@@ -766,7 +766,7 @@ HLIST_PVOID GetCapabilitiesList (_In_ HPKGREAD hReader)
 			}
 		} break;
 	}
-	size_t len = sizeof (LIST_PVOID) * sizeof (LPWSTR) * caps.size ();
+	size_t len = sizeof (LIST_PVOID) + sizeof (LPWSTR) * caps.size ();
 	HLIST_PVOID hList = (HLIST_PVOID)malloc (len);
 	ZeroMemory (hList, len);
 	hList->dwSize = 0;
@@ -811,7 +811,7 @@ HLIST_PVOID GetDeviceCapabilitiesList (_In_ HPKGREAD hReader)
 			}
 		} break;
 	}
-	size_t len = sizeof (LIST_PVOID) * sizeof (LPWSTR) * caps.size ();
+	size_t len = sizeof (LIST_PVOID) + sizeof (LPWSTR) * caps.size ();
 	HLIST_PVOID hList = (HLIST_PVOID)malloc (len);
 	ZeroMemory (hList, len);
 	hList->dwSize = 0;
@@ -830,4 +830,33 @@ void DestroyWStringList (_In_ HLIST_PVOID hList)
 		hList->alpVoid [cnt] = nullptr;
 	}
 	free (hList);
+}
+
+// Prerequisite
+BOOL GetPackagePrerequisite (_In_ HPKGREAD hReader, _In_ LPCWSTR lpName, _Outptr_ VERSION *pVerRet)
+{
+	auto ptr = ToPtrPackage (hReader);
+	if (!ptr) return FALSE;
+	switch (ptr->type ())
+	{
+		case PackageType::single: {
+			auto reader = ptr->appx_reader ();
+			auto pre = reader.prerequisites ();
+			auto ver = pre.get_version (lpName ? lpName : L"");
+			*pVerRet = VersionClassToStruct (ver);
+			return !ver.empty ();
+		} break;
+		case PackageType::bundle: {
+			auto br = ptr->bundle_reader ();
+			CComPtr <IAppxPackageReader> ar;
+			HRESULT hr = br.random_application_package (&ar);
+			if (FAILED (hr)) return false;
+			auto reader = appxreader (ar.p);
+			auto pre = reader.prerequisites ();
+			auto ver = pre.get_version (lpName ? lpName : L"");
+			*pVerRet = VersionClassToStruct (ver);
+			return !ver.empty ();
+		} break;
+	}
+	return FALSE;
 }

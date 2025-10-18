@@ -13,34 +13,47 @@
 #endif
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif
-#ifdef __cplusplus
 #define _DEFAULT_INIT_VALUE_(_init_value_) = _init_value_
-	#ifdef PKGREAD_EXPORTS
-	#define _DEFAULT_INIT_VALUE_FORFUNC_(_init_value_) = _init_value_
-	#else 
-	#define _DEFAULT_INIT_VALUE_FORFUNC_(_init_value_)
-	#endif
+#ifdef PKGREAD_EXPORTS
+#define _DEFAULT_INIT_VALUE_FORFUNC_(_init_value_) = _init_value_
+#else 
+#define _DEFAULT_INIT_VALUE_FORFUNC_(_init_value_)
+#endif
 #else
 #define _DEFAULT_INIT_VALUE_(_init_value_)
 #define _DEFAULT_INIT_VALUE_FORFUNC_(_init_value_)
 #endif
 
+#if defined (__cplusplus) && defined (PKGREAD_EXPORTS)
+#include <iostream>
+#endif
+
 #ifndef _TYPE_STRUCT_VERSION_
 #define _TYPE_STRUCT_VERSION_
-	typedef struct _VERSION
+typedef struct _VERSION
+{
+	UINT16 major _DEFAULT_INIT_VALUE_ (0),
+		minor _DEFAULT_INIT_VALUE_ (0),
+		build _DEFAULT_INIT_VALUE_ (0),
+		revision _DEFAULT_INIT_VALUE_ (0);
+#if defined (__cplusplus) && defined (PKGREAD_EXPORTS)
+	_VERSION (UINT16 major = 0, UINT16 minor = 0, UINT16 build = 0, UINT16 revision = 0):
+		major (major), minor (minor), build (build), revision (revision) {}
+	friend std::ostream &operator << (std::ostream &o, const _VERSION &v)
 	{
-	#if defined (__cplusplus) && defined (PKGREAD_EXPORTS)
-		_VERSION (UINT16 major = 0, UINT16 minor = 0, UINT16 build = 0, UINT16 revision = 0):
-			major (major), minor (minor), build (build), revision (revision) {}
-	#endif
-		UINT16 major _DEFAULT_INIT_VALUE_ (0), 
-			minor _DEFAULT_INIT_VALUE_ (0), 
-			build _DEFAULT_INIT_VALUE_ (0), 
-			revision _DEFAULT_INIT_VALUE_ (0);
-	} VERSION;
+		return o << v.major << "." << v.minor << "." << v.build << "." << v.revision;
+	}
+	friend std::wostream &operator << (std::wostream &o, const _VERSION &v)
+	{
+		return o << v.major << L"." << v.minor << L"." << v.build << L"." << v.revision;
+	}
+#endif
+} VERSION;
+#endif
+
+#ifdef __cplusplus
+extern "C"
+{
 #endif
 
 #ifndef _TYPE_STRUCT_LIST_PVOID_
@@ -106,6 +119,11 @@ extern "C"
 	// 获取身份信息能获取文本值的项。支持 PKG_IDENTITY_* 前缀的宏 NAME, PUBLISHER, PACKAGEFAMILYNAME, PACKAGEFULLNAME, RESOURCEID。
 	// 当与 PKG_IDENTITY_BUNDLE_GETAPPXINFO 通过位或结合时，则获取 AppxBundle 中某一个应用包。
 	PKGREAD_API LPWSTR GetPackageIdentityStringValue (_In_ HPKGREAD hReader, _In_ DWORD dwName);
+#define GetPackageIdentityName(_In_hReader_) GetPackageIdentityStringValue (_In_hReader_, PKG_IDENTITY_NAME)
+#define GetPackageIdentityPublisher(_In_hReader_) GetPackageIdentityStringValue (_In_hReader_, PKG_IDENTITY_PUBLISHER)
+#define GetPackageIdentityPackageFamilyName(_In_hReader_) GetPackageIdentityStringValue (_In_hReader_, PKG_IDENTITY_PACKAGEFAMILYNAME)
+#define GetPackageIdentityPackageFullName(_In_hReader_) GetPackageIdentityStringValue (_In_hReader_, PKG_IDENTITY_PACKAGEFULLNAME)
+#define GetPackageIdentityResourceId(_In_hReader_) GetPackageIdentityStringValue (_In_hReader_, PKG_IDENTITY_RESOURCEID)
 	// 获取身份信息。当 bGetSubPkgVer 为真，且打开的包为 AppxBundle 包，返回 AppxBundle 包中的某个应用包的版本号。
 	PKGREAD_API BOOL GetPackageIdentityVersion (_In_ HPKGREAD hReader, _Out_ VERSION *pVersion, _In_ BOOL bGetSubPkgVer _DEFAULT_INIT_VALUE_FORFUNC_ (0));
 	// 对于 AppxBundle 包，当传入的值有 PKG_IDENTITY_BUNDLE_GETAPPXINFO，则返回一个按位值，如 0b0011，则意味着支持 x86 和 x64
@@ -123,14 +141,21 @@ extern "C"
 	// 传入参数参考：https://learn.microsoft.com/en-us/windows/win32/api/appxpackaging/nf-appxpackaging-iappxmanifestproperties-getstringvalue
 	// 可以使用宏 PKG_PROPERTIES_* 前缀的 DISPLAYNAME, DESCRIPTION, LOGO, PUBLISHER
 	PKGREAD_API LPWSTR GetPackagePropertiesStringValue (_In_ HPKGREAD hReader, _In_ LPCWSTR lpName);
+#define GetPackagePropertiesDisplayName(_In_hReader_) GetPackagePropertiesStringValue (_In_hReader_, PKG_PROPERTIES_DISPLAYNAME)
+#define GetPackagePropertiesDescription(_In_hReader_) GetPackagePropertiesStringValue (_In_hReader_, PKG_PROPERTIES_DESCRIPTION)
+#define GetPackagePropertiesLogo(_In_hReader_) GetPackagePropertiesStringValue (_In_hReader_, PKG_PROPERTIES_LOGO)
+#define GetPackagePropertiesPublisher(_In_hReader_) GetPackagePropertiesStringValue (_In_hReader_, PKG_PROPERTIES_PUBLISHER)
 	// 传入参数参考：https://learn.microsoft.com/zh-cn/windows/win32/api/appxpackaging/nf-appxpackaging-iappxmanifestproperties-getboolvalue
 	// 可以使用宏 PKG_PROPERTIES_* 前缀的 FRAMEWORD, IS_RESOURCE (Windows 8.1 支持)
 	PKGREAD_API HRESULT GetPackagePropertiesBoolValue (_In_ HPKGREAD hReader, _In_ LPCWSTR lpName, _Outptr_ BOOL *pRet);
+#define GetPackagePropertiesIsFramework(_In_hReader_, _Outptr_pRetValue_) GetPackagePropertiesBoolValue (_In_hReader_, PKG_PROPERTIES_FRAMEWORD, _Outptr_pRetValue_)
+#define GetPackagePropertiesIsResourcePackage(_In_hReader_, _Outptr_pRetValue_) GetPackagePropertiesBoolValue (_In_hReader_, PKG_PROPERTIES_IS_RESOURCE, _Outptr_pRetValue_)
 //  Applications
 	// 注意：由于读取 Application 在官方 API 中是枚举类型，只能枚举一次。
 	// 所以请预先安排好需要的信息，并在枚举时进行缓存。
 	// 添加和删除的请参考这些：https://learn.microsoft.com/en-us/windows/win32/api/appxpackaging/nf-appxpackaging-iappxmanifestapplication-getstringvalue
 	// DLL 本身支持：Id, DisplayName, BackgroundColor, ForegroundText, ShortName, Square44x44Logo
+	// 注：一定会保留项：AppUserModelID。这是必须项。
 	PKGREAD_API BOOL AddPackageApplicationItemGetName (_In_ LPCWSTR lpName);
 	// 移除不需要的信息项名。
 	PKGREAD_API BOOL RemovePackageApplicationItemGetName (_In_ LPCWSTR lpName);
@@ -220,65 +245,12 @@ extern "C"
 #define DestroyCapabilitiesList DestroyWStringList
 #define DestroyDeviceCapabilitiesList DestroyWStringList
 
-#if defined (__cplusplus) && defined (PKGREAD_EXPORTS)
-#include <cstdlib>
-#include <string>
-#include <functional>
-	class package_info
-	{
-		private:
-		HPKGREAD hReader = nullptr;
-		std::wstring filepath = L"";
-		struct deconstr
-		{
-			std::function <void ()> endtask = nullptr;
-			deconstr (std::function <void ()> pf): endtask (pf) {}
-			~deconstr () { if (endtask) endtask (); }
-		};
-		public:
-		class identity
-		{
-			private:
-			HPKGREAD &hReader;
-			public:
-			identity (HPKGREAD hReader): hReader (hReader) {}
-			std::wstring string_value (DWORD dwName) const
-			{
-				LPWSTR lpstr = nullptr;
-				deconstr rel ([&lpstr] () {
-					if (lpstr) free (lpstr);
-					lpstr = nullptr;
-				});
-				lpstr = GetPackageIdentityStringValue (hReader, dwName);
-				return lpstr;
-			}
-			VERSION version (bool read_subpkg_ver = false) const
-			{
-				VERSION ver;
-				GetPackageIdentityVersion (hReader, &ver, read_subpkg_ver);
-				return ver;
-			}
-			DWORD architecture () const
-			{
-				DWORD dw = 0;
-				GetPackageIdentityArchitecture (hReader, &dw);
-				return dw;
-			}
-		};
-		package_info (): hReader (CreatePackageReader ()) {}
-		~package_info () { DestroyPackageReader (hReader); hReader = nullptr; }
-		std::wstring file () const { return filepath; }
-		bool file (const std::wstring &path)
-		{
-			return LoadPackageFromFile (hReader, (filepath = path).c_str ());
-		}
-		WORD package_type () const { return GetPackageType (hReader); }
-		bool valid () const { return hReader && IsPackageValid (hReader); }
-		WORD package_role () const { return GetPackageRole (hReader); }
-		identity get_identity () const { return identity (hReader); }
-
-	};
-#endif
+	// Prerequisite
+#define PKG_PREREQUISITE_OS_MIN_VERSION L"OSMinVersion"
+#define PKG_PREREQUISITE_OS_MAX_VERSION_TESTED L"OSMaxVersionTested"
+	PKGREAD_API BOOL GetPackagePrerequisite (_In_ HPKGREAD hReader, _In_ LPCWSTR lpName, _Outptr_ VERSION *pVerRet);
+#define GetPackagePrerequisiteOsMinVersion(_In_hReader_, _Outptr_pVerRet_) GetPackagePrerequisite (_In_hReader_, PKG_PREREQUISITE_OS_MIN_VERSION, _Outptr_pVerRet_)
+#define GetPackagePrerequisiteOsMaxVersionTested(_In_hReader_, _Outptr_pVerRet_) GetPackagePrerequisite (_In_hReader_, PKG_PREREQUISITE_OS_MAX_VERSION_TESTED, _Outptr_pVerRet_)
 
 #ifdef _DEFAULT_INIT_VALUE_
 #undef _DEFAULT_INIT_VALUE_
@@ -288,6 +260,334 @@ extern "C"
 #endif
 #ifdef __cplusplus
 }
+#endif
+
+#if defined (__cplusplus) && !defined (PKGREAD_EXPORTS)
+#include <cstdlib>
+#include <string>
+#include <map>
+#include <vector>
+#include <functional>
+#include <cstring>
+class package_reader
+{
+	private:
+	HPKGREAD hReader = nullptr;
+	std::wstring filepath = L"";
+	struct deconstr
+	{
+		std::function <void ()> endtask = nullptr;
+		deconstr (std::function <void ()> pf): endtask (pf) {}
+		~deconstr () { if (endtask) endtask (); }
+	};
+	public:
+	class base_subitems
+	{
+		protected:
+		HPKGREAD &hReader;
+		public:
+		base_subitems (HPKGREAD &hReader): hReader (hReader) {}
+	};
+	class identity: public base_subitems
+	{
+		using base = base_subitems;
+		public:
+		using base::base;
+		std::wstring string_value (DWORD dwName) const
+		{
+			LPWSTR lpstr = nullptr;
+			deconstr rel ([&lpstr] () {
+				if (lpstr) free (lpstr);
+				lpstr = nullptr;
+			});
+			lpstr = GetPackageIdentityStringValue (hReader, dwName);
+			return lpstr ? lpstr : L"";
+		}
+		std::wstring name () const { return string_value (PKG_IDENTITY_NAME); }
+		std::wstring publisher () const { return string_value (PKG_IDENTITY_PUBLISHER); }
+		std::wstring package_family_name () const { return string_value (PKG_IDENTITY_PACKAGEFAMILYNAME); }
+		std::wstring package_full_name () const { return string_value (PKG_IDENTITY_PACKAGEFULLNAME); }
+		std::wstring resource_id () const { return string_value (PKG_IDENTITY_RESOURCEID); }
+		VERSION version (bool read_subpkg_ver = false) const { VERSION ver; GetPackageIdentityVersion (hReader, &ver, read_subpkg_ver); return ver; }
+		DWORD architecture () const { DWORD dw = 0; GetPackageIdentityArchitecture (hReader, &dw); return dw; }
+	};
+	class properties: public base_subitems
+	{
+		using base = base_subitems;
+		public:
+		using base::base;
+		std::wstring string_value (const std::wstring &swName) const
+		{
+			LPWSTR lpstr = nullptr;
+			deconstr rel ([&lpstr] () {
+				if (lpstr) free (lpstr);
+				lpstr = nullptr;
+			});
+			lpstr = GetPackagePropertiesStringValue (hReader, swName.c_str ());
+			return lpstr ? lpstr : L"";
+		}
+		bool bool_value (const std::wstring &swName, bool bRetWhenFailed = false) const
+		{
+			BOOL ret = FALSE;
+			HRESULT hr = GetPackagePropertiesBoolValue (hReader, swName.c_str (), &ret);
+			if (FAILED (hr)) return bRetWhenFailed;
+			else return ret != FALSE;
+		}
+		std::wstring display_name () const { return string_value (PKG_PROPERTIES_DISPLAYNAME); }
+		std::wstring publisher_display_name () const { return string_value (PKG_PROPERTIES_PUBLISHER); }
+		std::wstring description () const { return string_value (PKG_PROPERTIES_DESCRIPTION); }
+		std::wstring logo () const { return string_value (PKG_PROPERTIES_LOGO); }
+		bool framework () const { return bool_value (PKG_PROPERTIES_FRAMEWORD); }
+		bool resource_package () const { return bool_value (PKG_PROPERTIES_IS_RESOURCE); }
+	};
+	class application: public std::map <std::wstring, std::wstring>
+	{
+		using base = std::map <std::wstring, std::wstring>;
+		public:
+		using base::base;
+		std::wstring user_model_id () const { return this->find (L"AppUserModelID")->second; }
+		friend bool operator == (const application &a1, const application &a2) { return !_wcsicmp (a1.user_model_id ().c_str (), a2.user_model_id ().c_str ()); }
+		friend bool operator != (const application &a1, const application &a2) { return _wcsicmp (a1.user_model_id ().c_str (), a2.user_model_id ().c_str ()); }
+		explicit operator bool () const { return this->user_model_id ().empty (); }
+		std::wstring &operator [] (const std::wstring &key)
+		{
+			auto it = this->find (key);
+			if (it == this->end ())
+			{
+				it = this->insert (std::make_pair (key, L"")).first;
+			}
+			return it->second;
+		}
+		typename base::iterator find_case_insensitive (const std::wstring &key)
+		{
+			for (auto it = this->begin (); it != this->end (); ++it)
+			{
+				if (_wcsicmp (it->first.c_str (), key.c_str ()) == 0)
+					return it;
+			}
+			return this->end ();
+		}
+		typename base::const_iterator find_case_insensitive (const std::wstring &key) const
+		{
+			for (auto it = this->begin (); it != this->end (); ++ it)
+			{
+				if (_wcsicmp (it->first.c_str (), key.c_str ()) == 0)
+					return it;
+			}
+			return this->end ();
+		}
+	};
+	class applications
+	{
+		private:
+		HPKGREAD &hReader;
+		HAPPENUMERATOR hList = nullptr;
+		public:
+		applications (HPKGREAD &hReader): hReader (hReader)
+		{
+			hList = GetPackageApplications (hReader);
+		}
+		~applications ()
+		{
+			if (hList) DestroyPackageApplications (hList);
+			hList = nullptr;
+		}
+		size_t get (std::vector <application> &apps)
+		{
+			apps.clear ();
+			if (!hList) return 0;
+			HLIST_PVOID hMapList = ApplicationsToMap (hList);
+			deconstr endt ([&hMapList] {
+				if (hMapList) DestroyApplicationsMap (hMapList);
+				hMapList = nullptr;
+			});
+			if (!hMapList) return 0;
+			for (size_t i = 0; i < hMapList->dwSize; i ++)
+			{
+				HLIST_PVOID &hKeyValues = ((HLIST_PVOID *)hMapList->alpVoid) [i];
+				application app;
+				for (size_t j = 0; j < hKeyValues->dwSize; j ++)
+				{
+					HPAIR_PVOID &hPair = ((HPAIR_PVOID *)hKeyValues->alpVoid) [j];
+					LPWSTR lpKey = (LPWSTR)hPair->lpKey;
+					LPWSTR lpValue = (LPWSTR)hPair->lpValue;
+					if (!lpKey || !*lpKey) continue;
+					app [lpKey] = lpValue ? lpValue : L"";
+				}
+				apps.push_back (app);
+			}
+			return apps.size ();
+		}
+	};
+	class capabilities: public base_subitems
+	{
+		using base = base_subitems;
+		public:
+		using base::base;
+		size_t capabilities_name (std::vector <std::wstring> &output) const
+		{
+			output.clear ();
+			HLIST_PVOID hList = GetCapabilitiesList (hReader);
+			deconstr endt ([&hList] () {
+				if (hList) DestroyCapabilitiesList (hList);
+				hList = nullptr;
+			});
+			if (!hList) return 0;
+			for (size_t i = 0; i < hList->dwSize; i ++)
+			{
+				LPWSTR lpstr = (LPWSTR)hList->alpVoid [i];
+				if (!lpstr) continue;
+				output.push_back (lpstr);
+			}
+			return output.size ();
+		}
+		size_t device_capabilities (std::vector <std::wstring> &output) const
+		{
+			output.clear ();
+			HLIST_PVOID hList = GetDeviceCapabilitiesList (hReader);
+			deconstr endt ([&hList] () {
+				if (hList) DestroyDeviceCapabilitiesList (hList);
+				hList = nullptr;
+			});
+			if (!hList) return 0;
+			for (size_t i = 0; i < hList->dwSize; i ++)
+			{
+				LPWSTR lpstr = (LPWSTR)hList->alpVoid [i];
+				if (!lpstr) continue;
+				output.push_back (lpstr);
+			}
+			return output.size ();
+		}
+	};
+	struct dependency
+	{
+		std::wstring name, publisher;
+		VERSION vermin;
+		dependency (const std::wstring &name = L"", const std::wstring &pub = L"", const VERSION &ver = VERSION ()):
+			name (name), publisher (pub), vermin (ver) {}
+	};
+	class dependencies: public base_subitems
+	{
+		using base = base_subitems;
+		public:
+		using base::base;
+		size_t get (std::vector <dependency> &output) const
+		{
+			auto hList = GetDependencesInfoList (hReader);
+			deconstr rel ([&hList] () {
+				DestroyDependencesInfoList (hList);
+			});
+			if (!hList) return 0;
+			for (size_t i = 0; i < hList->dwSize; i ++)
+			{
+				DEPENDENCY_INFO &depinf = ((DEPENDENCY_INFO *)hList->aDepInfo) [i];
+				if (!depinf.lpName || !*depinf.lpName) continue;
+				output.push_back (dependency (depinf.lpName, depinf.lpPublisher ? depinf.lpPublisher : L"", depinf.verMin));
+			}
+			return output.size ();
+		}
+	};
+	class resources: public base_subitems
+	{
+		using base = base_subitems;
+		public:
+		using base::base;
+		size_t languages (std::vector <std::wstring> &langs) const
+		{
+			langs.clear ();
+			auto hList = GetResourcesLanguages (hReader);
+			deconstr rel ([&hList] () {
+				if (hList) DestroyResourcesLanguagesList (hList);
+				hList = nullptr;
+			});
+			if (!hList) return 0;
+			for (size_t i = 0; i < hList->dwSize; i ++)
+			{
+				LPWSTR lpstr = ((LPWSTR *)hList->alpVoid) [i];
+				if (lpstr && *lpstr) langs.push_back (std::wstring (lpstr));
+			}
+			return langs.size ();
+		}
+		size_t languages (std::vector <LCID> &langs) const
+		{
+			langs.clear ();
+			auto hList = GetResourcesLanguagesToLcid (hReader);
+			deconstr rel ([&hList] () {
+				if (hList) DestroyResourcesLanguagesLcidList (hList);
+				hList = nullptr;
+			});
+			if (!hList) return 0;
+			for (size_t i = 0; i < hList->dwSize; i ++)
+			{
+				if (hList->aLcid [i]) langs.push_back (hList->aLcid [i]);
+			}
+			return langs.size ();
+		}
+		size_t scales (std::vector <UINT32> &output) const
+		{
+			output.clear ();
+			auto hList = GetResourcesScales (hReader);
+			deconstr rel ([&hList] () {
+				if (hList) DestroyResourcesScalesList (hList);
+			});
+			if (!hList) return 0;
+			for (size_t i = 0; i < hList->dwSize; i ++)
+			{
+				UINT32 s = hList->aUI32 [i];
+				if (s) output.push_back (s);
+			}
+			return output.size ();
+		}
+		DWORD dx_feature_level () const { return GetResourcesDxFeatureLevels (hReader); }
+		// 向数组添加的是以 PKG_RESOURCES_DXFEATURE_* 前缀的常量
+		size_t dx_feature_level (std::vector <DWORD> &ret)
+		{
+			DWORD dx = dx_feature_level ();
+			if (dx & PKG_RESOURCES_DXFEATURE_LEVEL9) ret.push_back (PKG_RESOURCES_DXFEATURE_LEVEL9);
+			else if (dx & PKG_RESOURCES_DXFEATURE_LEVEL10) ret.push_back (PKG_RESOURCES_DXFEATURE_LEVEL10);
+			else if (dx & PKG_RESOURCES_DXFEATURE_LEVEL11) ret.push_back (PKG_RESOURCES_DXFEATURE_LEVEL11);
+			else if (dx & PKG_RESOURCES_DXFEATURE_LEVEL12) ret.push_back (PKG_RESOURCES_DXFEATURE_LEVEL12);
+			return ret.size ();
+		}
+	};
+	class prerequisites: public base_subitems
+	{
+		using base = base_subitems;
+		public:
+		using base::base;
+		VERSION get_version (const std::wstring &name) const
+		{
+			VERSION ver;
+			GetPackagePrerequisite (hReader, name.c_str (), &ver);
+			return ver;
+		}
+		VERSION os_min_version () const { return get_version (PKG_PREREQUISITE_OS_MIN_VERSION); }
+		VERSION os_max_version_tested () const { return get_version (PKG_PREREQUISITE_OS_MAX_VERSION_TESTED); }
+	};
+	package_reader (): hReader (CreatePackageReader ()) {}
+	package_reader (const std::wstring &fpath): hReader (CreatePackageReader ())
+	{
+		file (fpath);
+	}
+	~package_reader () { DestroyPackageReader (hReader); hReader = nullptr; }
+	std::wstring file () const { return filepath; }
+	bool file (const std::wstring &path)
+	{
+		return LoadPackageFromFile (hReader, (filepath = path).c_str ());
+	}
+	// PKGTYPE_* 前缀常量
+	WORD package_type () const { return GetPackageType (hReader); }
+	bool valid () const { return hReader && IsPackageValid (hReader); }
+	// PKGROLE_* 前缀常量
+	WORD package_role () const { return GetPackageRole (hReader); }
+	identity get_identity () { return identity (hReader); }
+	properties get_properties () { return properties (hReader); }
+	applications get_applications () { return applications (hReader); }
+	capabilities get_capabilities () { return capabilities (hReader); }
+	dependencies get_dependencies () { return dependencies (hReader); }
+	resources get_resources () { return resources (hReader); }
+	prerequisites get_prerequisites () { return prerequisites (hReader); }
+};
 #endif
 
 #endif

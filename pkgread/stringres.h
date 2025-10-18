@@ -102,6 +102,7 @@ static CriticalSection g_appcs;
 bool PushApplicationAttributeItem (const std::wstring &lpstr)
 {
 	CreateScopedLock (g_appcs);
+	if (std::wnstring (L"AppUserModelID") == lpstr) return false;
 	size_t len1 = appitems.size ();
 	push_unique <std::wstring> (appitems, lpstr, [] (const std::wstring &v1, const std::wstring &v2) -> bool {
 		return std::wnstring (v1) == std::wnstring (v2);
@@ -111,6 +112,7 @@ bool PushApplicationAttributeItem (const std::wstring &lpstr)
 bool RemoveApplicationAttributeItem (const std::wstring &lpstr)
 {
 	CreateScopedLock (g_appcs);
+	if (std::wnstring (L"AppUserModelID") == lpstr) return false;
 	auto it = std::find_if (appitems.begin (), appitems.end (), [&] (const std::wstring &v) {
 		return std::wnstring (v) == std::wnstring (lpstr);
 	});

@@ -24,13 +24,10 @@
     <ClInclude Include="targetver.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="prireader.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="resource.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="priread.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="prifile.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -38,7 +35,7 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="prireader.cpp">
+    <ClCompile Include="priread.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="dllmain.cpp">

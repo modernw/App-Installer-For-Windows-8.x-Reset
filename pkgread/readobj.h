@@ -512,7 +512,6 @@ namespace appx_info
 		appx_preq (IAppxManifestReader *ptr = nullptr): com_info (nullptr) { set (ptr); }
 		version os_min_version () const { return get_version (L"OSMinVersion"); }
 		version os_max_version_tested () const { return get_version (L"OSMaxVersionTested"); }
-		private:
 		version get_version (const std::wstring &name) const
 		{
 			UINT64 u64 = 0;
@@ -551,8 +550,10 @@ namespace appx_info
 						if (lpstr) CoTaskMemFree (lpstr);
 						lpstr = nullptr;
 					});
-					if (SUCCEEDED (p->GetStringValue (it.c_str (), &lpstr))) app [it] = lpstr;
-					else app [it] = nullptr;
+					if (std::wnstring (it) == std::wnstring (L"AppUserModelID")) continue;
+					if (SUCCEEDED (p->GetStringValue (it.c_str (), &lpstr)) && lpstr)
+						app [it] = lpstr;
+					else app [it] = std::wstring ();
 				}
 				return app;
 			});
