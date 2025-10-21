@@ -187,6 +187,7 @@ struct section_header
 	CHAR szIdentifier [16] = {0};
 	DWORD dwQualifier = 0;
 	WORD wFlags = 0;
+	WORD wSectFlags = 0;
 	DWORD dwLength = 0;
 	DWORD dwPlaceholder1 = -1; // 0
 };

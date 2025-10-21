@@ -326,8 +326,8 @@ namespace std
 		basic_nstring (const base &str): base (str) {}
 		basic_nstring (base &&str): base (std::move (str)) {}
 		basic_nstring (const ct *data, size_type count): base (data, count), default_upper (false), default_include_blank_in_str (false) {}
-		template <typename InputIt> basic_nstring (InputIt first, InputIt last) : base (first, last), default_upper (false), default_include_blank_in_str (false) {}
 		template <std::size_t N> basic_nstring (const ct (&arr) [N]) : base (arr, N) {}
+		template <typename InputIt> basic_nstring (InputIt first, InputIt last): base (first, last), default_upper (false), default_include_blank_in_str (false) {}
 		bool upper_default () const { return this->default_upper; }
 		bool upper_default (bool value) { return this->default_upper = value; }
 		bool include_blank_in_str_middle () const { return this->default_include_blank_in_str; }

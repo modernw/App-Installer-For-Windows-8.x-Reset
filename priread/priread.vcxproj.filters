@@ -30,6 +30,12 @@
     <ClInclude Include="prifile.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="nstring.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="localeex.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

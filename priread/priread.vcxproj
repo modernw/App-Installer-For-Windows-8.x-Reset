@@ -145,6 +145,8 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="localeex.h" />
+    <ClInclude Include="nstring.h" />
     <ClInclude Include="prifile.h" />
     <ClInclude Include="priread.h" />
     <ClInclude Include="stdafx.h" />
