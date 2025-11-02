@@ -100,72 +100,96 @@ template <typename E, typename TR = std::char_traits <E>, typename AL = std::all
 }
 template <typename E, typename TR = std::char_traits <E>, typename AL = std::allocator <E>> bool IsNormalizeStringEquals (const std::basic_string <E, TR, AL> &l, const std::basic_string <E, TR, AL> &r, bool includemidblank = false)
 {
-	auto skip_blank = [&] (auto &it, auto &end)
-	{
-		while (it != end && is_blank (*it)) ++ it;
+	auto _local_strlen = [] (const E *p) -> size_t {
+		size_t cnt = 0;
+		while (*(p + cnt)) { cnt ++; }
+		return cnt;
 	};
-	auto it_l = l.begin (), it_r = r.begin ();
-	auto end_l = l.end (), end_r = r.end ();
-	skip_blank (it_l, end_l);
-	skip_blank (it_r, end_r);
-	while (it_l != end_l && it_r != end_r)
+	const E *pl = l.c_str ();
+	const E *pr = r.c_str ();
+	while (*pl && is_blank (*pl)) ++ pl;
+	while (*pr && is_blank (*pr)) ++ pr;
+	const E *el = l.c_str () + _local_strlen (l.c_str ());
+	const E *er = r.c_str () + _local_strlen (r.c_str ());
+	while (el > pl && is_blank (*(el - 1))) --el;
+	while (er > pr && is_blank (*(er - 1))) --er;
+	while (pl < el && pr < er)
 	{
-		E ch_l = *it_l;
-		E ch_r = *it_r;
-		ch_l = l0km::tolower (ch_l);
-		ch_r = l0km::tolower (ch_r);
-		if (ch_l != ch_r) return false;
-		++ it_l;
-		++ it_r;
 		if (includemidblank)
 		{
-			if (is_blank (ch_l))
+			if (is_blank (*pl) && is_blank (*pr))
 			{
-				skip_blank (it_l, end_l);
-				skip_blank (it_r, end_r);
+				while (pl < el && is_blank (*pl)) ++pl;
+				while (pr < er && is_blank (*pr)) ++pr;
+				continue;
+			}
+			else if (is_blank (*pl))
+			{
+				while (pl < el && is_blank (*pl)) ++pl;
+				continue;
+			}
+			else if (is_blank (*pr))
+			{
+				while (pr < er && is_blank (*pr)) ++pr;
+				continue;
 			}
 		}
+		if (l0km::tolower (*pl) != l0km::tolower (*pr)) return false;
+		++ pl;
+		++ pr;
 	}
-	skip_blank (it_l, end_l);
-	skip_blank (it_r, end_r);
-	return it_l == end_l && it_r == end_r;
+	while (pl < el && is_blank (*pl)) ++ pl;
+	while (pr < er && is_blank (*pr)) ++ pr;
+	return pl == el && pr == er;
 }
 template <typename E, typename TR = std::char_traits <E>, typename AL = std::allocator <E>> int64_t NormalizeStringCompare (const std::basic_string <E, TR, AL> &l, const std::basic_string <E, TR, AL> &r, bool includemidblank = false)
 {
-	auto skip_blank = [&] (auto &it, auto &end)
-	{
-		while (it != end && is_blank (*it)) ++ it;
+	auto _local_strlen = [] (const E *p) -> size_t {
+		size_t cnt = 0;
+		while (*(p + cnt)) { cnt ++; }
+		return cnt;
 	};
-	auto it_l = l.begin (), it_r = r.begin ();
-	auto end_l = l.end (), end_r = r.end ();
-	skip_blank (it_l, end_l);
-	skip_blank (it_r, end_r);
-	while (it_l != end_l && it_r != end_r)
+	const E *pl = l.c_str ();
+	const E *pr = r.c_str ();
+	while (*pl && is_blank (*pl)) ++ pl;
+	while (*pr && is_blank (*pr)) ++ pr;
+	const E *el = l.c_str () + _local_strlen (l.c_str ());
+	const E *er = r.c_str () + _local_strlen (r.c_str ());
+	while (el > pl && is_blank (*(el - 1))) -- el;
+	while (er > pr && is_blank (*(er - 1))) -- er;
+	while (pl < el && pr < er)
 	{
-		E ch_l = l0km::tolower (*it_l);
-		E ch_r = l0km::tolower (*it_r);
-		if (ch_l != ch_r) return ch_l < ch_r ? -1 : 1;
-		++ it_l;
-		++ it_r;
 		if (includemidblank)
 		{
-			if (is_blank (*it_l) || is_blank (*it_r))
+			if (is_blank (*pl) && is_blank (*pr))
 			{
-				skip_blank (it_l, end_l);
-				skip_blank (it_r, end_r);
-				if (it_l != end_l && it_r != end_r)
-				{
-					ch_l = l0km::tolower (*it_l);
-					ch_r = l0km::tolower (*it_r);
-				}
+				while (pl < el && is_blank (*pl)) ++pl;
+				while (pr < er && is_blank (*pr)) ++pr;
+				continue;
+			}
+			else if (is_blank (*pl))
+			{
+				while (pl < el && is_blank (*pl)) ++pl;
+				continue;
+			}
+			else if (is_blank (*pr))
+			{
+				while (pr < er && is_blank (*pr)) ++pr;
+				continue;
 			}
 		}
+		E chl = l0km::tolower (*pl);
+		E chr = l0km::tolower (*pr);
+		if (chl != chr) return (int64_t)chl - (int64_t)chr;
+		++ pl;
+		++ pr;
 	}
-	skip_blank (it_l, end_l);
-	skip_blank (it_r, end_r);
-	if (it_l == end_l && it_r == end_r) return 0;
-	if (it_l == end_l) return -1;
-	return 1;
+	while (pl < el && is_blank (*pl)) ++ pl;
+	while (pr < er && is_blank (*pr)) ++ pr;
+	if (pl == el && pr == er) return 0;
+	if (pl == el) return -1;
+	if (pr == er) return 1;
+	return (int64_t)l0km::tolower (*pl) - (int64_t)l0km::tolower (*pr);
 }
 template <typename CharT> bool IsNormalizeStringEquals (const CharT *l, const CharT *r, bool includemidblank = false)
 {
