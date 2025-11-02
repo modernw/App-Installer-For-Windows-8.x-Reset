@@ -155,48 +155,6 @@ void read_package (const std::wstring &filepath)
 	}
 }
 
-struct head
-{
-	CHAR szMagic [8];
-	WORD wPlaceholder1, // 0
-		wPlaceholder2; // 1
-	DWORD dwFileSize,
-		dwToCOffset,
-		dwSectStartOffset;
-	WORD wSectCount,
-		wPlaceholder3; // 0xFFFF
-	DWORD dwPlaceholder4; // 0
-};
-struct footer
-{
-	DWORD dwChkCode, // 0xDEFFFADE
-		dwTotalFileSize;
-};
-struct tocentry
-{
-	CHAR szIdentifier [16] = {0};
-	WORD wFlags = 0;
-	WORD wSectFlags = 0;
-	DWORD dwSectQualifier = 0;
-	DWORD dwSectOffset = 0;
-	DWORD dwSectLength = 0;
-};
-// #pragma pack (push, 1)
-struct section_header
-{
-	CHAR szIdentifier [16] = {0};
-	DWORD dwQualifier = 0;
-	WORD wFlags = 0;
-	WORD wSectFlags = 0;
-	DWORD dwLength = 0;
-	DWORD dwPlaceholder1 = -1; // 0
-};
-struct section_check
-{
-	DWORD dwChkCode = 0, // 0xDEF5FADE
-		dwSectLength = 0;
-};
-
 int main (int argc, char *argv [])
 {
 	setlocale (LC_ALL, "");
@@ -209,46 +167,7 @@ int main (int argc, char *argv [])
 		std::remove (pkgPathStr.begin (), pkgPathStr.end (), L'\"'),
 		pkgPathStr.end ()
 	);
-	HANDLE hFile = CreateFileW (
-		pkgPathStr.c_str (),           // 文件名
-		GENERIC_READ,          // 只读
-		FILE_SHARE_READ,       // 允许其他进程读取
-		NULL,                  // 默认安全属性
-		OPEN_EXISTING,         // 必须文件存在
-		FILE_ATTRIBUTE_NORMAL, // 普通文件
-		NULL                   // 无模板
-	);
-	head header;
-	footer foot;
-	DWORD headRead = 0, footRead = 0;
-	ReadFile (hFile, &header, sizeof (header), &headRead, NULL);
-	SetFilePointer (hFile, header.dwFileSize - 16, NULL, FILE_BEGIN);
-	ReadFile (hFile, &foot, sizeof (foot), &footRead, NULL);
-	SetFilePointer (hFile, header.dwToCOffset, NULL, FILE_BEGIN);
-	std::vector <tocentry> tocs;
-	for (size_t i = 0; i < header.wSectCount; i ++)
-	{
-		tocentry toc;
-		DWORD dwRead;
-		ReadFile (hFile, &toc, sizeof (toc), &dwRead, NULL);
-		tocs.push_back (toc);
-	}
-	for (size_t i = 0; i < header.wSectCount; i ++)
-	{
-		SetFilePointer (hFile, header.dwSectStartOffset + tocs [i].dwSectOffset, NULL, FILE_BEGIN);
-		section_header sh;
-		section_check sc;
-		DWORD dwsh, dwsc;
-		ReadFile (hFile, &sh, sizeof (sh), &dwsh, NULL);
-		SetFilePointer (hFile, sh.dwLength - 16 - 24, NULL, FILE_CURRENT);
-		ReadFile (hFile, &sc, sizeof (sc), &dwsc, NULL);
-		SetFilePointer (hFile, 32 - sh.dwLength, NULL, FILE_CURRENT);
-		//subsection ss;
-		//ss.dwOffset = SetFilePointer (hFile, 0, NULL, FILE_CURRENT);
-		//ss.dwLength = sh.dwLength - 16 - 24;
-		//SetFilePointer (hFile, 32, NULL, FILE_CURRENT);
-	}
-	CloseHandle (hFile);
+
 	system ("pause");
 	return 0;
 }

@@ -54,6 +54,9 @@
     <ClInclude Include="localeex.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\priformatcli\priformatcli\priformatcli.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

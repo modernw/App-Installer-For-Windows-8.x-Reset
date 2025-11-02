@@ -145,6 +145,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\priformatcli\priformatcli\priformatcli.h" />
     <ClInclude Include="dynarr.h" />
     <ClInclude Include="localeex.h" />
     <ClInclude Include="norstr.h" />

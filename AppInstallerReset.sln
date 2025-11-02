@@ -6,10 +6,13 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "appinstaller", "AppInstallerReset\AppInstallerReset.vcxproj", "{C96219BE-8AFF-4914-8933-B6B7047A94D8}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pkgread", "pkgread\pkgread.vcxproj", "{A7753282-AA16-43D9-8ACA-7065239DD702}"
+	ProjectSection(ProjectDependencies) = postProject
+		{33D91B58-1981-4A3C-B4D1-86EE406CDE12} = {33D91B58-1981-4A3C-B4D1-86EE406CDE12}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dlltest", "dlltest\dlltest.vcxproj", "{F5CCB3AB-AC43-432A-862D-4F264760B09B}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "priread", "priread\priread.vcxproj", "{99D714D9-F40D-425B-BAFA-8B41C17971A5}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "priformatcli", "..\priformatcli\priformatcli\priformatcli.vcxproj", "{33D91B58-1981-4A3C-B4D1-86EE406CDE12}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -43,14 +46,14 @@ Global
 		{F5CCB3AB-AC43-432A-862D-4F264760B09B}.Release|x64.Build.0 = Release|x64
 		{F5CCB3AB-AC43-432A-862D-4F264760B09B}.Release|x86.ActiveCfg = Release|Win32
 		{F5CCB3AB-AC43-432A-862D-4F264760B09B}.Release|x86.Build.0 = Release|Win32
-		{99D714D9-F40D-425B-BAFA-8B41C17971A5}.Debug|x64.ActiveCfg = Debug|x64
-		{99D714D9-F40D-425B-BAFA-8B41C17971A5}.Debug|x64.Build.0 = Debug|x64
-		{99D714D9-F40D-425B-BAFA-8B41C17971A5}.Debug|x86.ActiveCfg = Debug|Win32
-		{99D714D9-F40D-425B-BAFA-8B41C17971A5}.Debug|x86.Build.0 = Debug|Win32
-		{99D714D9-F40D-425B-BAFA-8B41C17971A5}.Release|x64.ActiveCfg = Release|x64
-		{99D714D9-F40D-425B-BAFA-8B41C17971A5}.Release|x64.Build.0 = Release|x64
-		{99D714D9-F40D-425B-BAFA-8B41C17971A5}.Release|x86.ActiveCfg = Release|Win32
-		{99D714D9-F40D-425B-BAFA-8B41C17971A5}.Release|x86.Build.0 = Release|Win32
+		{33D91B58-1981-4A3C-B4D1-86EE406CDE12}.Debug|x64.ActiveCfg = Debug|x64
+		{33D91B58-1981-4A3C-B4D1-86EE406CDE12}.Debug|x64.Build.0 = Debug|x64
+		{33D91B58-1981-4A3C-B4D1-86EE406CDE12}.Debug|x86.ActiveCfg = Debug|Win32
+		{33D91B58-1981-4A3C-B4D1-86EE406CDE12}.Debug|x86.Build.0 = Debug|Win32
+		{33D91B58-1981-4A3C-B4D1-86EE406CDE12}.Release|x64.ActiveCfg = Release|x64
+		{33D91B58-1981-4A3C-B4D1-86EE406CDE12}.Release|x64.Build.0 = Release|x64
+		{33D91B58-1981-4A3C-B4D1-86EE406CDE12}.Release|x86.ActiveCfg = Release|Win32
+		{33D91B58-1981-4A3C-B4D1-86EE406CDE12}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -14,6 +14,7 @@
 #include "stringres.h"
 #include "norstr.h"
 #include "raii.h"
+#include "priformatcli.h"
 
 bool IsFileExistsW (LPCWSTR filename)
 {
