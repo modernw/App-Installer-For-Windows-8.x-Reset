@@ -14,7 +14,7 @@
 
 #ifdef __cplusplus
 #define _DEFAULT_INIT_VALUE_(_init_value_) = _init_value_
-#ifdef PKGREAD_EXPORTS
+#ifndef PKGREAD_EXPORTS
 #define _DEFAULT_INIT_VALUE_FORFUNC_(_init_value_) = _init_value_
 #else 
 #define _DEFAULT_INIT_VALUE_FORFUNC_(_init_value_)
@@ -252,6 +252,36 @@ extern "C"
 #define GetPackagePrerequisiteOsMinVersion(_In_hReader_, _Outptr_pVerRet_) GetPackagePrerequisite (_In_hReader_, PKG_PREREQUISITE_OS_MIN_VERSION, _Outptr_pVerRet_)
 #define GetPackagePrerequisiteOsMaxVersionTested(_In_hReader_, _Outptr_pVerRet_) GetPackagePrerequisite (_In_hReader_, PKG_PREREQUISITE_OS_MAX_VERSION_TESTED, _Outptr_pVerRet_)
 
+	// File Stream
+	// 从 Appx 包中获取 Appx 中的文件的文件流。
+	// 注：只提取 Payloads 文件。不可提供 Footprint 文件。
+	// 对于 AppxBundle 包，则随机从一个应用包中提取文件。
+	PKGREAD_API HANDLE GetAppxFileFromAppxPackage (_In_ HPKGREAD hReader, _In_ LPCWSTR lpFileName);
+	// 从 AppxBundle 包中获取 Appx 子包的文件流。
+	PKGREAD_API HANDLE GetAppxBundlePayloadPackageFile (_In_ HPKGREAD hReader, _In_ LPCWSTR lpFileName);
+	// 从 Appx 包中获取 Appx 的 Pri 文件流
+	// 对于 AppxBundle 包，则随机从一个应用包中提取 Pri 文件。
+	PKGREAD_API HANDLE GetAppxPriFileStream (_In_ HPKGREAD hReader);
+	// 从 AppxBundle 包中获取的子包的文件流中提取包中的文件
+	// 注：只提取 Payloads 文件。不可提供 Footprint 文件。
+	PKGREAD_API HANDLE GetFileFromPayloadPackage (_In_ HANDLE hPackageStream, _In_ LPCWSTR lpFileName);
+	// 从 AppxBundle 包中获取的子包的文件流中提取 Pri 文件流
+	PKGREAD_API HANDLE GetPriFileFromPayloadPackage (_In_ HANDLE hPackageStream);
+	// 从 AppxBundle 包中获取合适的包，合适指的是资源合适。
+	// 第一个用于返回的参数指的是返回的语言合适的选项，第二个用于返回的参数是返回的缩放资源。
+	// 如果指向的都是同一个包，那么两个参数返回的都是同一个指针。
+	// 对于 Appx 文件直接返回假。
+	PKGREAD_API BOOL GetSuitablePackageFromBundle (_In_ HPKGREAD hReader, _Outptr_ HANDLE *pStreamForLang, _Outptr_ HANDLE *pStreamForScale);
+	// 文件流必须通过此来释放。
+	PKGREAD_API ULONG DestroyAppxFileStream (_In_ HANDLE hFileStream);
+	// 转换：文件流转换到 Data URL。这样转换后浏览器可以使用图片。
+	// 注意：dwCharCount 指的是 lpMimeBuf 的可容纳字符数，如 WCHAR lpMimeBuf [dwCharCount]，不是实际可容纳字节数。
+	// 返回的非空指针需要通过 free 释放。lpBase64Head 返回的是 Base64 编码后的数据，为返回指针指向的部分。
+	// 如字符串为 data:text/plain;base64,SGVsbG8sIFdvcmxkIQ%3D%3D
+	// 那么：						    ↑ lpBase64Head 指向于“base64,”后的第一个字符。
+	PKGREAD_API LPWSTR StreamToBase64W (_In_ HANDLE hFileStream, _Out_writes_ (dwCharCount) LPWSTR lpMimeBuf, _In_ DWORD dwCharCount, _Outptr_ LPWSTR *lpBase64Head);
+	// 获取 AppxBundle 包中的应用包文件流。最后通过 DestroyAppxFileStream 销毁。
+	PKGREAD_API HANDLE GetAppxBundleApplicationPackageFile (_In_ HPKGREAD hReader);
 #ifdef _DEFAULT_INIT_VALUE_
 #undef _DEFAULT_INIT_VALUE_
 #endif
@@ -262,24 +292,142 @@ extern "C"
 }
 #endif
 
-#if defined (__cplusplus) && !defined (PKGREAD_EXPORTS)
+#if defined (__cplusplus)
 #include <cstdlib>
 #include <string>
 #include <map>
 #include <vector>
 #include <functional>
 #include <cstring>
+#include <Shlwapi.h>
+#include <algorithm>
+//#include "..\priformatcli\priformatcli.h"
+const std::vector <std::wstring> g_filepathitems =
+{
+	L"LockScreenLogo",
+	L"Logo",
+	L"SmallLogo",
+	L"Square150x150Logo",
+	L"Square30x30Logo",
+	L"Square310x310Logo",
+	L"Square44x44Logo",
+	L"Square70x70Logo",
+	L"Square71x71Logo",
+	L"StartPage",
+	L"Tall150x310Logo",
+	L"VisualGroup",
+	L"WideLogo",
+	L"Wide310x150Logo",
+	L"Executable"
+};
 class package_reader
 {
 	private:
 	HPKGREAD hReader = nullptr;
 	std::wstring filepath = L"";
-	struct deconstr
+	bool usepri = false;
+	bool resswitch = false;
+#ifdef _PRI_READER_CLI_HEADER_
+	prifilebundle pribundlereader;
+	std::vector <IStream *> prifilestreams;
+#endif
+	void initpri ()
+	{
+	#ifdef _PRI_READER_CLI_HEADER_
+		pribundlereader.destroy ();
+		for (auto &it : prifilestreams) if (it != nullptr) DestroyAppxFileStream (it);
+		prifilestreams.clear ();
+		switch (this->package_type ())
+		{
+			case PKGTYPE_APPX: {
+				IStream *pristream = (IStream *)GetAppxPriFileStream (hReader);
+				if (pristream)
+				{
+					prifilestreams.push_back (pristream);
+					pribundlereader.set (3, pristream);
+				}
+			} break;
+			case PKGTYPE_BUNDLE: {
+				HANDLE hls = nullptr, hss = nullptr;
+				destruct rel1 ([&hls, &hss] () {
+					if (hls) DestroyAppxFileStream (hls);
+					if (hss) DestroyAppxFileStream (hss);
+				});
+				GetSuitablePackageFromBundle (hReader, &hls, &hss);
+				HANDLE hlpri = GetPriFileFromPayloadPackage (hls),
+					hspri = GetPriFileFromPayloadPackage (hss);
+				IStream *ls = (IStream *)hls, *ss = (IStream *)hss;
+				switch ((bool)ls << 1 | (bool)ss)
+				{
+					case 0b01:
+					case 0b10: {
+						if (hlpri) pribundlereader.set (1, (IStream *)hlpri);
+						if (hspri) pribundlereader.set (2, (IStream *)hspri);
+						HANDLE hd = GetAppxBundleApplicationPackageFile (hReader);
+						destruct relthd ([&hd] () {
+							if (hd) DestroyAppxFileStream (hd);
+						});
+						HANDLE hdpri = GetPriFileFromPayloadPackage (hd);
+						if (hd) pribundlereader.set (3, (IStream *)hd);
+					} break;
+					case 0b11: {
+						if (ls) pribundlereader.set (1, (IStream *)hlpri);
+						if (ss) pribundlereader.set (2, (IStream *)hspri);
+					} break;
+					default:
+					case 0b00: {
+						IStream *pkgstream = (IStream *)GetAppxBundleApplicationPackageFile (hReader);
+						destruct relthd ([&pkgstream] () {
+							if (pkgstream) DestroyAppxFileStream (pkgstream);
+						});
+						IStream *pristream = (IStream *)GetPriFileFromPayloadPackage (pkgstream);
+						if (pristream)
+						{
+							prifilestreams.push_back (pristream);
+							pribundlereader.set (3, pristream);
+						}
+					} break;
+				}
+			} break;
+		}
+		try
+		{
+			std::vector <std::wstring> resnames;
+			{
+				auto prop = get_properties ();
+				std::wstring temp = prop.description ();
+				if (IsMsResourcePrefix (temp.c_str ())) resnames.push_back (temp);
+				temp = prop.display_name ();
+				if (IsMsResourcePrefix (temp.c_str ())) resnames.push_back (temp);
+				temp = prop.publisher_display_name ();
+				if (IsMsResourcePrefix (temp.c_str ())) resnames.push_back (temp);
+				resnames.push_back (prop.logo ());
+			}
+			{
+				auto app = get_applications ();
+				std::vector <application> apps;
+				app.get (apps);
+				for (auto &it_map : apps)
+				{
+					for (auto &it_item : it_map)
+					{
+						if (std::find (g_filepathitems.begin (), g_filepathitems.end (), it_item.first) != g_filepathitems.end () && !it_item.second.empty ())
+							resnames.push_back (it_item.second);
+						else if (IsMsResourcePrefix (it_item.second.c_str ())) resnames.push_back (it_item.second);
+					}
+				}
+			}
+			pribundlereader.add_search (resnames);
+		}
+		catch (const std::exception &e) {}
+	#endif
+	}
+	typedef struct deconstr
 	{
 		std::function <void ()> endtask = nullptr;
 		deconstr (std::function <void ()> pf): endtask (pf) {}
 		~deconstr () { if (endtask) endtask (); }
-	};
+	} destruct;
 	public:
 	class base_subitems
 	{
@@ -333,22 +481,151 @@ class package_reader
 			if (FAILED (hr)) return bRetWhenFailed;
 			else return ret != FALSE;
 		}
-		std::wstring display_name () const { return string_value (PKG_PROPERTIES_DISPLAYNAME); }
-		std::wstring publisher_display_name () const { return string_value (PKG_PROPERTIES_PUBLISHER); }
-		std::wstring description () const { return string_value (PKG_PROPERTIES_DESCRIPTION); }
-		std::wstring logo () const { return string_value (PKG_PROPERTIES_LOGO); }
+		std::wstring display_name (bool toprires = true) 
+		{ 
+			std::wstring ret = string_value (PKG_PROPERTIES_DISPLAYNAME);
+			if (!toprires) return ret;
+			if (!enable_pri ()) return ret;
+		#ifdef _PRI_READER_CLI_HEADER_
+			else
+			{
+				if (!IsMsResourcePrefix (ret.c_str ())) return ret;
+				std::wstring privalue = pri_get_res (ret);
+				if (privalue.empty ()) return ret;
+				return privalue;
+			}
+		#endif
+			return ret;
+		}
+		std::wstring publisher_display_name (bool toprires = true) 
+		{ 
+			std::wstring ret = string_value (PKG_PROPERTIES_PUBLISHER);
+			if (!toprires) return ret;
+			if (!enable_pri ()) return ret;
+		#ifdef _PRI_READER_CLI_HEADER_
+			else
+			{
+				if (!IsMsResourcePrefix (ret.c_str ())) return ret;
+				std::wstring privalue = pri_get_res (ret);
+				if (privalue.empty ()) return ret;
+				return privalue;
+			}
+		#endif
+			return ret;
+		}
+		std::wstring description (bool toprires = true) 
+		{ 
+			std::wstring ret = string_value (PKG_PROPERTIES_DESCRIPTION);
+			if (!toprires) return ret;
+			if (!enable_pri ()) return ret;
+		#ifdef _PRI_READER_CLI_HEADER_
+			else
+			{
+				if (!IsMsResourcePrefix (ret.c_str ())) return ret;
+				std::wstring privalue = pri_get_res (ret);
+				if (privalue.empty ()) return ret;
+				return privalue;
+			}
+		#endif
+			return ret;
+		}
+		std::wstring logo (bool toprires = true)
+		{ 
+			std::wstring ret = string_value (PKG_PROPERTIES_LOGO);
+			if (!toprires) return ret;
+			if (!enable_pri ()) return ret;
+		#ifdef _PRI_READER_CLI_HEADER_
+			else
+			{
+				std::wstring privalue = pri_get_res (ret);
+				if (privalue.empty ()) return ret;
+				return privalue;
+			}
+		#endif
+			return ret;
+		}
+		std::wstring logo_base64 ()
+		{
+			switch (GetPackageType (hReader))
+			{
+				case PKGTYPE_APPX: {
+					HANDLE pic = GetAppxFileFromAppxPackage (hReader, logo ().c_str ());
+					destruct relp ([&pic] () {
+						if (pic) DestroyAppxFileStream (pic);
+						pic = nullptr;
+					});
+					LPWSTR lpstr = nullptr;
+					destruct rel ([&lpstr] () {
+						if (lpstr) free (lpstr);
+						lpstr = nullptr;
+					});
+					lpstr = StreamToBase64W (pic, nullptr, 0, nullptr);
+					return lpstr ? lpstr : L"";
+				} break;
+				case PKGTYPE_BUNDLE: {
+					HANDLE pkg = nullptr, pic = nullptr;
+					destruct relp ([&pic, &pkg] () {
+						if (pic) DestroyAppxFileStream (pic);
+						if (pkg) DestroyAppxFileStream (pkg);
+						pkg = nullptr;
+						pic = nullptr;
+					});
+					GetSuitablePackageFromBundle (hReader, nullptr, &pkg);
+					pic = GetFileFromPayloadPackage (pkg, logo ().c_str ());
+					LPWSTR lpstr = nullptr;
+					destruct rel ([&lpstr] () {
+						if (lpstr) free (lpstr);
+						lpstr = nullptr;
+					});
+					lpstr = StreamToBase64W (pic, nullptr, 0, nullptr);
+					return lpstr ? lpstr : L"";
+				} break;
+			}
+			return L"";
+		}
 		bool framework () const { return bool_value (PKG_PROPERTIES_FRAMEWORD); }
 		bool resource_package () const { return bool_value (PKG_PROPERTIES_IS_RESOURCE); }
+	#ifdef _PRI_READER_CLI_HEADER_
+		prifilebundle *pbreader = nullptr;
+		bool *usepri = nullptr;
+		bool *resconvert = nullptr;
+	#endif
+		bool enable_pri () const
+		{
+		#ifdef _PRI_READER_CLI_HEADER_
+			if (!pbreader) return false;
+			if (!usepri || !*usepri) return false;
+			if (!resconvert) return false;
+			return *resconvert;
+		#else
+			return false;
+		#endif
+		}
+		std::wstring pri_get_res (const std::wstring &resname)
+		{
+		#ifdef _PRI_READER_CLI_HEADER_
+			if (resname.empty ()) return L"";
+			if (!pbreader) return L"";
+			return pbreader->resource (resname);
+		#else
+			return L"";
+		#endif
+		}
+	#ifdef _PRI_READER_CLI_HEADER_
+		properties (HPKGREAD &hReader, prifilebundle *pri, bool *up, bool *resc):
+			base (hReader), pbreader (pri), usepri (up), resconvert (resc) {}
+	#endif
 	};
 	class application: public std::map <std::wstring, std::wstring>
 	{
 		using base = std::map <std::wstring, std::wstring>;
 		public:
 		using base::base;
-		std::wstring user_model_id () const { return this->find (L"AppUserModelID")->second; }
-		friend bool operator == (const application &a1, const application &a2) { return !_wcsicmp (a1.user_model_id ().c_str (), a2.user_model_id ().c_str ()); }
-		friend bool operator != (const application &a1, const application &a2) { return _wcsicmp (a1.user_model_id ().c_str (), a2.user_model_id ().c_str ()); }
-		explicit operator bool () const { return this->user_model_id ().empty (); }
+		application () = default;
+		std::wstring user_model_id () { return this->at (L"AppUserModelID"); }
+		friend bool operator == (application &a1, application &a2) { return !_wcsicmp (a1.user_model_id ().c_str (), a2.user_model_id ().c_str ()); }
+		friend bool operator != (application &a1, application &a2) { return _wcsicmp (a1.user_model_id ().c_str (), a2.user_model_id ().c_str ()); }
+		explicit operator bool () { return this->user_model_id ().empty (); }
 		std::wstring &operator [] (const std::wstring &key)
 		{
 			auto it = this->find (key);
@@ -356,6 +633,21 @@ class package_reader
 			{
 				it = this->insert (std::make_pair (key, L"")).first;
 			}
+			if (!enable_pri ()) return it->second;
+		#ifdef _PRI_READER_CLI_HEADER_
+			if (IsMsResourcePrefix (it->second.c_str ()))
+			{
+				std::wstring privalue = pri_get_res (it->second);
+				if (!privalue.empty ()) return privalue;
+				return it->second;
+			}
+			else if (std::find (g_filepathitems.begin (), g_filepathitems.end (), it->first) != g_filepathitems.end () && !it->second.empty ())
+			{
+				std::wstring privalue = pri_get_res (it->second);
+				if (!privalue.empty ()) return privalue;
+				return it->second;
+			}
+		#endif
 			return it->second;
 		}
 		typename base::iterator find_case_insensitive (const std::wstring &key)
@@ -376,6 +668,124 @@ class package_reader
 			}
 			return this->end ();
 		}
+		std::wstring at (const std::wstring &key)
+		{
+			auto it = this->find_case_insensitive (key);
+			if (it == this->end ()) throw std::out_of_range ("application::at: key not found");
+			if (!enable_pri ()) return it->second;
+		#ifdef _PRI_READER_CLI_HEADER_
+			if (IsMsResourcePrefix (it->second.c_str ()))
+			{
+				std::wstring privalue = pri_get_res (it->second);
+				if (!privalue.empty ()) return privalue;
+			}
+		#endif
+			return it->second;
+		}
+		std::wstring newat (const std::wstring &key, bool to_pri_string = true)
+		{
+			auto it = this->find (key);
+			if (it == this->end ())
+			{
+				it = this->insert (std::make_pair (key, L"")).first;
+			}
+			if (!enable_pri () && to_pri_string) return it->second;
+		#ifdef _PRI_READER_CLI_HEADER_
+			if (IsMsResourcePrefix (it->second.c_str ()))
+			{
+				std::wstring privalue = pri_get_res (it->second);
+				if (!privalue.empty ()) return privalue;
+				return it->second;
+			}
+			else if (std::find (g_filepathitems.begin (), g_filepathitems.end (), it->first) != g_filepathitems.end () && !it->second.empty ())
+			{
+				std::wstring privalue = pri_get_res (it->second);
+				if (!privalue.empty ()) return privalue;
+				return it->second;
+			}
+		#endif
+			return it->second;
+		}
+		// 仅支持文件
+		std::wstring newat_base64 (const std::wstring &key)
+		{
+		#ifdef _PRI_READER_CLI_HEADER_
+			std::wstring value = newat (key);
+			if (std::find (g_filepathitems.begin (), g_filepathitems.end (), key) != g_filepathitems.end () && !value.empty ())
+			{
+				switch (GetPackageType (hReader))
+				{
+					case PKGTYPE_APPX: {
+						HANDLE pic = GetAppxFileFromAppxPackage (hReader, value.c_str ());
+						destruct relp ([&pic] () {
+							if (pic) DestroyAppxFileStream (pic);
+							pic = nullptr;
+						});
+						LPWSTR lpstr = nullptr;
+						destruct rel ([&lpstr] () {
+							if (lpstr) free (lpstr);
+							lpstr = nullptr;
+						});
+						lpstr = StreamToBase64W (pic, nullptr, 0, nullptr);
+						return lpstr ? lpstr : L"";
+					} break;
+					case PKGTYPE_BUNDLE: {
+						HANDLE pkg = nullptr, pic = nullptr;
+						destruct relp ([&pic, &pkg] () {
+							if (pic) DestroyAppxFileStream (pic);
+							if (pkg) DestroyAppxFileStream (pkg);
+							pkg = nullptr;
+							pic = nullptr;
+						});
+						GetSuitablePackageFromBundle (hReader, nullptr, &pkg);
+						pic = GetFileFromPayloadPackage (pkg, value.c_str ());
+						LPWSTR lpstr = nullptr;
+						destruct rel ([&lpstr] () {
+							if (lpstr) free (lpstr);
+							lpstr = nullptr;
+						});
+						lpstr = StreamToBase64W (pic, nullptr, 0, nullptr);
+						return lpstr ? lpstr : L"";
+					} break;
+				}
+				return L"";
+			}
+			else return L"";
+		#else
+			return L"";
+		#endif
+		}
+	#ifdef _PRI_READER_CLI_HEADER_
+		HPKGREAD hReader = nullptr;
+		prifilebundle *pbreader = nullptr;
+		bool *usepri = nullptr;
+		bool *resconvert = nullptr;
+	#endif
+		bool enable_pri () const
+		{
+		#ifdef _PRI_READER_CLI_HEADER_
+			if (!pbreader) return false;
+			if (!usepri || !*usepri) return false;
+			if (!resconvert) return false;
+			return *resconvert;
+		#else
+			return false;
+		#endif
+		}
+		std::wstring pri_get_res (const std::wstring &resname)
+		{
+		#ifdef _PRI_READER_CLI_HEADER_
+			if (resname.empty ()) return L"";
+			if (!pbreader) return L"";
+			return pbreader->resource (resname);
+		#else
+			return L"";
+		#endif
+		}
+	#ifdef _PRI_READER_CLI_HEADER_
+		application (HPKGREAD hReader, prifilebundle *pri, bool *up, bool *resc):
+			hReader (hReader), pbreader (pri), usepri (up), resconvert (resc) {}
+	#endif
 	};
 	class applications
 	{
@@ -405,7 +815,11 @@ class package_reader
 			for (size_t i = 0; i < hMapList->dwSize; i ++)
 			{
 				HLIST_PVOID &hKeyValues = ((HLIST_PVOID *)hMapList->alpVoid) [i];
+			#ifdef _PRI_READER_CLI_HEADER_
+				application app (hReader, pbreader, usepri, resconvert);
+			#else
 				application app;
+			#endif
 				for (size_t j = 0; j < hKeyValues->dwSize; j ++)
 				{
 					HPAIR_PVOID &hPair = ((HPAIR_PVOID *)hKeyValues->alpVoid) [j];
@@ -418,6 +832,13 @@ class package_reader
 			}
 			return apps.size ();
 		}
+	#ifdef _PRI_READER_CLI_HEADER_
+		prifilebundle *pbreader = nullptr;
+		bool *usepri = nullptr;
+		bool *resconvert = nullptr;
+		applications (HPKGREAD &hReader, prifilebundle *pri, bool *up, bool *resc):
+			hReader (hReader), pbreader (pri), usepri (up), resconvert (resc) { hList = GetPackageApplications (hReader); }
+	#endif
 	};
 	class capabilities: public base_subitems
 	{
@@ -569,7 +990,16 @@ class package_reader
 	{
 		file (fpath);
 	}
-	~package_reader () { DestroyPackageReader (hReader); hReader = nullptr; }
+	~package_reader () 
+	{ 
+		DestroyPackageReader (hReader); 
+		hReader = nullptr;
+	#ifdef _PRI_READER_CLI_HEADER_
+		pribundlereader.destroy ();
+		for (auto &it : prifilestreams) if (it != nullptr) DestroyAppxFileStream (it);
+		prifilestreams.clear ();
+	#endif
+	}
 	std::wstring file () const { return filepath; }
 	bool file (const std::wstring &path)
 	{
@@ -581,12 +1011,64 @@ class package_reader
 	// PKGROLE_* 前缀常量
 	WORD package_role () const { return GetPackageRole (hReader); }
 	identity get_identity () { return identity (hReader); }
-	properties get_properties () { return properties (hReader); }
-	applications get_applications () { return applications (hReader); }
+	properties get_properties () 
+	{
+		return properties (hReader
+		#ifdef _PRI_READER_CLI_HEADER_
+			,
+			&pribundlereader,
+			&usepri,
+			&resswitch
+		#endif
+		); 
+	}
+	applications get_applications () 
+	{ 
+		return applications (hReader
+		#ifdef _PRI_READER_CLI_HEADER_
+			,
+			&pribundlereader,
+			&usepri,
+			&resswitch
+		#endif
+		); 
+	}
 	capabilities get_capabilities () { return capabilities (hReader); }
 	dependencies get_dependencies () { return dependencies (hReader); }
 	resources get_resources () { return resources (hReader); }
 	prerequisites get_prerequisites () { return prerequisites (hReader); }
+	// 是否允许使用 PRI
+	bool use_pri () const 
+	{ 
+	#ifdef _PRI_READER_CLI_HEADER_
+		return usepri;
+	#else
+		return false;
+	#endif
+	}
+	// 是否允许使用 PRI
+	bool use_pri (bool value)
+	{
+	#ifdef _PRI_READER_CLI_HEADER_
+		bool laststatus = usepri;
+		usepri = value;
+		if (laststatus ^ usepri) initpri ();
+		return usepri;
+	#else
+		return usepri = false;
+	#endif
+	}
+	// 是否自动从 PRI 中提取资源
+	bool enable_pri_convert () const { return resswitch; }
+	// 是否自动从 PRI 中提取资源
+	bool enable_pri_convert (bool value) 
+	{
+	#ifdef _PRI_READER_CLI_HEADER_
+		return resswitch = value;
+	#else
+		return resswitch = false;
+	#endif
+	}
 };
 #endif
 

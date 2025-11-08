@@ -92,14 +92,23 @@ void  GetLocaleElaboratedCodeFromLcid (LCID lcid, std::string &ret)
 	ret = GetLocaleElaboratedCodeFromLcidA (lcid);
 }
 
-LCID LocaleCodeToLcidW (LPCWSTR localeCode)
+LCID LocaleCodeToLcidW (const std::wstring &localeCode)
 {
-	BYTE buf [LOCALE_NAME_MAX_LENGTH * sizeof (WCHAR)] = {0};
-	int res = GetLocaleInfoEx (localeCode, LOCALE_RETURN_NUMBER | LOCALE_ILANGUAGE, (LPWSTR)buf, LOCALE_NAME_MAX_LENGTH);
-	LCID lcid = *((LCID *)buf);
-	return lcid;
+#if defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0600)
+	try
+	{
+		BYTE buf [LOCALE_NAME_MAX_LENGTH * sizeof (WCHAR)] = {0};
+		int res = GetLocaleInfoEx (localeCode.c_str (), LOCALE_RETURN_NUMBER | LOCALE_ILANGUAGE, (LPWSTR)buf, LOCALE_NAME_MAX_LENGTH);
+		LCID lcid = *((LCID *)buf);
+		return lcid;
+	}
+	catch (const std::exception &e) {}
+	return LocaleNameToLCID (localeCode.c_str (), 0);
+#else
+	return LocaleNameToLCID (localeCode.c_str (), 0);
+#endif
 }
-LCID LocaleCodeToLcidA (LPCSTR localeCode)
+LCID LocaleCodeToLcidA (const std::string &localeCode)
 {
 	std::wstring lcWide = StringToWString (std::string (localeCode));
 	return LocaleCodeToLcidW (lcWide.c_str ());
@@ -157,7 +166,91 @@ std::string LcidToLocaleCodeA (LCID lcid, char divide = '-')
 }
 std::wstring LcidToLocaleCodeW (LCID lcid, WCHAR divide = L'-')
 {
+#if defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0600)
+	try
+	{
+		WCHAR buf [LOCALE_NAME_MAX_LENGTH] = {0};
+		LCIDToLocaleName (lcid, buf, LOCALE_NAME_MAX_LENGTH, 0);
+		return buf;
+	}
+	catch (const std::exception &e) {}
 	return GetLocaleRestrictedCodeFromLcidW (lcid) + divide + GetLocaleElaboratedCodeFromLcidW (lcid);
+#else
+	return GetLocaleRestrictedCodeFromLcidW (lcid) + divide + GetLocaleElaboratedCodeFromLcidW (lcid);
+#endif
 }
 std::wstring LcidToLocaleCode (LCID lcid, WCHAR divide = L'-') { return LcidToLocaleCodeW (lcid, divide); }
 std::string LcidToLocaleCode (LCID lcid, char divide = '-') { return LcidToLocaleCodeA (lcid, divide); }
+
+std::wstring GetUserDefaultLocaleName ()
+{
+#if defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0600)
+	try
+	{
+		WCHAR buf [LOCALE_NAME_MAX_LENGTH] = {0};
+		GetUserDefaultLocaleName (buf, LOCALE_NAME_MAX_LENGTH);
+		return buf;
+	}
+	catch (const std::exception &e) {}
+	return LcidToLocaleCodeW (GetUserDefaultLCID ());
+#else
+	return LcidToLocaleCodeW (GetUserDefaultLCID ());
+#endif
+}
+std::wstring GetSystemDefaultLocaleName ()
+{
+#if defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0600)
+	try
+	{
+		WCHAR buf [LOCALE_NAME_MAX_LENGTH] = {0};
+		GetSystemDefaultLocaleName (buf, LOCALE_NAME_MAX_LENGTH);
+		return buf;
+	}
+	catch (const std::exception &e) {}
+	return LcidToLocaleCodeW (GetSystemDefaultLCID ());
+#else
+	return LcidToLocaleCodeW (GetSystemDefaultLCID ());
+#endif
+}
+
+std::wstring GetComputerLocaleCodeW ()
+{
+#if defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0600)
+	{
+		try
+		{
+			{
+				LCID lcid = GetThreadLocale ();
+				std::wstring tmp = LcidToLocaleCodeW (lcid);
+				if (lcid && tmp.length () > 1) return tmp;
+			}
+			{
+				WCHAR buf [LOCALE_NAME_MAX_LENGTH] = {0};
+				GetUserDefaultLocaleName (buf, LOCALE_NAME_MAX_LENGTH);
+				if (lstrlenW (buf)) return buf;
+			}
+			{
+				WCHAR buf [LOCALE_NAME_MAX_LENGTH] = {0};
+				GetSystemDefaultLocaleName (buf, LOCALE_NAME_MAX_LENGTH);
+				return buf;
+			}
+		}
+		catch (const std::exception &e) {}
+		LCID lcid = GetThreadLocale ();
+		if (!lcid) lcid = GetUserDefaultLCID ();
+		if (!lcid) lcid = GetSystemDefaultLCID ();
+		return LcidToLocaleCodeW (lcid);
+	}
+#else
+	{
+		LCID lcid = GetThreadLocale ();
+		if (!lcid) lcid = GetUserDefaultLCID ();
+		if (!lcid) lcid = GetSystemDefaultLCID ();
+		return LcidToLocaleCodeW (lcid);
+	}
+#endif
+}
+bool LocaleNameCompare (const std::wstring &left, const std::wstring &right)
+{
+	return std::wnstring::equals (left, right) || LocaleCodeToLcidW (left) == LocaleCodeToLcidW (right);
+}

@@ -209,7 +209,6 @@ template <typename ComInterface> class com_info_quote
 	private:
 	IComInterface &icom = nullptr;
 	protected:
-	ComInterface *pointer () const noexcept { return icom; }
 	template <typename Fn> std::wstring get (_In_ Fn func) const
 	{
 		if (!icom) return L"";
@@ -254,6 +253,7 @@ template <typename ComInterface> class com_info_quote
 	com_info_quote (com_info_quote &&) noexcept = default;
 	com_info_quote &operator = (com_info_quote &&) noexcept = default;
 	bool valid () const { return !!icom; }
+	ComInterface *pointer () const noexcept { return icom; }
 };
 namespace appx_info
 {
@@ -703,6 +703,34 @@ namespace appx_info
 		}
 		UINT64 size () const { return get <UINT64> (&Interface::GetSize); }
 	};
+	enum class ResourceType
+	{
+		unknown = 0b00,
+		language = 0b01,
+		scale = 0b10,
+		both = 0b11
+	};
+	struct resource
+	{
+		ResourceType restype = ResourceType::unknown;
+		APPX_BUNDLE_PAYLOAD_PACKAGE_TYPE pkgtype = APPX_BUNDLE_PAYLOAD_PACKAGE_TYPE_APPLICATION;
+		struct resource_content
+		{
+			std::vector <std::wnstring> languages;
+			std::vector <uint32_t> scales;
+			resource_content (const std::vector <std::wnstring> &langs): languages (langs) {}
+			resource_content (const std::vector <uint32_t> &ss): scales (ss) {}
+			resource_content (const std::vector <std::wnstring> &langs, const std::vector <uint32_t> &ss): languages (langs), scales (ss) {}
+			resource_content () = default;
+		} resvalue;
+		resource (const std::vector <std::wnstring> &languages):
+			restype (ResourceType::language), resvalue (languages) {}
+		resource (const std::vector <uint32_t> &ss):
+			restype (ResourceType::scale), resvalue (ss) {}
+		resource (const std::vector <std::wnstring> &langs, const std::vector <uint32_t> &ss):
+			restype (ResourceType::both), resvalue (langs, ss) {}
+		resource (): restype (ResourceType::unknown), resvalue () {}
+	};
 	class appx_iditems: virtual public com_info <IAppxBundleManifestPackageInfoEnumerator>
 	{
 		using Base = com_info <IAppxBundleManifestPackageInfoEnumerator>;
@@ -776,6 +804,33 @@ namespace appx_info
 				hr = pointer ()->MoveNext (&hasCurrent);
 			}
 			return cnt;
+		}
+		size_t resource_info (std::map <std::wnstring, resource> &output) const
+		{
+			output.clear ();
+			std::vector <appx_iditem> items;
+			enumerate (items);
+			for (auto &it : items)
+			{
+				std::wnstring fpath = it.file_name ();
+				auto qres = it.qualified_resources ();
+				std::vector <std::wstring> langs;
+				std::vector <uint32_t> scales;
+				qres.qualified_resources (&langs, &scales);
+				std::vector <std::wnstring> langs_n;
+				for (auto &it_l : langs) langs_n.push_back (it_l);
+				BYTE status = (bool)langs_n.size () << 1 | (bool)scales.size ();
+				switch (status)
+				{
+					case 0b01: output [fpath] = resource (scales); break;
+					case 0b10: output [fpath] = resource (langs_n); break;
+					case 0b11: output [fpath] = resource (langs_n, scales); break;
+					default:
+					case 0b00: output [fpath] = resource (); break;
+				}
+				output [fpath].pkgtype = it.type ();
+			}
+			return output.size ();
 		}
 	};
 }
@@ -1028,6 +1083,98 @@ class bundlereader: virtual public com_info_quote <IAppxBundleReader>
 		hr = afile->GetStream (&ist);
 		if (FAILED (hr)) return hr;
 		return GetAppxPackageReader (ist, output);
+	}
+	HRESULT random_application_package (_Outptr_ IAppxFile **output) const
+	{
+		CComPtr <IAppxBundleManifestPackageInfoEnumerator> iditems;
+		HRESULT hr = get_package_id_items (&iditems);
+		if (FAILED (hr)) return hr;
+		BOOL hc = FALSE;
+		hr = iditems->GetHasCurrent (&hc);
+		bool find = false;
+		std::wstring fname = L"";
+		while (SUCCEEDED (hr) && hc)
+		{
+			CComPtr <IAppxBundleManifestPackageInfo> iditem;
+			hr = iditems->GetCurrent (&iditem);
+			if (SUCCEEDED (hr))
+			{
+				APPX_BUNDLE_PAYLOAD_PACKAGE_TYPE ptype;
+				if (!(SUCCEEDED (iditem->GetPackageType (&ptype)) && ptype == APPX_BUNDLE_PAYLOAD_PACKAGE_TYPE::APPX_BUNDLE_PAYLOAD_PACKAGE_TYPE_APPLICATION))
+				{
+					hr = iditems->MoveNext (&hc);
+					continue;
+				}
+				LPWSTR lpfname = nullptr;
+				raii endt ([&lpfname] () {
+					if (lpfname) CoTaskMemFree (lpfname);
+					lpfname = nullptr;
+				});
+				if (SUCCEEDED (iditem->GetFileName (&lpfname)) && lpfname)
+				{
+					fname += lpfname;
+					find = true;
+					break;
+				}
+			}
+			hr = iditems->MoveNext (&hc);
+		}
+		if (!find) return FAILED (hr) ? hr : E_FAIL;
+		CComPtr <IAppxFile> afile;
+		return get_payload_package (fname, output);
+	}
+	HRESULT random_resource_package (_Outptr_ IAppxFile **output) const
+	{
+		CComPtr <IAppxBundleManifestPackageInfoEnumerator> iditems;
+		HRESULT hr = get_package_id_items (&iditems);
+		if (FAILED (hr)) return hr;
+		BOOL hc = FALSE;
+		hr = iditems->GetHasCurrent (&hc);
+		bool find = false;
+		std::wstring fname = L"";
+		while (SUCCEEDED (hr) && hc)
+		{
+			CComPtr <IAppxBundleManifestPackageInfo> iditem;
+			hr = iditems->GetCurrent (&iditem);
+			if (SUCCEEDED (hr))
+			{
+				APPX_BUNDLE_PAYLOAD_PACKAGE_TYPE ptype;
+				if (!(SUCCEEDED (iditem->GetPackageType (&ptype)) && ptype == APPX_BUNDLE_PAYLOAD_PACKAGE_TYPE::APPX_BUNDLE_PAYLOAD_PACKAGE_TYPE_RESOURCE))
+				{
+					hr = iditems->MoveNext (&hc);
+					continue;
+				}
+				LPWSTR lpfname = nullptr;
+				raii endt ([&lpfname] () {
+					if (lpfname) CoTaskMemFree (lpfname);
+					lpfname = nullptr;
+				});
+				if (SUCCEEDED (iditem->GetFileName (&lpfname)) && lpfname)
+				{
+					fname += lpfname;
+					find = true;
+					break;
+				}
+			}
+			hr = iditems->MoveNext (&hc);
+		}
+		if (!find) return FAILED (hr) ? hr : E_FAIL;
+		CComPtr <IAppxFile> afile;
+		return hr = get_payload_package (fname, output);
+	}
+	HRESULT random_application_package (_Outptr_ IStream **output) const
+	{
+		CComPtr <IAppxFile> iaf;
+		HRESULT hr = S_OK;
+		if (FAILED (hr = random_application_package (&iaf))) return hr;
+		return iaf->GetStream (output);
+	}
+	HRESULT random_resource_package (_Outptr_ IStream **output) const
+	{
+		CComPtr <IAppxFile> iaf;
+		HRESULT hr = S_OK;
+		if (FAILED (hr = random_resource_package (&iaf))) return hr;
+		return iaf->GetStream (output);
 	}
 	size_t application_packages (std::function <void (IAppxPackageReader *)> callback) const
 	{

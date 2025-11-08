@@ -14,22 +14,17 @@
 
 
 // TODO:  在此处引用程序需要的其他头文件
-#include <map>
+#using <Windows.winmd>
+using namespace Platform;
+using namespace Windows::Foundation;
+using namespace Windows::Management::Deployment;
 #include <string>
 #include <vector>
-#include <Shlwapi.h>
-#include <AppxPackaging.h>
-#include <strsafe.h>
-#include <sstream>
-#include <atlbase.h>
+#include <objbase.h>
+#include <iostream>
 #include <functional>
-#include <utility>
-#include <urlmon.h>
-#include <wincrypt.h>
-
-#ifdef max
-#undef max
-#endif
-#ifdef min
-#undef min
-#endif
+#include <sddl.h>
+#include <algorithm>
+#include <collection.h>
+#include <string>
+#include <sddl.h>

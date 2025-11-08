@@ -5,6 +5,7 @@
 #include "readobj.h"
 #include "pkgread.h"
 #include "localeex.h"
+#include "themeinfo.h"
 
 #define ToHandleRead(_cpp_ptr_) reinterpret_cast <HPKGREAD> (_cpp_ptr_) 
 #define ToPtrPackage(_cpp_ptr_) reinterpret_cast <package *> (_cpp_ptr_)
@@ -859,4 +860,313 @@ BOOL GetPackagePrerequisite (_In_ HPKGREAD hReader, _In_ LPCWSTR lpName, _Outptr
 		} break;
 	}
 	return FALSE;
+}
+
+// Selector
+std::wnstring SelectLanguageSuitPackageNameByLocaleCode (std::map <std::wnstring, appx_info::resource> &in, const std::wstring &langcode,  std::wnstring &output)
+{
+	output.clear ();
+	for (auto &it : in)
+	{
+		if (it.second.restype != appx_info::ResourceType::language) continue;
+		for (auto &it_s : it.second.resvalue.languages) if (LocaleNameCompare (it_s, langcode)) return output = it.first;
+	}
+	return output = L"";
+}
+std::wnstring SelectLanguageSuitPackageName (std::map <std::wnstring, appx_info::resource> &in, std::wnstring &output)
+{
+	output.clear ();
+	output = SelectLanguageSuitPackageNameByLocaleCode (in, GetComputerLocaleCodeW (), output);
+	if (output.empty ()) output = SelectLanguageSuitPackageNameByLocaleCode (in, L"en-US", output);
+	if (output.empty ())
+	{
+		for (auto &it : in)
+		{
+			if (it.second.pkgtype == APPX_BUNDLE_PAYLOAD_PACKAGE_TYPE_APPLICATION)
+			{
+				output = it.first;
+				break;
+			}
+		}
+	}
+	if (output.empty ())
+	{
+		try { output = in.begin ()->first; }
+		catch (const std::exception &e) { output = L""; }
+	}
+	return output;
+}
+std::wnstring SelectScaleSuitPackageName (std::map <std::wnstring, appx_info::resource> &in, std::wnstring &output)
+{
+	output.clear ();
+	struct res_key_value
+	{
+		std::wnstring filename = L"";
+		uint32_t scale = 0;
+		res_key_value (const std::wstring &fpath = L"", uint32_t s = 0):
+			filename (fpath), scale (s) {}
+	};
+	std::vector <res_key_value> rkv;
+	for (auto &it : in) if ((WORD)it.second.restype & (WORD)appx_info::ResourceType::scale)
+	{
+		for (auto &it_s : it.second.resvalue.scales)
+		{
+			if (!it_s) continue;
+			rkv.push_back (res_key_value (it.first, it_s));
+		}
+	}
+	std::sort (rkv.begin (), rkv.end (), [] (const res_key_value &a, const res_key_value &b) {
+		return a.scale < b.scale;
+	});
+	auto dpi = GetDPI ();
+	for (auto &it : rkv) if (it.scale > dpi) return output = it.filename;
+	if (output.empty ()) { for (auto it = rkv.rbegin (); it != rkv.rend (); ++ it) if (it->scale < dpi) return output = it->filename; }
+	if (output.empty ()) { for (auto &it : in) if (it.second.pkgtype == APPX_BUNDLE_PAYLOAD_PACKAGE_TYPE_APPLICATION) return output = it.first; }
+	try { output = in.begin ()->first; }
+	catch (const std::exception &e) { output = L""; }
+	return output;
+}
+
+// File Stream
+HANDLE GetAppxFileFromAppxPackage (_In_ HPKGREAD hReader, _In_ LPCWSTR lpFileName)
+{
+	auto ptr = ToPtrPackage (hReader);
+	if (!ptr) return nullptr;
+	if (!lpFileName) return nullptr;
+	switch (ptr->type ())
+	{
+		case PackageType::single: {
+			auto reader = ptr->appx_reader ();
+			CComPtr <IAppxFile> afile;
+			if (FAILED (reader.payload_stream (lpFileName, &afile))) return nullptr;
+			IStream *istream = nullptr;
+			if (FAILED (afile->GetStream (&istream))) return nullptr;
+			else return istream;
+		} break;
+		case PackageType::bundle: {
+			auto bread = ptr->bundle_reader ();
+			CComPtr <IAppxPackageReader> appfile;
+			if (FAILED (bread.random_application_package (&appfile))) return nullptr;
+			appxreader reader (appfile.p);
+			CComPtr <IAppxFile> afile;
+			if (FAILED (reader.payload_stream (lpFileName, &afile))) return nullptr;
+			IStream *istream = nullptr;
+			if (FAILED (afile->GetStream (&istream))) return nullptr;
+			else return istream;
+		} break;
+	}
+	return nullptr;
+}
+HANDLE GetAppxBundlePayloadPackageFile (_In_ HPKGREAD hReader, _In_ LPCWSTR lpFileName)
+{
+	auto ptr = ToPtrPackage (hReader);
+	if (!ptr) return nullptr;
+	if (!lpFileName) return nullptr;
+	if (ptr->type () == PackageType::bundle)
+	{
+		auto reader = ptr->bundle_reader ();
+		CComPtr <IAppxFile> iafile;
+		if (FAILED (reader.get_payload_package (lpFileName, &iafile))) return nullptr;
+		IStream *istream = nullptr;
+		if (FAILED (iafile->GetStream (&istream))) return nullptr;
+		else return istream;
+	}
+	else return nullptr;
+}
+HANDLE GetAppxPriFileStream (_In_ HPKGREAD hReader) { return GetAppxFileFromAppxPackage (hReader, L"resources.pri"); }
+HANDLE GetFileFromPayloadPackage (_In_ HANDLE hPackageStream, _In_ LPCWSTR lpFileName)
+{
+	if (!hPackageStream || !lpFileName) return nullptr;
+	IStream *ifs = (IStream *)hPackageStream;
+	CComPtr <IAppxPackageReader> iappx;
+	if (FAILED (GetAppxPackageReader (ifs, &iappx))) return nullptr;
+	appxreader reader (iappx.p);
+	CComPtr <IAppxFile> iaf;
+	if (FAILED (reader.payload_stream (lpFileName, &iaf))) return nullptr;
+	IStream *istream = nullptr;
+	if (FAILED (iaf->GetStream (&istream))) return nullptr;
+	else return istream;
+}
+HANDLE GetPriFileFromPayloadPackage (_In_ HANDLE hPackageStream) { return GetFileFromPayloadPackage (hPackageStream, L"resources.pri"); }
+BOOL GetSuitablePackageFromBundle (_In_ HPKGREAD hReader, _Outptr_ HANDLE *pStreamForLang, _Outptr_ HANDLE *pStreamForScale)
+{
+	auto ptr = ToPtrPackage (hReader);
+	if (!ptr)  return FALSE;
+	if (ptr->type () != PackageType::bundle) return FALSE;
+	if (pStreamForLang) *pStreamForLang = nullptr;
+	if (pStreamForScale) *pStreamForScale = nullptr;
+	auto bread = ptr->bundle_reader ();
+	auto pkgsinfo = bread.package_id_items ();
+	std::map <std::wnstring, appx_info::resource> mapfr;
+	pkgsinfo.resource_info (mapfr);
+	std::wnstring lf = L"", sf = L"";
+	SelectLanguageSuitPackageName (mapfr, lf);
+	SelectScaleSuitPackageName (mapfr, sf);
+	if (lf == sf)
+	{
+		WORD flag = (bool)pStreamForLang << 1 | (bool)pStreamForScale;
+		switch (flag)
+		{
+			case 0b01:
+			case 0b10:
+			case 0b11: {
+				IStream *file = nullptr;
+				CComPtr <IAppxFile> pread;
+				if (FAILED (bread.get_payload_package (lf, &pread))) return false;
+				if (FAILED (pread->GetStream (&file))) return false;
+				if (pStreamForLang) *pStreamForLang = file;
+				if (pStreamForScale) *pStreamForScale = file;
+				return true;
+			} break;
+			default:
+			case 0b00: {
+				CComPtr <IAppxFile> pread;
+				if (FAILED (bread.get_payload_package (lf, &pread))) return false;
+				CComPtr <IStream> file = nullptr;
+				if (FAILED (pread->GetStream (&file))) return false;
+				else return true;
+			} break;
+		}
+	}
+	else
+	{
+		{
+			CComPtr <IAppxFile> reslangpkg;
+			if (FAILED (bread.get_payload_package (lf, &reslangpkg))) return false;
+			if (pStreamForLang)
+			{
+				IStream *file = nullptr;
+				if (FAILED (reslangpkg->GetStream (&file))) return false;
+				*pStreamForLang = file;
+			}
+			else
+			{
+				CComPtr <IStream> file;
+				if (FAILED (reslangpkg->GetStream (&file))) return false;
+			}
+		}
+		{
+			CComPtr <IAppxFile> resscalepkg;
+			if (FAILED (bread.get_payload_package (sf, &resscalepkg))) return false;
+			if (pStreamForScale)
+			{
+				IStream *file = nullptr;
+				if (FAILED (resscalepkg->GetStream (&file))) return false;
+				*pStreamForScale = file;
+			}
+			else
+			{
+				CComPtr <IStream> file;
+				if (FAILED (resscalepkg->GetStream (&file))) return false;
+			}
+		}
+	}
+	return true;
+}
+ULONG DestroyAppxFileStream (_In_ HANDLE hFileStream)
+{
+	if (!hFileStream) return 0;
+	IStream *ptr = reinterpret_cast <IStream *> (hFileStream);
+	if (!ptr) return 0;
+	return ptr->Release ();
+}
+HANDLE GetAppxBundleApplicationPackageFile (_In_ HPKGREAD hReader)
+{
+	if (!hReader) return nullptr;
+	auto ptr = ToPtrPackage (hReader);
+	if (!ptr) return nullptr;
+	switch (ptr->type ())
+	{
+		case PackageType::single: {
+			return nullptr;
+		} break;
+		case PackageType::bundle: {
+			auto bread = ptr->bundle_reader ();
+			IStream *ipf = nullptr;
+			if (FAILED (bread.random_application_package (&ipf))) return nullptr;
+			else return ipf;
+		} break;
+	}
+	return nullptr;
+}
+
+std::wstring GetMimeTypeFromStream (IStream *filestream)
+{
+	if (!filestream) return L"";
+	LARGE_INTEGER liZero = {0};
+	filestream->Seek (liZero, STREAM_SEEK_SET, nullptr);
+	BYTE buffer [256] = {0};
+	ULONG bytesRead = 0;
+	HRESULT hr = filestream->Read (buffer, sizeof (buffer), &bytesRead);
+	filestream->Seek (liZero, STREAM_SEEK_SET, nullptr);
+	if (FAILED (hr) || bytesRead == 0) return L"";
+	LPWSTR lpMime = nullptr;
+	raii relt ([&lpMime] () {
+		if (lpMime) CoTaskMemFree (lpMime);
+		lpMime = nullptr;
+	});
+	std::wstring mime;
+	hr = FindMimeFromData (
+		nullptr,            // pBC
+		nullptr,            // URL (unknown)
+		buffer,              // data buffer
+		bytesRead,           // data size
+		nullptr,             // proposed MIME
+		FMFD_RETURNUPDATEDIMGMIMES |
+		FMFD_IGNOREMIMETEXTPLAIN |
+		FMFD_URLASFILENAME,
+		&lpMime,             // result
+		0                    // reserved
+	);
+	if (SUCCEEDED (hr) && lpMime) mime = lpMime;
+	if (mime.empty ())
+	{
+		if (bytesRead >= 8 && memcmp (buffer, "\x89PNG\r\n\x1A\n", 8) == 0) mime = L"image/png";
+		else if (bytesRead >= 3 && buffer [0] == 0xFF && buffer [1] == 0xD8) mime = L"image/jpeg";
+		else if (bytesRead >= 6 && memcmp (buffer, "GIF89a", 6) == 0) mime = L"image/gif";
+		else if (bytesRead >= 2 && buffer [0] == 'B' && buffer [1] == 'M') mime = L"image/bmp";
+		else if (bytesRead >= 12 && memcmp (buffer, "RIFF", 4) == 0 && memcmp (buffer + 8, "WEBP", 4) == 0) mime = L"image/webp";
+		else if (bytesRead >= 4 && memcmp (buffer, "\x00\x00\x01\x00", 4) == 0) mime = L"image/x-icon";
+		else mime = L"application/octet-stream";
+	}
+	return mime;
+}
+std::wstring GetBase64StringFromStreamW (IStream *ifile)
+{
+	if (!ifile) return L"";
+	IStream *&pStream = ifile;
+	LARGE_INTEGER liZero = {};
+	pStream->Seek (liZero, STREAM_SEEK_SET, nullptr);
+	STATSTG statstg;
+	pStream->Stat (&statstg, STATFLAG_NONAME);
+	ULARGE_INTEGER uliSize = statstg.cbSize;
+	std::vector <BYTE> buffer (uliSize.QuadPart);
+	ULONG bytesRead;
+	pStream->Read (buffer.data (), static_cast <ULONG> (buffer.size ()), &bytesRead);
+	DWORD base64Size = 0;
+	if (!CryptBinaryToStringW (buffer.data (), bytesRead, CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, nullptr, &base64Size)) return nullptr;
+	std::vector <WCHAR> base64Buffer (base64Size + 1);
+	if (!CryptBinaryToStringW (buffer.data (), bytesRead, CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, base64Buffer.data (), &base64Size)) return nullptr;
+	pStream->Seek (liZero, STREAM_SEEK_SET, nullptr);
+	return std::wstring (base64Buffer.data ());
+}
+LPWSTR StreamToBase64W (_In_ HANDLE hFileStream, _Out_writes_ (dwCharCount) LPWSTR lpMimeBuf, _In_ DWORD dwCharCount, _Outptr_ LPWSTR *lpBase64Head)
+{
+	IStream *ifs = (IStream *)hFileStream;
+	if (!ifs) return nullptr;
+	LPWSTR retptr = nullptr;
+	std::wstring ret = L"";
+	std::wstring mime = GetMimeTypeFromStream (ifs);
+	auto &dwBufSize = dwCharCount;
+	if (lpMimeBuf)
+	{ 
+		ZeroMemory (lpMimeBuf, sizeof (WCHAR) * dwBufSize); 
+		wcsncpy_s (lpMimeBuf, dwBufSize, mime.c_str (), _TRUNCATE);
+	}
+	ret += L"data:" + mime + L";base64,";
+	size_t head = ret.length ();
+	ret += GetBase64StringFromStreamW (ifs);
+	retptr = _wcsdup (ret.c_str ());
+	if (lpBase64Head) *lpBase64Head = retptr + head;
+	return retptr;
 }

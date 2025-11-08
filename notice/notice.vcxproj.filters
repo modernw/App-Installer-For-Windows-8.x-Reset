@@ -15,7 +15,12 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="ReadMe.txt" />
+    <ClCompile Include="stdafx.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="notice.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -24,57 +29,17 @@
     <ClInclude Include="targetver.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="pkgread.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="readobj.h">
+    <ClInclude Include="raii.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="version.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="stringres.h">
+    <ClInclude Include="notice.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="dynarr.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="norstr.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="raii.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="syncutil.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="localeex.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="resource1.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="themeinfo.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="stdafx.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="pkgread.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="dllmain.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="pkgread.rc">
-      <Filter>资源文件</Filter>
-    </ResourceCompile>
   </ItemGroup>
 </Project>

@@ -1,13 +1,18 @@
 #include <Windows.h>
-#include "..\pkgread\pkgread.h"
 #include <iostream>
 #include <string>
 #include <algorithm>
 #include <thread>
+#include <iomanip>
+#include "..\priformatcli\priformatcli.h"
+#include "..\pkgread\pkgread.h"
+#include "..\pkgmgr\pkgmgr.h"
 
 void read_package (const std::wstring &filepath)
 {
 	package_reader pr (filepath);
+	pr.enable_pri_convert (true);
+	pr.use_pri (true);
 	std::wcout << L"Is Valid: " << (pr.valid () ? L"true" : L"false") << std::endl;
 	std::wcout << L"Package Type: ";
 	switch (pr.package_type ())
@@ -61,6 +66,7 @@ void read_package (const std::wstring &filepath)
 	std::wcout << L"\tDescription: " << prop.description () << std::endl;
 	std::wcout << L"\tPublisher Display Name: " << prop.publisher_display_name () << std::endl;
 	std::wcout << L"\tLogo: " << prop.logo () << std::endl;
+	std::wcout << L"\tLogo Base64: " << prop.logo_base64 () << std::endl;
 	std::wcout << L"\tFramework: " << (prop.framework () ? L"true" : L"false") << std::endl;
 	std::wcout << L"\tResource Package: " << (prop.resource_package () ? L"true" : L"false") << std::endl;
 	auto preq = pr.get_prerequisites ();
@@ -134,7 +140,9 @@ void read_package (const std::wstring &filepath)
 			std::wcout << L"\tApplication" << cnt ++ << std::endl;
 			for (auto &it_s : it)
 			{
-				std::wcout << L"\t\t" << it_s.first << L": " << it_s.second << std::endl;
+				std::wcout << L"\t\t" << it_s.first << L": " << it.newat (it_s.first) << std::endl;
+				std::wstring base64 = it.newat_base64 (it_s.first);
+				if (!base64.empty ()) std::wcout << L"\t\t" << it_s.first << L" (Base64): " << base64 << std::endl;
 			}
 		}
 	}
@@ -154,20 +162,57 @@ void read_package (const std::wstring &filepath)
 		}
 	}
 }
-
+using cbfunc = std::function <void (int progress)>;
+void ProgressCallback (DWORD dwProgress, void *pCustom)
+{
+	if (auto func = reinterpret_cast <cbfunc *> (pCustom)) (*func)(dwProgress);
+}
+HRESULT AddAppxPackage (const std::wstring path, cbfunc callback, std::wstring &errorcode, std::wstring &detailmsg)
+{
+	LPWSTR ec = nullptr, dm = nullptr;
+	struct reltask
+	{
+		using endfunc = std::function <void ()>;
+		endfunc endtask = nullptr;
+		reltask (endfunc et): endtask (et) {}
+		~reltask () { if (endtask) endtask (); }
+	} relt ([=] () {
+		if (ec) free (ec);
+		if (dm) free (dm);
+	});
+	HRESULT hr = AddAppxPackageFromPath (path.c_str (), nullptr, DEPOLYOPTION_NONE, ProgressCallback, &callback, &ec, &dm);
+	errorcode.clear ();
+	detailmsg.clear ();
+	if (ec) errorcode = ec;
+	if (dm) detailmsg = dm;
+	return hr;
+}
 int main (int argc, char *argv [])
 {
 	setlocale (LC_ALL, "");
 	std::wcout.imbue (std::locale ("", LC_CTYPE));
 	std::wcout << L"Please enter the file path: " << std::endl;
 	std::wcout << L"\\> ";
-	std::wstring pkgPathStr = L"E:\\Profiles\\Bruce\\Desktop\\resources.pri";
-	//std::getline (std::wcin, pkgPathStr);
+	std::wstring pkgPathStr = L"E:\\Profiles\\Bruce\\Desktop\\Discourse.appx";
+	pkgPathStr = L"F:\\BaiduNetdiskDownload\\Collection4\\Microsoft.BingFinance_2015.709.2014.2069_neutral_~_8wekyb3d8bbwe\\FinanceApp_3.0.4.336_x86.appx";
+	pkgPathStr = L"F:\\BaiduNetdiskDownload\\Collection4\\Microsoft.BingFinance_2015.709.2014.2069_neutral_~_8wekyb3d8bbwe.appxbundle";
+	pkgPathStr = L"";
+	if (pkgPathStr.empty ()) std::getline (std::wcin, pkgPathStr);
 	pkgPathStr.erase (
 		std::remove (pkgPathStr.begin (), pkgPathStr.end (), L'\"'),
 		pkgPathStr.end ()
 	);
-
+	std::wcout << L"Installing ..." << std::endl;
+	std::wstring ec, dm;
+	HRESULT hr = AddAppxPackage (pkgPathStr, [] (int progress) {
+		std::wcout << L"\r  " << progress << L"%";
+	}, ec, dm);
+	if (SUCCEEDED (hr)) std::wcout << std::endl << L"Installed Successfully." << std::endl;
+	else
+	{
+		std::wcout << std::endl << L"Exception: " << ec << L"(0x" << std::hex << std::setw (8) << std::setfill (L'0') << hr << L")" << std::endl;
+		std::wcout << L"Detail Message: " << dm << std::endl;
+	}
 	system ("pause");
 	return 0;
 }
