@@ -142,7 +142,9 @@ HRESULT AddAppxPackageFromURI (LPCWSTR lpPkgFileUri, PCREGISTER_PACKAGE_DEFENDEN
 			}
 		}
 		if (depuris->Size > 0) depuris = nullptr;
-		auto ope = pkgmgr->AddPackageAsync (ref new Uri (ref new String (lpPkgFileUri)), depuris, (DeploymentOptions)dwDeployOption);
+		auto pkguri = ref new Uri (ref new String (lpPkgFileUri));
+		auto pkguristr = pkguri->ToString ();
+		auto ope = pkgmgr->AddPackageAsync (pkguri, depuris, (DeploymentOptions)dwDeployOption);
 		return ope;
 	}, pfCallback, pCustom, pErrorCode, pDetailMsg);
 }
@@ -426,7 +428,7 @@ HRESULT RegisterAppxPackageByPath (LPCWSTR lpManifestPath, PCREGISTER_PACKAGE_DE
 {
 	std::wstring fullpath = GetFullPathName (lpManifestPath ? lpManifestPath : L"");
 	if (fullpath.empty ()) fullpath = lpManifestPath ? lpManifestPath : L"";
-	return RegisterAppxPackageByPath (fullpath.c_str (), alpDependencyUriList, dwDeployOption, pfCallback, pCustom, pErrorCode, pDetailMsg);
+	return RegisterAppxPackageByUri (fullpath.c_str (), alpDependencyUriList, dwDeployOption, pfCallback, pCustom, pErrorCode, pDetailMsg);
 }
 [MTAThread]
 HRESULT RegisterAppxPackageByFullName (LPCWSTR lpPackageFullName, PCREGISTER_PACKAGE_DEFENDENCIES alpDepFullNameList, DWORD dwDeployOption, PKGMRR_PROGRESSCALLBACK pfCallback, void *pCustom, LPWSTR *pErrorCode, LPWSTR *pDetailMsg)
@@ -527,7 +529,7 @@ HRESULT StageAppxPackageFromPath (LPCWSTR lpPkgPath, PCREGISTER_PACKAGE_DEFENDEN
 {
 	std::wstring fullpath = GetFullPathName (lpPkgPath ? lpPkgPath : L"");
 	if (fullpath.empty ()) fullpath = lpPkgPath ? lpPkgPath : L"";
-	return StageAppxPackageFromPath (fullpath.c_str (), alpDepUriList, dwDeployOption, pfCallback, pCustom, pErrorCode, pDetailMsg);
+	return StageAppxPackageFromURI (fullpath.c_str (), alpDepUriList, dwDeployOption, pfCallback, pCustom, pErrorCode, pDetailMsg);
 }
 [MTAThread]
 HRESULT StageAppxUserData (LPCWSTR lpPackageFullName, PKGMRR_PROGRESSCALLBACK pfCallback, void *pCustom, LPWSTR *pErrorCode, LPWSTR *pDetailMsg)

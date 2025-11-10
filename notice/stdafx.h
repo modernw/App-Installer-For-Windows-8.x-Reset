@@ -28,11 +28,8 @@
 #include <shlobj.h>
 #include <propkey.h>
 #include <comdef.h>
-
+#using <Windows.winmd>
 using namespace Microsoft::WRL;
 using namespace ABI::Windows::UI::Notifications;
 using namespace ABI::Windows::Data::Xml::Dom;
 using namespace Microsoft::WRL::Wrappers;
-
-#include <pugiconfig.hpp>
-#include <pugixml.hpp>

@@ -18,7 +18,7 @@ extern "C"
 #endif
 #ifdef __cplusplus
 #define _DEFAULT_INIT_VALUE_(_init_value_) = _init_value_
-#ifndef PKGMGR_EXPORTS
+#ifndef NOTICE_EXPORTS
 #define _DEFAULT_INIT_VALUE_FORFUNC_(_init_value_) = _init_value_
 #else 
 #define _DEFAULT_INIT_VALUE_FORFUNC_(_init_value_)
@@ -27,6 +27,29 @@ extern "C"
 #define _DEFAULT_INIT_VALUE_(_init_value_)
 #define _DEFAULT_INIT_VALUE_FORFUNC_(_init_value_)
 #endif
+	typedef void (*NOTICE_ACTIVECALLBACK) (void *pCustom);
+	// 参考：https://learn.microsoft.com/zh-cn/previous-versions/windows/apps/hh761494(v=win.10)
+	// 通过 Toast 通知名来获取 XML 模板。
+	// 不符合会返回一个默认模板（只会有一个 text 节点。根据需要的话可以自己添加）
+	// 注意：返回的指针要自己 free 释放
+	NOTICE_API LPWSTR GetToastNoticeXml (LPCWSTR lpTemplateName);
+	// 获取一个简单的 Toast 通知 XML 文档。第一个参数是必须的。第二个参数为图片 URI（file:///）。
+	// 第二个参数如果为 NULL 或去掉首尾空的长度为 0 的文本则不会使用带图片的模板。
+	// 注意：返回的指针要自己通过 free 释放
+	NOTICE_API LPWSTR GenerateSimpleToastNoticeXml (LPCWSTR lpText, LPCWSTR lpImagePath);
+	// 获取一个简单的 Toast 通知 XML 文档。第一个参数是必须的。第三个参数为图片 URI（file:///）。
+	// 第三个参数如果为 NULL 或去掉首尾空的长度为 0 的文本则不会使用带图片的模板。
+	// 第二个参数可以为 NULL 或空文本。当为空时不会使用相关模板
+	// 注意：返回的指针要自己通过 free 释放
+	NOTICE_API LPWSTR GenerateSimpleToastNoticeXml2 (LPCWSTR lpTitle, LPCWSTR lpText, LPCWSTR lpImagePath);
+	// 创建并显示一个 Toast 通知
+	// 参数1 为非必须项，这意味着可以传入 NULL 或空文本。但是建议必须填。桌面应用
+	// 必须在开始菜单快捷方式储存处创建一个含有 AppUserModelID 的快捷方式才能使用 Toast 通知。而这个限制
+	// 在 Windows 10 已经去除。
+	// pfCallback 为点击 Toast 通知本体后触发的回调函数。注意：仅运行期才能用，且不一定会调用成功
+	// pCustom 可以传入自定义内容并在回调中使用
+	// lpExceptMsg 返回异常信息。获取到的指针必须由 free 释放。
+	NOTICE_API HRESULT CreateToastNoticeFromXmlDocument (LPCWSTR lpIdName, LPCWSTR lpXmlString, NOTICE_ACTIVECALLBACK pfCallback, void *pCustom, LPWSTR *lpExceptMsg);
 
 #ifdef _DEFAULT_INIT_VALUE_
 #undef _DEFAULT_INIT_VALUE_
