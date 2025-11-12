@@ -629,3 +629,29 @@ HRESULT FindAppxPackage (LPCWSTR lpPackageFullName, PKGMGR_FINDENUMCALLBACK pfCa
 LPCWSTR GetPackageManagerLastErrorCode () { return g_swExceptionCode.c_str (); }
 [STAThread]
 LPCWSTR GetPackageManagerLastErrorDetailMessage () { return g_swExceptionDetail.c_str (); }
+
+HRESULT ActivateAppxApplication (LPCWSTR lpAppUserId, PDWORD pdwProcessId)
+{
+	if (!lpAppUserId) return E_INVALIDARG;
+	std::wstring strAppUserModelId (L"");
+	if (lpAppUserId) strAppUserModelId += lpAppUserId;
+	IApplicationActivationManager *spAppActivationManager = nullptr;
+	destruct relaamgr ([&] () {
+		if (spAppActivationManager) spAppActivationManager->Release ();
+		spAppActivationManager = nullptr;
+	});
+	HRESULT hResult = E_INVALIDARG;
+	if (!strAppUserModelId.empty ())
+	{
+		// Instantiate IApplicationActivationManager
+		hResult = CoCreateInstance (CLSID_ApplicationActivationManager, NULL, CLSCTX_LOCAL_SERVER, IID_IApplicationActivationManager, (LPVOID *)&spAppActivationManager);
+		if (SUCCEEDED (hResult))
+		{
+			// This call ensures that the app is launched as the foreground window
+			hResult = CoAllowSetForegroundWindow (spAppActivationManager, NULL);
+			// Launch the app
+			if (SUCCEEDED (hResult)) hResult = spAppActivationManager->ActivateApplication (strAppUserModelId.c_str (), NULL, AO_NONE, pdwProcessId);
+		}
+	}
+	return hResult;
+}

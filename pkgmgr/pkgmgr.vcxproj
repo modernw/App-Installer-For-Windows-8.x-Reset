@@ -82,6 +82,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="pkgmgr.cpp" />
     <ClCompile Include="stdafx.cpp" />
   </ItemGroup>

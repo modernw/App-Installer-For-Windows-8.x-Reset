@@ -347,73 +347,73 @@ namespace std
 	{
 		bool default_upper = false, default_include_blank_in_str = false;
 		public:
-		using base = std::basic_string <ct, tr, al>;
+		using Base = std::basic_string <ct, tr, al>;
 		using derive = std::basic_nstring <ct, tr, al>;
-		using typename base::size_type;
-		using typename base::value_type;
-		using base::base;
-		basic_nstring (): base (), default_upper (false), default_include_blank_in_str (false) {}
-		basic_nstring (const ct *pStr): base (pStr), default_upper (false), default_include_blank_in_str (false) {}
-		basic_nstring (const base &str): base (str) {}
-		basic_nstring (base &&str): base (std::move (str)) {}
-		basic_nstring (const ct *data, size_type count): base (data, count), default_upper (false), default_include_blank_in_str (false) {}
-		template <std::size_t N> basic_nstring (const ct (&arr) [N]) : base (arr, N) {}
-		template <typename InputIt> basic_nstring (InputIt first, InputIt last): base (first, last), default_upper (false), default_include_blank_in_str (false) {}
+		using typename Base::size_type;
+		using typename Base::value_type;
+		// using Base::Base;
+		basic_nstring (): Base (), default_upper (false), default_include_blank_in_str (false) {}
+		basic_nstring (const ct *pStr): Base (pStr), default_upper (false), default_include_blank_in_str (false) {}
+		basic_nstring (const Base &str): Base (str) {}
+		basic_nstring (Base &&str): Base (std::move (str)) {}
+		basic_nstring (const ct *data, size_type count): Base (data, count), default_upper (false), default_include_blank_in_str (false) {}
+		template <std::size_t N> basic_nstring (const ct (&arr) [N]) : Base (arr, N) {}
+		template <typename InputIt> basic_nstring (InputIt first, InputIt last): Base (first, last), default_upper (false), default_include_blank_in_str (false) {}
 		bool upper_default () const { return this->default_upper; }
 		bool upper_default (bool value) { return this->default_upper = value; }
 		bool include_blank_in_str_middle () const { return this->default_include_blank_in_str; }
 		bool include_blank_in_str_middle (bool value) { return this->default_include_blank_in_str = value; }
-		base normalize (bool upper, bool includemidblank) const
+		Base normalize (bool upper, bool includemidblank) const
 		{
 			return NormalizeString <ct, tr, al> (*this, upper, includemidblank);
 		}
-		base normalize (bool upper) const
+		Base normalize (bool upper) const
 		{
 			return this->normalize (upper, default_include_blank_in_str);
 		}
-		base normalize () const { return this->normalize (default_upper); }
-		base upper (bool includemidblank) const
+		Base normalize () const { return this->normalize (default_upper); }
+		Base upper (bool includemidblank) const
 		{
 			return NormalizeString <ct, tr, al> (*this, true, includemidblank);
 		}
-		base upper () const { return this->upper (default_include_blank_in_str); }
-		base lower (bool includemidblank) const
+		Base upper () const { return this->upper (default_include_blank_in_str); }
+		Base lower (bool includemidblank) const
 		{
 			return NormalizeString <ct, tr, al> (*this, false, includemidblank);
 		}
-		base lower () const { return this->lower (default_include_blank_in_str); }
-		base trim (bool includemidblank) const
+		Base lower () const { return this->lower (default_include_blank_in_str); }
+		Base trim (bool includemidblank) const
 		{
 			return StringTrim <ct, tr, al> (*this, includemidblank);
 		}
-		base trim () const { return this->trim (default_include_blank_in_str); }
+		Base trim () const { return this->trim (default_include_blank_in_str); }
 		size_t length (bool includemidblank) const { return GetNormalizeStringLength (*this, includemidblank); }
 		size_t length () const { return length (default_include_blank_in_str); }
 		bool empty () const
 		{
 			return IsNormalizeStringEmpty (*this);
 		}
-		bool equals (const base &another, bool includemidblank) const
+		bool equals (const Base &another, bool includemidblank) const
 		{
 			return IsNormalizeStringEquals <ct, tr, al> (*this, another, includemidblank);
 		}
-		bool equals (const base &another) const { return equals (another, default_include_blank_in_str); }
-		int64_t compare (const base &another, bool includemidblank) const
+		bool equals (const Base &another) const { return equals (another, default_include_blank_in_str); }
+		int64_t compare (const Base &another, bool includemidblank) const
 		{
 			return NormalizeStringCompare <ct, tr, al> (*this, another, includemidblank);
 		}
-		int64_t compare (const base &another) const { return compare (another, default_include_blank_in_str); }
-		base &string () { return *this; }
-		base to_string (bool upper, bool includemidblank) const { return this->normalize (upper, includemidblank); }
-		base to_string (bool upper) const { return this->normalize (upper, default_include_blank_in_str); }
-		base to_string () const { return this->normalize (default_upper); }
-		bool operator == (const base &other) const { return equals (other, false); }
-		bool operator != (const base &other) const { return !equals (other, false); }
-		bool operator < (const base &other) const { return compare (other, false) < 0; }
-		bool operator > (const base &other) const { return compare (other, false) > 0; }
-		bool operator <= (const base &other) const { return compare (other, false) <= 0; }
-		bool operator >= (const base &other) const { return compare (other, false) >= 0; }
-		int64_t operator - (const base &other) const { return compare (other, false); }
+		int64_t compare (const Base &another) const { return compare (another, default_include_blank_in_str); }
+		Base &string () { return *this; }
+		Base to_string (bool upper, bool includemidblank) const { return this->normalize (upper, includemidblank); }
+		Base to_string (bool upper) const { return this->normalize (upper, default_include_blank_in_str); }
+		Base to_string () const { return this->normalize (default_upper); }
+		bool operator == (const Base &other) const { return equals (other, false); }
+		bool operator != (const Base &other) const { return !equals (other, false); }
+		bool operator < (const Base &other) const { return compare (other, false) < 0; }
+		bool operator > (const Base &other) const { return compare (other, false) > 0; }
+		bool operator <= (const Base &other) const { return compare (other, false) <= 0; }
+		bool operator >= (const Base &other) const { return compare (other, false) >= 0; }
+		int64_t operator - (const Base &other) const { return compare (other, false); }
 		template <typename E, typename TR = std::char_traits <E>, typename AL = std::allocator <E>>
 		static bool equals (const std::basic_string <E> &l, const std::basic_string <E> &r, bool remove_mid_blank = false)
 		{

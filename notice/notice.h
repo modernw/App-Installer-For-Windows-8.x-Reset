@@ -50,7 +50,27 @@ extern "C"
 	// pCustom 可以传入自定义内容并在回调中使用
 	// lpExceptMsg 返回异常信息。获取到的指针必须由 free 释放。
 	NOTICE_API HRESULT CreateToastNoticeFromXmlDocument (LPCWSTR lpIdName, LPCWSTR lpXmlString, NOTICE_ACTIVECALLBACK pfCallback, void *pCustom, LPWSTR *lpExceptMsg);
-
+	// 创建一个简单的 Toast 通知。仅支持一段文本和一张图片（图片若不需要则设置为 NULL 或空文本）
+	// 一些参数作用与 CreateToastNoticeFromXmlDocument 中的同名参数作用一致。
+	NOTICE_API HRESULT CreateToastNotice (LPCWSTR lpIdName, LPCWSTR lpText, LPCWSTR lpImgPath, NOTICE_ACTIVECALLBACK pfCallback, void *pCustom, LPWSTR *lpExceptMsg);
+	// 创建一个简单的 Toast 通知。支持两段文本和一张图片（图片若不需要则设置为 NULL 或空文本）
+	// lpText 可以设置为 NULL 或空文本。此时函数的作用与 CreateToastNotice 一致。
+	// 一些参数作用与 CreateToastNoticeFromXmlDocument 中的同名参数作用一致。
+	NOTICE_API HRESULT CreateToastNotice2 (LPCWSTR lpIdName, LPCWSTR lpTitle, LPCWSTR lpText, LPCWSTR lpImgPath, NOTICE_ACTIVECALLBACK pfCallback, void *pCustom, LPWSTR *lpExceptMsg);
+	// 创建一个简单的 Toast 通知。支持两段文本和一张图片（图片是 IStream 流，如果不想设置则置 NULL）
+	// lpText 可以设置为 NULL 或空文本。此时函数的作用与 CreateToastNoticeWithIStream 一致。
+	// 一些参数作用与 CreateToastNoticeFromXmlDocument 中的同名参数作用一致。
+	NOTICE_API HRESULT CreateToastNoticeWithIStream2 (LPCWSTR lpIdName, LPCWSTR lpTitle, LPCWSTR lpText, HANDLE pIImgStream, NOTICE_ACTIVECALLBACK pfCallback, void *pCustom, LPWSTR *lpExceptMsg);
+	// 创建一个简单的 Toast 通知。支持两段文本和一张图片（图片是 IStream 流，如果不想设置则置 NULL）
+	// 一些参数作用与 CreateToastNoticeFromXmlDocument 中的同名参数作用一致。
+	NOTICE_API HRESULT CreateToastNoticeWithIStream (LPCWSTR lpIdName, LPCWSTR lpText, HANDLE pIImgStream, NOTICE_ACTIVECALLBACK pfCallback, void *pCustom, LPWSTR *lpExceptMsg);
+	// 获取上一次操作的 HReuslt（注意：返回的 HResult 不一定代表错误，因为这是记录每一个步骤的 HResult）
+	NOTICE_API HRESULT NoticeGetLastHResult ();
+	// 获取上一次异常操作的错误信息。（注意：仅在发生异常时才会记录）
+	NOTICE_API LPCWSTR NoticeGetLastDetailMessage ();
+	// 创建快捷方式
+	// （不用安装程序原生的创建，因为需要 AppUserID 才能使用 Toast 通知，当然这个限制只有 Windows 8.x 有，Windows 10 没有这个限制了）
+	NOTICE_API HRESULT CreateShortcutWithAppIdW (LPCWSTR pszShortcutPath, LPCWSTR pszTargetPath, LPCWSTR pszAppId);
 #ifdef _DEFAULT_INIT_VALUE_
 #undef _DEFAULT_INIT_VALUE_
 #endif

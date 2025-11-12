@@ -28,6 +28,10 @@
 #include <shlobj.h>
 #include <propkey.h>
 #include <comdef.h>
+#include <string>
+#include <Shlwapi.h>
+#include <algorithm>
+#include <random>
 #using <Windows.winmd>
 using namespace Microsoft::WRL;
 using namespace ABI::Windows::UI::Notifications;

@@ -28,3 +28,6 @@ using namespace Windows::Management::Deployment;
 #include <collection.h>
 #include <string>
 #include <sddl.h>
+#include <shlobj.h>
+#include <stdio.h>
+#include <shobjidl.h>

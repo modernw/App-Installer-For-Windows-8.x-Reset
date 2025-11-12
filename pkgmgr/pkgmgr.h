@@ -181,6 +181,8 @@ extern "C"
 	PKGMGR_API LPCWSTR GetPackageManagerLastErrorCode ();
 	// 获取错误详细信息。这个是常用的
 	PKGMGR_API LPCWSTR GetPackageManagerLastErrorDetailMessage ();
+	// 启动 Metro UI 应用
+	PKGMGR_API HRESULT ActivateAppxApplication (LPCWSTR lpAppUserId, PDWORD pdwProcessId);
 #ifdef _DEFAULT_INIT_VALUE_
 #undef _DEFAULT_INIT_VALUE_
 #endif
