@@ -1,0 +1,26 @@
+.popup {
+    width: 288px;
+    height: 252px;
+    position: absolute;
+    box-sizing: border-box;
+    max-width: 50%;
+    max-height: 50%;
+    padding: 20px;
+    margin: 5px;
+    background-color: white;
+    overflow-x: auto;
+    overflow-y: auto;
+    -ms-overflow-style: -ms-autohiding-scrollbar;
+    border: 2px solid black;
+}
+
+.popup .content {
+    width: 100%;
+    max-height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.popup .content.with-ctrls {
+    max-height: calc(100% - 40px);
+}

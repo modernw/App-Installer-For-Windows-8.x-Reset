@@ -1068,7 +1068,8 @@ ULONG DestroyAppxFileStream (_In_ HANDLE hFileStream)
 	if (!hFileStream) return 0;
 	IStream *ptr = reinterpret_cast <IStream *> (hFileStream);
 	if (!ptr) return 0;
-	return ptr->Release ();
+	ULONG ret = ptr->Release ();
+	return ret;
 }
 HANDLE GetAppxBundleApplicationPackageFile (_In_ HPKGREAD hReader)
 {

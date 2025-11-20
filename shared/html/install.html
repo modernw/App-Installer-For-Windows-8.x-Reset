@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>App Installer</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script type="text/javascript" src="js/module.js"></script>
+    <script type="text/javascript" src="js/polyfill-ie.js"></script>
+    <link rel="stylesheet" href="libs/winjs/2.0/css/ui-light.css">
+    <script type="text/javascript" src="libs/winjs/2.0/js/base.js"></script>
+    <script type="text/javascript" src="libs/winjs/2.0/js/ui.js"></script>
+    <script type="text/javascript" src="js/color.js"></script>
+    <script type="text/javascript" src="js/promise.js"></script>
+    <script type="text/javascript" src="js/bridge.js"></script>
+    <script type="text/javascript" src="js/dpimodes.js"></script>
+    <script type="text/javascript" src="js/animation.js"></script>
+    <link rel="stylesheet" href="fonts/fonts.css">
+    <link rel="stylesheet" href="css/pages.css">
+    <script type="text/javascript" src="js/event.js"></script>
+    <script type="text/javascript" src="js/pages.js"></script>
+</head>
+
+<body>
+    <div id="page-container" class="pagecontainer full">
+        <div class="page preinstall">
+            <!-- Splash Screen -->
+            <img class="splash" src="images/splash.default.png" alt="Splash Screen">
+            <div class="content splash">
+                <progress class="win-ring"></progress>
+            </div>
+            <!-- Loading... -->
+            <div class="content loading">
+                <span class="ring-loading">&#57543;</span>&nbsp;
+                <span>请稍候...</span>
+            </div>
+            <!-- Main Page -->
+            <div class="content select preinstall installing installsuccess installfailed">
+                <div style="width: 100%; box-sizing: border-box;" class="currentfile multiple">
+                    <h1 class="win-type-x-large">有多个包将要安装</h1><br />
+                    <label for="select-package" class="win-label">在这里请选择一个包查看信息。</label><br />
+                    <select id="select-package"></select><br />
+                </div>
+                <div class="storelogo">
+                    <div class="filter">
+                        <img src="images/splash.default.png" alt="App Store Logo">
+                    </div>
+                </div>
+                <h1 class="win-type-x-large pkgtitle">Install {Package Title}?</h1>
+                <p class="pkgtitle multiple">{Package Title}</p>
+                <p>Microsoft Store Application</p>
+                <p class="pkgpublisher">Publisher: {Package Publisher}</p>
+                <p class="pkgversion"> Version: {Package Version}</p><br />
+                <p class="pkgfunctions-label"><span>Functions</span>: </p>
+                <div class="functions">
+                    <ul>
+                        <li>使用全部的系统资源</li>
+                    </ul>
+                </div>
+                <a class="moreinfo">更多信息</a>
+                <script>
+                    (function() {
+                        "use strict";
+                        var monitor = Windows.UI.Event.Monitor;
+                        var page = document.querySelector(".page");
+                        var content = page.querySelector(".content.preinstall");
+                        var functions = page.querySelector(".functions");
+                        var funculist = functions.querySelector("ul");
+
+                        function sizeChangeEvent(e) {
+                            var height = content.getBoundingClientRect().height;
+                            var top = functions.getBoundingClientRect().top;
+                            var newheight = parseInt((height - top - 10));
+                            var listheight = (funculist.scrollHeight || funculist.offsetHeight || funculist.clientHeight || funculist.getBoundingClientRect().height || 10) + 20;
+                            console.log(newheight, listheight);
+                            if (newheight > listheight) newheight = listheight;
+                            functions.style.height = newheight + "px";
+                        }
+                        var deb_sizechange = debounce(sizeChangeEvent, 500);
+                        monitor.observe(content, Windows.UI.Event.Monitor.EventType.resize, deb_sizechange);
+                        monitor.observe(content, Windows.UI.Event.Monitor.EventType.position, deb_sizechange);
+                        monitor.observe(funculist, Windows.UI.Event.Monitor.EventType.child, deb_sizechange);
+                        setTimeout(sizeChangeEvent, 0);
+                    })();
+                </script>
+            </div>
+            <div class="progress installing">
+                <div>
+                    <span class="ring-loading">&#57543;</span>&nbsp;<span class="status">Installing... 0%</span>
+                </div>
+                <progress min="0" max="100" value="50" class="win-progress-bar"></progress>
+            </div>
+            <div class="reason installfailed">
+                <p><span>Reason</span>: </p>
+                <textarea class="win-textarea" readonly></textarea>
+            </div>
+            <div class="controls select preinstall installing installsuccess installfailed">
+                <div class="checkbox">
+                    <input type="checkbox" id="preinst-enablelaunch" class="win-checkbox">
+                    <label for="preinst-enablelaunch">Launch app after installation</label>
+                </div>
+                <div class="command">
+                    <button>Install</button>
+                    <button>Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

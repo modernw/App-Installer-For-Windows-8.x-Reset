@@ -1,0 +1,447 @@
+body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    -ms-overflow-style: -ms-autohiding-scrollbar;
+    user-select: none;
+    -ms-user-select: none;
+}
+
+body * {
+    -ms-overflow-style: -ms-autohiding-scrollbar;
+}
+
+.pagecontainer {
+    padding: 0px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    box-sizing: border-box;
+    margin: 0px;
+    padding: 0px;
+    border: 0px;
+}
+
+.pagecontainer.full {
+    padding: 0px;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.pagecontainer>.page {
+    position: relative;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    box-sizing: border-box;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+}
+
+.page.padding {
+    padding: 24px;
+}
+
+.page.splash {
+    padding: 0px;
+    background-color: #333;
+}
+
+.page.splash>img {
+    width: 620px;
+    height: 300px;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.page.splash progress.win-ring {
+    width: 30px;
+    height: 30px;
+    margin-top: 32px;
+    border-style: none;
+    background-color: transparent;
+    color: white;
+}
+
+.page.splash>.content {
+    position: absolute;
+    text-align: center;
+    box-sizing: border-box;
+    top: calc(50% + 300px / 2);
+    left: 50%;
+    width: 100%;
+    transform: translateX(-50%);
+    color: white;
+}
+
+progress.win-ring:indeterminate::-ms-fill {
+    animation-delay: 1.5s;
+}
+
+.page.preinstall .content.preinstall,
+.page.installsuccess .content.installsuccess,
+.page.installfailed .content.installfailed {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: calc(100% - 100px);
+    bottom: auto;
+    box-sizing: border-box;
+    padding: 24px 24px 0px 24px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    word-break: break-all;
+    max-width: 100%;
+    max-height: calc(100% - 100px);
+}
+
+.page>.controls {
+    position: absolute;
+    top: auto;
+    bottom: 0px;
+    left: 0px;
+    width: 100%;
+    max-width: 100%;
+    height: 100px;
+    max-height: 100px;
+    padding: 10px 24px 24px 24px;
+    box-sizing: border-box;
+    overflow-y: hidden;
+    overflow-x: auto;
+    -ms-overflow-style: -ms-autohiding-scrollbar;
+    /* display: flex; */
+    flex-direction: row-reverse;
+    flex-wrap: nowrap;
+    align-content: center;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.page>.controls .command {
+    float: right;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-content: center;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.page>.controls .command button {
+    margin-left: 20px;
+}
+
+.page>.controls .checkbox {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-content: center;
+    justify-content: flex-start;
+    align-items: center;
+    -ms-flex-direction: row;
+    -ms-flex-wrap: nowrap;
+    -ms-flex-line-pack: center;
+    -ms-flex-pack: start;
+    -ms-flex-align: center;
+}
+
+.page>.controls .checkbox input[type="checkbox"] {
+    min-width: 21px;
+    min-height: 21px;
+}
+
+.page>.controls .checkbox label {
+    text-overflow: ellipsis;
+}
+
+.page>.content p {
+    margin: 0;
+}
+
+.page>.content ul {
+    margin: 0;
+    padding-left: 16px;
+}
+
+.page>.content ul li {
+    margin: 0;
+}
+
+.storelogo {
+    width: 90px;
+    height: 90px;
+    position: relative;
+    background-color: #464646;
+    float: right;
+    display: flex;
+    flex-direction: row;
+    -ms-flex-direction: row;
+    flex-wrap: nowrap;
+    -ms-flex-wrap: nowrap;
+    align-content: center;
+    -ms-flex-line-pack: center;
+    justify-content: center;
+    -ms-flex-pack: center;
+    align-items: center;
+    -ms-flex-align: center;
+    min-width: 90px;
+    min-height: 90px;
+    max-width: 90px;
+    max-height: 90px;
+}
+
+.storelogo .filter img {
+    max-width: 90px;
+    max-height: 90px;
+    aspect-ratio: auto;
+}
+
+.storelogo .filter {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(254, 0.1);
+    display: flex;
+    flex-direction: row;
+    -ms-flex-direction: row;
+    flex-wrap: nowrap;
+    -ms-flex-wrap: nowrap;
+    align-content: center;
+    -ms-flex-line-pack: center;
+    justify-content: center;
+    -ms-flex-pack: center;
+    align-items: center;
+    -ms-flex-align: center;
+}
+
+.storelogo::after {
+    border: 1px solid rgba(254, 254, 254, 0.1);
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.page>.content .functions {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    min-height: 10%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-height: calc(100% - 10.5em);
+    user-select: all;
+    -ms-user-select: element;
+    box-sizing: border-box;
+    transition: width 0.5s cubic-bezier(0.1, 0.9, 0.2, 1), height 0.5s cubic-bezier(0.1, 0.9, 0.2, 1), top 0.5s cubic-bezier(0.1, 0.9, 0.2, 1), left 0.5s cubic-bezier(0.1, 0.9, 0.2, 1), right 0.5s cubic-bezier(0.1, 0.9, 0.2, 1), bottom 0.5s cubic-bezier(0.1, 0.9, 0.2, 1), margin 0.5s cubic-bezier(0.1, 0.9, 0.2, 1), padding 0.5s cubic-bezier(0.1, 0.9, 0.2, 1);
+    list-style-position: outside;
+    /*test*/
+    border: 1px solid black;
+    padding: 5px;
+}
+
+.page>.progress {
+    position: absolute;
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 100px;
+    height: auto;
+    padding: 0 24px;
+    box-sizing: border-box;
+}
+
+.progress * {
+    width: 100%;
+}
+
+.page>.reason {
+    position: absolute;
+    top: auto;
+    left: 0;
+    bottom: 100px;
+    height: auto;
+    min-height: 10%;
+    padding: 0 24px;
+    box-sizing: border-box;
+    max-height: calc(100% - 10.5em);
+    width: 100%;
+    transition: all 0.5s cubic-bezier(0.1, 0.9, 0.2, 1);
+}
+
+.page>.reason p {
+    margin: 0;
+}
+
+.page>.reason textarea {
+    width: 100%;
+    height: calc(100% - 1.3em);
+    box-sizing: border-box;
+}
+
+.moreinfo-content p {
+    margin: 0px;
+}
+
+.moreinfo-content table tbody tr td {
+    border-bottom: 1px solid #ccc;
+    border-left: 1px solid #ddd;
+}
+
+.page>* {
+    display: none;
+}
+
+.page.splash>.splash {
+    display: block;
+}
+
+.page.loading,
+.page.select,
+.page.preinstall,
+.page.installing,
+.page.installsuccess,
+.page.installfailed {}
+
+.page.loading>.content.loading {
+    width: 100%;
+    height: 100%;
+    padding: 0px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-content: center;
+    justify-content: center;
+    align-items: center;
+    font-size: 16pt;
+    max-height: 100%;
+}
+
+.ring-loading {
+    font-family: Setup, "Segoe Boot Semilight", "Segoe Boot Semilight";
+}
+
+.page.select>.select {
+    display: block;
+}
+
+.page.select>.controls.select,
+.page.installsuccess>.controls.installsuccess,
+.page.installfailed>.controls.installfailed {
+    display: flex;
+}
+
+.page.preinstall>.controls.preinstall,
+.page.installing>.controls.installing {
+    display: flex;
+    flex-direction: row;
+}
+
+.page.select>.controls.select>.checkbox {
+    display: none;
+}
+
+.page.select>.controls.select>.command button:nth-of-type(2) {
+    display: none;
+}
+
+.page.select>.content.select,
+.page.preinstall>.content.preinstall,
+.page.installing>.content.installing,
+.page.installsuccess>.content.installsuccess,
+.page.installfailed>.content.installfailed {
+    padding: 24px 24px 0 24px;
+}
+
+.page:not(.multiple) .multiple {
+    display: none;
+}
+
+.page.select>.content.select .multiple {
+    display: none;
+}
+
+.page.select>.content.select .storelogo {
+    display: none;
+}
+
+.page.select>.content.select p,
+.page.select>.content.select br,
+.page.select>.content.select .functions,
+.page.select>.content.select .moreinfo {
+    display: none;
+}
+
+.page.preinstall>.content.preinstall,
+.page.installing>.content.installing,
+.page.installsuccess>.content.installsuccess,
+.page.installfailed>.content.installfailed {
+    display: block;
+}
+
+.page.installing>.progress.installing {
+    display: block;
+}
+
+.page.installing>.content.installing {
+    height: calc(100% - 200px);
+    max-height: calc(100% - 24px);
+}
+
+.page.installing>.content.installing .pkgfunctions-label,
+.page.installing>.content.installing .functions,
+.page.installing>.content.installing .moreinfo,
+.page.installsuccess>.content.installsuccess .pkgfunctions-label,
+.page.installsuccess>.content.installsuccess .functions,
+.page.installsuccess>.content.installsuccess .moreinfo,
+.page.installfailed>.content.installfailed .pkgfunctions-label,
+.page.installfailed>.content.installfailed .functions,
+.page.installfailed>.content.installfailed .moreinfo {
+    display: none;
+}
+
+.page.installing>.controls.installing .command {
+    display: none;
+}
+
+.page.installsuccess>.content.installsuccess {
+    display: block;
+}
+
+.page.installsuccess>.controls.installsuccess .checkbox,
+.page.installfailed>.controls.installfailed .checkbox {
+    display: none;
+}
+
+.page.installfailed>.reason {
+    display: block;
+}
+
+.page.preinstall.multiple>.content.preinstall h1.pkgtitle,
+.page.installing.multiple>.content.installing h1.pkgtitle,
+.page.installsuccess.multiple>.content.installsuccess h1.pkgtitle,
+.page.installfailed.multiple>.content.installfailed h1.pkgtitle {
+    display: none;
+}
+
+.page.installing.multiple>.content .currentfile label,
+.page.installing.multiple>.content .currentfile select,
+.page.installing.multiple>.content .currentfile br {
+    display: none;
+}

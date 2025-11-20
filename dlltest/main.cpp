@@ -195,24 +195,14 @@ int main (int argc, char *argv [])
 	std::wcout << L"\\> ";
 	std::wstring pkgPathStr = L"E:\\Profiles\\Bruce\\Desktop\\Discourse.appx";
 	pkgPathStr = L"F:\\BaiduNetdiskDownload\\Collection4\\Microsoft.BingFinance_2015.709.2014.2069_neutral_~_8wekyb3d8bbwe\\FinanceApp_3.0.4.336_x86.appx";
-	pkgPathStr = L"F:\\BaiduNetdiskDownload\\Collection4\\Microsoft.BingFinance_2015.709.2014.2069_neutral_~_8wekyb3d8bbwe.appxbundle";
-	pkgPathStr = L"";
+	//pkgPathStr = L"F:\\BaiduNetdiskDownload\\Collection4\\Microsoft.BingFinance_2015.709.2014.2069_neutral_~_8wekyb3d8bbwe.appxbundle";
+	//pkgPathStr = L"";
 	if (pkgPathStr.empty ()) std::getline (std::wcin, pkgPathStr);
 	pkgPathStr.erase (
 		std::remove (pkgPathStr.begin (), pkgPathStr.end (), L'\"'),
 		pkgPathStr.end ()
 	);
-	std::wcout << L"Installing ..." << std::endl;
-	std::wstring ec, dm;
-	HRESULT hr = AddAppxPackage (pkgPathStr, [] (int progress) {
-		std::wcout << L"\r  " << progress << L"%";
-	}, ec, dm);
-	if (SUCCEEDED (hr)) std::wcout << std::endl << L"Installed Successfully." << std::endl;
-	else
-	{
-		std::wcout << std::endl << L"Exception: " << ec << L"(0x" << std::hex << std::setw (8) << std::setfill (L'0') << hr << L")" << std::endl;
-		std::wcout << L"Detail Message: " << dm << std::endl;
-	}
+	read_package (pkgPathStr);
 	system ("pause");
 	return 0;
 }
