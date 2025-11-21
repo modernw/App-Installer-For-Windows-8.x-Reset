@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <resource id="splash">
-        <scale dpi="100">splash\SplashScreen.scale-100.png</scale>
-        <scale dpi="125">splash\SplashScreen.scale-125.png</scale>
-        <scale dpi="150">splash\SplashScreen.scale-150.png</scale>
-        <scale dpi="200">splash\SplashScreen.scale-200.png</scale>
+        <scale dpi="100">splash\AppPackageSplashScreen.scale-100.png</scale>
+        <scale dpi="125">splash\AppPackageSplashScreen.scale-125.png</scale>
+        <scale dpi="150">splash\AppPackageSplashScreen.scale-150.png</scale>
+        <scale dpi="200">splash\AppPackageSplashScreen.scale-200.png</scale>
+        <scale dpi="400">splash\AppPackageSplashScreen.scale-200.png</scale>
         <scale dpi="default">SplashScreen.png</scale>
     </resource>
     <resource id="splashlarge">

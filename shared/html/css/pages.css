@@ -65,10 +65,16 @@ body * {
     transform: translate(-50%, -50%);
 }
 
-.page.splash progress.win-ring {
+.page.splash .content.splash progress.win-ring {
     width: 30px;
     height: 30px;
     margin-top: 32px;
+    border-style: none;
+    background-color: transparent;
+    color: white;
+}
+
+.page.splash .content.splash progress {
     border-style: none;
     background-color: transparent;
     color: white;

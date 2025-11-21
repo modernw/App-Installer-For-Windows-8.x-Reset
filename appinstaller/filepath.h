@@ -10,7 +10,7 @@
 #include "strcmp.h"
 #include "version.h"
 #include "module.h"
-typedef version VERSION;
+typedef version S_VERSION;
 template <typename T> constexpr T Max (T l, T r) { return l > r ? l : r; }
 template <typename T> constexpr T Max (T l, T m, T r) { return Max (Max (l, r), m); }
 template <typename T> constexpr T Max (T l, T ml, T mr, T r) { return Max (Max (l, ml), Max (mr, r)); }
@@ -202,9 +202,9 @@ std::wstring GetCurrentProgramPathW (HMODULE hModule hModule_DefaultParam)
 }
 std::string GetCurrentProgramNameA (HMODULE hModule hModule_DefaultParam) { return PathFindFileNameA (GetCurrentProgramPathA (hModule).c_str ()); }
 std::wstring GetCurrentProgramNameW (HMODULE hModule hModule_DefaultParam) { return PathFindFileNameW (GetCurrentProgramPathW (hModule).c_str ()); }
-VERSION GetExeFileVersion (LPCSTR lpszFilePath)
+S_VERSION GetExeFileVersion (LPCSTR lpszFilePath)
 {
-	VERSION ver (0);
+	S_VERSION ver (0);
 	DWORD dummy;
 	DWORD size = GetFileVersionInfoSizeA (lpszFilePath, &dummy);
 	std::vector <BYTE> pVersionInfo (size);
@@ -222,7 +222,7 @@ VERSION GetExeFileVersion (LPCSTR lpszFilePath)
 	{
 		return ver;
 	}
-	ver = VERSION (
+	ver = S_VERSION (
 		HIWORD (pFileInfo->dwFileVersionMS),
 		LOWORD (pFileInfo->dwFileVersionMS),
 		HIWORD (pFileInfo->dwFileVersionLS),
@@ -230,9 +230,9 @@ VERSION GetExeFileVersion (LPCSTR lpszFilePath)
 	);
 	return ver;
 }
-VERSION GetExeFileVersion (LPCWSTR lpswFilePath)
+S_VERSION GetExeFileVersion (LPCWSTR lpswFilePath)
 {
-	VERSION ver (0);
+	S_VERSION ver (0);
 	DWORD dummy;
 	DWORD size = GetFileVersionInfoSizeW (lpswFilePath, &dummy);
 	std::vector <BYTE> pVersionInfo (size);
@@ -250,7 +250,7 @@ VERSION GetExeFileVersion (LPCWSTR lpswFilePath)
 	{
 		return ver;
 	}
-	ver = VERSION (
+	ver = S_VERSION (
 		HIWORD (pFileInfo->dwFileVersionMS),
 		LOWORD (pFileInfo->dwFileVersionMS),
 		HIWORD (pFileInfo->dwFileVersionLS),
@@ -258,11 +258,11 @@ VERSION GetExeFileVersion (LPCWSTR lpswFilePath)
 	);
 	return ver;
 }
-VERSION GetExeFileVersion (std::wstring objswFilePath)
+S_VERSION GetExeFileVersion (std::wstring objswFilePath)
 {
 	return GetExeFileVersion (objswFilePath.c_str ());
 }
-VERSION GetExeFileVersion (std::string objszFilePath)
+S_VERSION GetExeFileVersion (std::string objszFilePath)
 {
 	return GetExeFileVersion (objszFilePath.c_str ());
 }

@@ -308,13 +308,29 @@ class resxmldoc
 						catch (...) {}
 					}
 				}
-				
+				std::vector <std::pair <int, std::string>> existfilepath;
+				{
+					std::vector <std::pair <int, std::string>> vec (s_v.begin (), s_v.end ());
+					std::sort (vec.begin (), vec.end (), [] (auto &a, auto &b) { return a.second < b.second; });
+					for (auto &it_ss : vec)
+					{
+						it_ss.second = pugi::as_utf8 (CombinePath (GetFileDirectoryW (filepath), pugi::as_wide (it_ss.second)));
+						if (IsFileExists (pugi::as_wide (it_ss.second))) existfilepath.push_back (it_ss);
+					}
+				}
+				int dpipercent = GetDPI ();
+				for (auto &it_path : existfilepath)
+				{
+					if (it_path.first >= dpipercent) return it_path.second;
+				}
+				if (!existfilepath.empty ()) return existfilepath.at (0).second;
+				return "";
 				break;
 			}
 		}
 		return "";
 	}
-	std::wstring get (const std::wstring &id) const { return pugi::as_wide (get (WStringToString (id)).c_str ()); }
+	std::wstring get (const std::wstring &id) const { return pugi::as_wide (get (WStringToString (id))); }
 	std::wstring operator [] (const std::wstring &id) const { return get (id); }
 	std::wstring operator [] (const std::wstring &id) { return get (id); }
 	std::string operator [] (const std::string &id) const { return get (id); }

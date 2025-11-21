@@ -12,6 +12,9 @@
 #include "resource.h"
 #include "vemani.h"
 #include "ieshell.h"
+#include "resmap.h"
+#include "appxinfo.h"
+
 using namespace System;
 using namespace System::Runtime::InteropServices;
 
@@ -20,6 +23,7 @@ using namespace System::Runtime::InteropServices;
 #else
 #define DEBUGMODE false
 #endif
+#define JS_SAFE [MarshalAs (UnmanagedType::SafeArray, SafeArraySubType = VarEnum::VT_VARIANT)]
 
 LPCWSTR g_lpAppId = L"Microsoft.DesktopAppInstaller";
 auto &g_identity = g_lpAppId;
@@ -44,6 +48,9 @@ resxmldoc g_scaleres (
 	CombinePath (GetProgramRootDirectoryW (), L"VisualElements\\scale.xml") :
 	CombinePath (GetProgramRootDirectoryW (), L"VisualElementsManifest.xml")
 );
+WORD g_wcmdflags = 0;
+std::set <std::wnstring> g_pkgfiles;
+std::vector <pkginfo> g_pkginfo;
 
 HRESULT GetWebBrowser2Interface (System::Windows::Forms::WebBrowser ^fwb, IWebBrowser2 **output)
 {
@@ -66,6 +73,9 @@ public ref class SplashForm: public System::Windows::Forms::Form
 	private:
 	PictureBox ^picbox;
 	Timer ^timer;
+	System::Drawing::Image ^splashimg = nullptr;
+	System::Drawing::Color background = System::Drawing::Color::Transparent;
+	// System::Windows::Forms ^parent = nullptr;
 	double opastep = 0.05;
 	void InitForm ()
 	{
@@ -140,13 +150,25 @@ public ref class SplashForm: public System::Windows::Forms::Form
 		try
 		{
 			auto img = System::Drawing::Image::FromFile (gcnew System::String (filefullpath.c_str ()));
-			if (img != nullptr) picbox->Image = img;
+			if (img != nullptr)
+			{
+				splashimg = img;
+				picbox->Image = img;
+			}
 		}
 		catch (...) { }
+		if (splashimg) picbox->Image = splashimg;
 		if (backcolor != Drawing::Color::Transparent)
 		{
+			background = backcolor;
 			picbox->BackColor = backcolor;
 			this->BackColor = backcolor;
+		}
+		else
+
+		{
+			picbox->BackColor = background;
+			this->BackColor = background;
 		}
 		if (this->Owner != nullptr)
 		{
@@ -159,6 +181,27 @@ public ref class SplashForm: public System::Windows::Forms::Form
 		timer->Interval = 15;
 		timer->Tick += gcnew System::EventHandler (this, &SplashForm::OnFadeTimer);
 		this->Load += gcnew EventHandler (this, &SplashForm::OnLoad);
+	}
+	void ReInit ()
+	{
+		InitForm ();
+		picbox = gcnew System::Windows::Forms::PictureBox ();
+		picbox->BackColor = background;
+		if (splashimg) picbox->Image = splashimg;
+		picbox->SizeMode = System::Windows::Forms::PictureBoxSizeMode::Zoom;
+		picbox->Anchor = System::Windows::Forms::AnchorStyles::None;
+		double dDpi = GetDPI () * 0.01;
+		picbox->Size = Drawing::Size (620 * dDpi, 300 * dDpi);
+		this->BackColor = background;
+		this->Controls->Clear ();
+		this->Controls->Add (picbox);
+		timer = gcnew System::Windows::Forms::Timer ();
+		timer->Interval = 15;
+		timer->Tick += gcnew EventHandler (this, &SplashForm::OnFadeTimer);
+		this->Resize += gcnew EventHandler (this, &SplashForm::OnResize);
+		this->Load += gcnew EventHandler (this, &SplashForm::OnLoad);
+		ChangePosAndSize ();
+		this->Opacity = 1.0;
 	}
 	void ChangePosAndSize ()
 	{
@@ -185,14 +228,14 @@ public ref class SplashForm: public System::Windows::Forms::Form
 			);
 		}
 	}
-	void SetSplashImage (System::Drawing::Image ^img) { if (picbox) picbox->Image = img; }
+	void SetSplashImage (System::Drawing::Image ^img) { if (picbox && picbox->IsHandleCreated) { splashimg = img; picbox->Image = splashimg; } else splashimg = img; }
 	void SetSplashImage (System::String ^imgpath) { try { SetSplashImage (System::Drawing::Image::FromFile (imgpath)); } catch (...) {} }
 	void SetSplashImage (const std::wstring &imgpath) { SetSplashImage (CStringToMPString (imgpath)); }
-	void SetSplashBackgroundColor (System::Drawing::Color color) { picbox->BackColor = color; this->BackColor = color; }
+	void SetSplashBackgroundColor (System::Drawing::Color color) { background = color;  picbox->BackColor = color; this->BackColor = color; }
 	// 渐变消失
 	void FadeOut () { timer->Start (); }
 	// 立即消失
-	void FadeAway () { this->Visible = false; this->Close (); }
+	void FadeAway () { timer->Start (); }
 	~SplashForm ()
 	{
 		if (this->Owner != nullptr)
@@ -202,7 +245,37 @@ public ref class SplashForm: public System::Windows::Forms::Form
 		}
 	}
 };
-
+bool ReadPackagesTask ()
+{
+	std::set <std::wstring> noread;
+	std::set <std::wstring> hasread;
+	for (auto &it : g_pkgfiles)
+	{
+		bool isfind = false;
+		for (auto &rit : g_pkginfo)
+		{
+			if (rit.filepath == it)
+			{
+				isfind == true;
+				hasread.insert (it);
+				break;
+			}
+		}
+		if (!isfind) noread.insert (it);
+	}
+	for (auto &it : noread)
+	{
+		auto pi = pkginfo::parse (it);
+		if (pi.valid)
+		{
+			hasread.insert (it);
+			g_pkginfo.push_back (pi);
+		}
+	}
+	g_pkgfiles.clear ();
+	for (auto &it : hasread) g_pkgfiles.insert (it);
+	return hasread.size ();
+}
 [ComVisible (true)]
 public ref class MainHtmlWnd: public System::Windows::Forms::Form
 {
@@ -229,18 +302,166 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 				private:
 				MainHtmlWnd ^wndinst = nullptr;
 				public:
+				ref struct _I_UI_Size
+				{
+					private:
+					int m_width = 0;
+					int m_height = 0;
+					public:
+					property int width { int get () { return m_width; } }
+					property int height { int get () { return m_height; }}
+					property int Width { int get () { return m_width; } }
+					property int Height { int get () { return m_height; }}
+					int getWidth () { return m_width; }
+					int getHeight () { return m_height; }
+					_I_UI_Size (int w, int h): m_width (w), m_height (h) {}
+				};
 				_I_UI (MainHtmlWnd ^wnd): wndinst (wnd) {}
 				property int DPIPercent { int get () { return GetDPI (); }}
 				property double DPI { double get () { return DPIPercent * 0.01; }}
-				void showSplash () { wndinst->SplashScreen->Show (); }
-				void fadeAwaySplash () { wndinst->SplashScreen->FadeAway (); }
-				void fadeOutSplash () { wndinst->SplashScreen->FadeOut (); }
+				property _I_UI_Size ^WndSize { _I_UI_Size ^get () { return gcnew _I_UI_Size (wndinst->Width, wndinst->Height); } }
+				property _I_UI_Size ^ClientSize { _I_UI_Size ^get () { auto cs = wndinst->ClientSize; return gcnew _I_UI_Size (cs.Width, cs.Height); } }
+				property String ^SplashImage 
+				{ 
+					String ^get () 
+					{ 
+						auto uri = gcnew Uri (CStringToMPString (wndinst->GetSuitSplashImage ())); 
+						return uri->AbsoluteUri;
+					} 
+				}
+				property String ^SplashBackgroundColor { String ^get () { return CStringToMPString (g_vemani.splash_screen_backgroundcolor (L"App")); } }
+				void ShowSplash () { if (wndinst->SplashScreen->IsHandleCreated) wndinst->SplashScreen->Show (); else wndinst->SplashScreen->ReInit (); }
+				void FadeAwaySplash () { wndinst->SplashScreen->FadeAway (); }
+				void FadeOutSplash () { wndinst->SplashScreen->FadeOut (); }
+			};
+			ref class _I_Resources
+			{
+				public:
+				String ^GetById (unsigned int uiResId) { return GetRCStringCli (uiResId); }
+				unsigned ToId (String ^lpResName)
+				{
+					auto it = g_nameToId.find (MPStringToStdA (lpResName));
+					return (it != g_nameToId.end ()) ? it->second : 0;
+				}
+				String ^ToName (unsigned int ulResId)
+				{
+					for (auto &it : g_nameToId) {if (it.second == ulResId) return CStringToMPString (it.first);}
+					return "";
+				}
+				String ^GetByName (String ^lpResId) { return GetById (ToId (lpResId)); }
+				String ^operator [] (unsigned int uiResId) { return GetRCStringCli (uiResId); }
+			};
+			ref class _I_Version
+			{
+				private:
+				UINT16 major = 0, minor = 0, build = 0, revision = 0;
+				public:
+				property UINT16 Major { UINT16 get () { return major; } void set (UINT16 value) { major = value; } }
+				property UINT16 Minor { UINT16 get () { return minor; } void set (UINT16 value) { minor = value; } }
+				property UINT16 Build { UINT16 get () { return build; } void set (UINT16 value) { build = value; } }
+				property UINT16 Revision { UINT16 get () { return revision; } void set (UINT16 value) { revision = value; } }
+				property array <UINT16> ^Data 
+				{
+					array <UINT16> ^get ()
+					{
+						return gcnew array <UINT16> {
+							major, minor, build, revision
+						};
+					}
+					void set (array <UINT16> ^arr)
+					{
+						major = minor = build = revision = 0;
+						for (size_t i = 0; i < arr->Length; i ++)
+						{
+							switch (i)
+							{
+								case 0: major = arr [i]; break;
+								case 1: minor = arr [i]; break;
+								case 2: build = arr [i]; break;
+								case 3: revision = arr [i]; break;
+								default: break;
+							}
+						}
+					}
+				}
+				property String ^DataStr
+				{
+					String ^get () { return Stringify (); }
+					void set (String ^str) { Parse (str); }
+				}
+				_I_Version (UINT16 p_ma, UINT16 p_mi, UINT16 p_b, UINT16 p_r):
+					major (p_ma), minor (p_mi), build (p_b), revision (p_r) {}
+				_I_Version (UINT16 p_ma, UINT16 p_mi, UINT16 p_b):
+					major (p_ma), minor (p_mi), build (p_b), revision (0) {}
+				_I_Version (UINT16 p_ma, UINT16 p_mi):
+					major (p_ma), minor (p_mi), build (0), revision (0) {}
+				_I_Version (UINT16 p_ma):
+					major (p_ma), minor (0), build (0), revision (0) {}
+				_I_Version () {}
+				_I_Version %Parse (String ^ver)
+				{
+					auto strarr = ver->Split ('.');
+					auto arr = gcnew array <UINT16> (4);
+					for (size_t i = 0; i < strarr->Length; i ++)
+					{
+						try { arr [i] = Convert::ToUInt16 (strarr [i]); }
+						catch (...) {}
+					}
+					Data = arr;
+					return *this;
+				}
+				String ^Stringify () { return major + "." + minor + "." + build + "." + revision; }
+				String ^ToString () override { return Stringify (); }
+				bool Valid () { return Major != 0 && Minor != 0 && Build != 0 && Revision != 0; }
 			};
 			private:
 			_I_UI ^ui = gcnew _I_UI (wndinst);
+			_I_Resources ^ires = gcnew _I_Resources ();
 			public:
 			_I_System (MainHtmlWnd ^wnd): wndinst (wnd) {}
 			property _I_UI ^UI { _I_UI ^get () { return ui; } }
+			property _I_Resources ^Resources { _I_Resources ^get () { return ires; } }
+			property _I_Version ^Version
+			{
+				_I_Version ^get ()
+				{
+				#pragma warning(push)
+				#pragma warning(disable:4996)
+					auto ver = gcnew _I_Version ();
+					OSVERSIONINFOEXW osvi = {0};
+					osvi.dwOSVersionInfoSize = sizeof (osvi);
+					if (!GetVersionExW ((LPOSVERSIONINFOW)&osvi)) return ver;
+					ver->Major = osvi.dwMajorVersion;
+					ver->Minor = osvi.dwMinorVersion;
+					ver->Build = osvi.dwBuildNumber;
+					HKEY hKey;
+					{
+						DWORD ubr = 0, size = sizeof (DWORD);
+						if (RegOpenKeyExW (HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+						{
+							RegQueryValueExW (hKey, L"UBR", 0, NULL, (LPBYTE)&ubr, &size);
+							RegCloseKey (hKey);
+						}
+						ver->Revision = ubr;
+					}
+					return ver;
+				#pragma warning(pop)
+				}
+			}
+			property bool IsWindows10
+			{
+				bool get ()
+				{
+					OSVERSIONINFOEX osvi = {0};
+					osvi.dwOSVersionInfoSize = sizeof (OSVERSIONINFOEX);
+					osvi.dwMajorVersion = 10;
+					DWORDLONG conditionMask = 0;
+					VER_SET_CONDITION (conditionMask, VER_MAJORVERSION, VER_GREATER_EQUAL);
+					if (VerifyVersionInfoW (&osvi, VER_MAJORVERSION, conditionMask)) return TRUE;
+					DWORD error = GetLastError ();
+					return (error == ERROR_OLD_WIN_VERSION) ? FALSE : FALSE;
+				}
+			}
 		};
 		ref class _I_IEFrame
 		{
@@ -289,36 +510,31 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 			String ^ToLower (String ^src) { return CStringToMPString (StringToLower (MPStringToStdW (src))); }
 			String ^ToUpper (String ^src) { return CStringToMPString (StringToUpper (MPStringToStdW (src))); }
 		};
+		ref class _I_Package
+		{
+			public:
+
+		};
 		private:
 		_I_System ^system = gcnew _I_System (wndinst);
 		_I_IEFrame ^ieframe = gcnew _I_IEFrame (wndinst);
 		_I_Storage ^storage = gcnew _I_Storage (wndinst);
 		_I_String ^str = gcnew _I_String ();
+		_I_Package ^pkg = gcnew _I_Package ();
 		public:
 		property _I_System ^System { _I_System ^get () { return system; }}
 		property _I_IEFrame ^IEFrame { _I_IEFrame ^get () { return ieframe; }}
 		property _I_Storage ^Storage { _I_Storage ^get () { return storage; }}
 		property _I_String ^String { _I_String ^get () { return str; }}
+		property _I_Package ^Package { _I_Package ^get () { return pkg; }}
 	};
 	protected:
 	property WebBrowser ^WebUI { WebBrowser ^get () { return this->webui; } }
 	property SplashForm ^SplashScreen { SplashForm ^get () { return this->splash; } }
 	property int DPIPercent { int get () { return GetDPI (); }}
 	property double DPI { double get () { return DPIPercent * 0.01; }}
-	void Init ()
+	void InitSize ()
 	{
-		this->Visible = false;
-		this->webui = gcnew System::Windows::Forms::WebBrowser ();
-		this->SuspendLayout ();
-		this->webui->Dock = System::Windows::Forms::DockStyle::Fill;
-		this->webui->IsWebBrowserContextMenuEnabled = DEBUGMODE;
-		this->webui->AllowWebBrowserDrop = false;
-		this->Controls->Add (this->webui);
-		if (g_hIconMain.hIcon)
-		{
-			try { this->Icon = System::Drawing::Icon::FromHandle (IntPtr (g_hIconMain.hIcon)); }
-			catch (...) {}
-		}
 		unsigned ww = 0, wh = 0;
 		auto &ini = g_initfile;
 		auto setsect = ini ["Settings"];
@@ -333,11 +549,26 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 			wh = setsect [L"DefaultHeight"].read_uint (rcInt (IDS_DEFAULTHEIGHT));
 		}
 		this->MinimumSize = System::Drawing::Size (
-			setsect [L"MinimumWidth"].read_uint (rcInt (IDS_MINWIDTH)) * DPI, 
+			setsect [L"MinimumWidth"].read_uint (rcInt (IDS_MINWIDTH)) * DPI,
 			setsect [L"MinimumHeight"].read_uint (rcInt (IDS_MINHIEHGT)) * DPI
 		);
 		this->ClientSize = System::Drawing::Size (ww * DPI, wh * DPI);
 		this->WindowState = (System::Windows::Forms::FormWindowState)setsect [L"LastWndState"].read_int ((int)System::Windows::Forms::FormWindowState::Normal);
+	}
+	void Init ()
+	{
+		this->Visible = false;
+		this->webui = gcnew System::Windows::Forms::WebBrowser ();
+		this->SuspendLayout ();
+		this->webui->Dock = System::Windows::Forms::DockStyle::Fill;
+		this->webui->IsWebBrowserContextMenuEnabled = DEBUGMODE;
+		this->webui->AllowWebBrowserDrop = false;
+		this->Controls->Add (this->webui);
+		if (g_hIconMain.hIcon)
+		{
+			try { this->Icon = System::Drawing::Icon::FromHandle (IntPtr (g_hIconMain.hIcon)); }
+			catch (...) {}
+		}
 		this->Text = rcString (IDS_WINTITLE);
 		this->ResumeLayout (false);
 		webui->ObjectForScripting = gcnew IBridge (this);
@@ -354,7 +585,8 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 
 			ExecScript ("Windows.UI.DPI.mode = 1");
 			ExecScript ("Bridge.Frame.scale = Bridge.Frame.scale * Bridge.UI.dpi");
-			splash->FadeOut ();
+			// splash->FadeOut ();
+			splash->FadeAway ();
 		}
 	}
 	void OnCreate (System::Object ^sender, System::EventArgs ^e)
@@ -372,19 +604,45 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 	}
 	void OnResize (Object ^sender, EventArgs ^e)
 	{
+		ResizeEvent ();
 	}
 	void OnResizeEnd (Object ^sender, EventArgs ^e)
 	{
 
 	}
-
-
+	std::wstring GetSuitSplashImage ()
+	{
+		std::wstring path = g_scaleres [this->Width >= 1024 && this->Height >= 768 ? L"splashlarge" : L"splash"];
+		if (IsNormalizeStringEmpty (path)) path = g_vemani.splash_screen_image (L"App");
+		return path;
+	}
+	void ResizeEvent ()
+	{
+		splash->SetSplashImage (GetSuitSplashImage ());
+		ExecScript (
+			"(function () {"
+			"var splash = Page.splash;"
+			"if (!splash) return null;"
+			"splash.imagesrc = Bridge.UI.Splash.imageurl;"
+			"splash.background = Bridge.UI.Splash.backcolor;"
+			"var progress = splash.content.querySelector (\"progress\");"
+			"if (Bridge.Frame.WindowSize.height / Bridge.UI.dpi < 500) {"
+			"if (progress.classList.contains(\"win-ring\")) progress.classList.remove(\"win-ring\");}"
+			"else { if (!progress.classList.contains(\"win-ring\")) progress.classList.add(\"win-ring\"); }"
+			"}) ();"
+		);
+	}
+	void PackageLoadTask ()
+	{
+		if (!g_pkginfo.size ())
+	}
 	public:
 	MainHtmlWnd ()
 	{
+		InitSize ();
 		splash = gcnew SplashForm (
-			gcnew String (g_vemani.splash_screen_image (L"App").c_str ()),
-			StringToColor (gcnew String (g_vemani.splash_screen_backgroundcolor (L"App").c_str ())),
+			CStringToMPString (GetSuitSplashImage ()),
+			StringToColor (CStringToMPString (g_vemani.splash_screen_backgroundcolor (L"App"))),
 			this
 		);
 		System::Windows::Forms::Application::DoEvents ();
@@ -578,7 +836,7 @@ int APIENTRY wWinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCm
 	SetProcessDPIAware ();
 	{
 		// 设置当前目录为程序所在目录
-		std::wnstring currdir = GetCurrentProgramPathW ();
+		std::wnstring currdir = GetCurrentDirectoryW ();
 		std::wnstring rootdir = GetProgramRootDirectoryW ();
 		if (!PathEquals (currdir, rootdir)) SetCurrentDirectoryW (rootdir.c_str ());
 	}
@@ -586,6 +844,12 @@ int APIENTRY wWinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCm
 	destruct relco ([] () {
 		CoUninitialize ();
 	});
+	{
+		std::map <cmdkey, cmdvalue> pair_cmdkv;
+		ParseCmdLine (lpCmdLine, pair_cmdkv);
+		std::set <std::wnstring> uris;
+		g_wcmdflags = CmdMapsToFlags (pair_cmdkv, g_pkgfiles, uris);
+	}
 	System::Windows::Forms::Application::EnableVisualStyles ();
 	System::Windows::Forms::Application::SetCompatibleTextRenderingDefault (false);
 	auto mwnd = gcnew MainHtmlWnd ();

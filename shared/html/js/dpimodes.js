@@ -24,21 +24,21 @@
                 break;
         }
         var images = document.getElementsByTagName('img');
-        for (var i = 0; i < images.length; i++) {
-            var img = images[i];
-            var parent = img.parentElement;
-            if (!parent) continue;
-            var parentWidth = parent.offsetWidth;
-            var parentHeight = parent.offsetHeight;
-            var scaledWidth = img.naturalWidth * dpiValue;
-            var scaledHeight = img.naturalHeight * dpiValue;
-            if (scaledWidth > parentWidth || scaledHeight > parentHeight) {
-                img.style.transform = 'none';
-            } else {
-                img.style.transform = 'scale(' + dpiValue + ')';
-            }
-            // console.log('Image:', img, 'Parent Size:', parentWidth, parentHeight, 'Scaled:', scaledWidth, scaledHeight, 'Transform:', img.style.transform);
-        }
+        /*         for (var i = 0; i < images.length; i++) {
+                    var img = images[i];
+                    var parent = img.parentElement;
+                    if (!parent) continue;
+                    var parentWidth = parent.offsetWidth;
+                    var parentHeight = parent.offsetHeight;
+                    var scaledWidth = img.naturalWidth * dpiValue;
+                    var scaledHeight = img.naturalHeight * dpiValue;
+                    if (scaledWidth > parentWidth || scaledHeight > parentHeight) {
+                        img.style.transform = 'none';
+                    } else {
+                        img.style.transform = 'scale(' + dpiValue + ')';
+                    }
+                    // console.log('Image:', img, 'Parent Size:', parentWidth, parentHeight, 'Scaled:', scaledWidth, scaledHeight, 'Transform:', img.style.transform);
+                } */
         if (IsIeVersionElder && IsIeVersionElder()) {
             var contentElements = document.getElementsByClassName('content');
             var controlElements = document.getElementsByClassName('control-column-bottom');

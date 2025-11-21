@@ -15,31 +15,49 @@
     <script type="text/javascript" src="js/promise.js"></script>
     <script type="text/javascript" src="js/bridge.js"></script>
     <script type="text/javascript" src="js/dpimodes.js"></script>
+    <script type="text/javascript" src="js/resources.js"></script>
     <script type="text/javascript" src="js/animation.js"></script>
     <link rel="stylesheet" href="fonts/fonts.css">
     <link rel="stylesheet" href="css/pages.css">
     <script type="text/javascript" src="js/event.js"></script>
     <script type="text/javascript" src="js/pages.js"></script>
+    <script type="text/javascript" src="js/load.js"></script>
+    <script type="text/javascript" src="js/init.js"></script>
 </head>
 
 <body>
     <div id="page-container" class="pagecontainer full">
-        <div class="page preinstall">
+        <div class="page splash">
             <!-- Splash Screen -->
-            <img class="splash" src="images/splash.default.png" alt="Splash Screen">
+            <img class="splash" src="images/splash.default.png" alt="Splash Screen" width="620" height="300">
             <div class="content splash">
                 <progress class="win-ring"></progress>
             </div>
+            <script>
+                (function() {
+                    "use strict";
+                    var img = document.querySelector(".pagecontainer .page img.splash");
+                    if (img) img.src = Bridge.UI.Splash.imageurl;
+                    var progress = document.querySelector(".pagecontainer .page .content.splash progress");
+                    if (Bridge.Frame.WindowSize.height / Bridge.UI.dpi < 500) {
+                        if (progress.classList.contains("win-ring")) progress.classList.remove("win-ring");
+                    } else progress.classList.add("win-ring");
+                    var splashpage = document.querySelector(".pagecontainer .page.splash");
+                    if (splashpage) {
+                        splashpage.style.backgroundColor = Bridge.UI.Splash.backcolor;
+                    }
+                })();
+            </script>
             <!-- Loading... -->
             <div class="content loading">
                 <span class="ring-loading">&#57543;</span>&nbsp;
-                <span>请稍候...</span>
+                <span data-res-byname="IDS_PLEASEWAIT">Please wait...</span>
             </div>
             <!-- Main Page -->
             <div class="content select preinstall installing installsuccess installfailed">
                 <div style="width: 100%; box-sizing: border-box;" class="currentfile multiple">
-                    <h1 class="win-type-x-large">有多个包将要安装</h1><br />
-                    <label for="select-package" class="win-label">在这里请选择一个包查看信息。</label><br />
+                    <h1 class="win-type-x-large" data-res-byname="IDS_PREINSTALL_MTTITLE"></h1>
+                    <label for="select-package" class="win-label" data-res-byname="IDS_PREINSTALL_MSELECT">在这里请选择一个包查看信息。</label><br />
                     <select id="select-package"></select><br />
                 </div>
                 <div class="storelogo">
@@ -47,18 +65,18 @@
                         <img src="images/splash.default.png" alt="App Store Logo">
                     </div>
                 </div>
-                <h1 class="win-type-x-large pkgtitle">Install {Package Title}?</h1>
-                <p class="pkgtitle multiple">{Package Title}</p>
-                <p>Microsoft Store Application</p>
-                <p class="pkgpublisher">Publisher: {Package Publisher}</p>
-                <p class="pkgversion"> Version: {Package Version}</p><br />
-                <p class="pkgfunctions-label"><span>Functions</span>: </p>
+                <h1 class="win-type-x-large pkgtitle" data-res-byname="IDS_PREINSTALL_TITLE"></h1>
+                <p class="pkgtitle multiple" data-res-byname="IDS_PREINSTALL_MPKGNAME"></p>
+                <p data-res-byname="IDS_MSAPP"></p>
+                <p class="pkgpublisher" data-res-byname="IDS_PUBLISHER"></p>
+                <p class="pkgversion" data-res-byname="IDS_VERSION"></p><br />
+                <p class="pkgfunctions-label" data-res-byname="IDS_FUNCTIONNAME"></p>
                 <div class="functions">
                     <ul>
                         <li>使用全部的系统资源</li>
                     </ul>
                 </div>
-                <a class="moreinfo">更多信息</a>
+                <a class="moreinfo" data-res-byname="IDS_MOREINFO"></a>
                 <script>
                     (function() {
                         "use strict";
@@ -87,24 +105,25 @@
             </div>
             <div class="progress installing">
                 <div>
-                    <span class="ring-loading">&#57543;</span>&nbsp;<span class="status">Installing... 0%</span>
+                    <span class="ring-loading">&#57543;</span>&nbsp;<span class="status" data-res-byname="IDS_INSTALLING_SLOADING"></span>
                 </div>
                 <progress min="0" max="100" value="50" class="win-progress-bar"></progress>
             </div>
             <div class="reason installfailed">
-                <p><span>Reason</span>: </p>
+                <p data-res-byname="IDS_FAILED_REASONNAME"></p>
                 <textarea class="win-textarea" readonly></textarea>
             </div>
             <div class="controls select preinstall installing installsuccess installfailed">
                 <div class="checkbox">
                     <input type="checkbox" id="preinst-enablelaunch" class="win-checkbox">
-                    <label for="preinst-enablelaunch">Launch app after installation</label>
+                    <label for="preinst-enablelaunch" data-res-byname="IDS_LAUNCHWHENREADY"></label>
                 </div>
                 <div class="command">
-                    <button>Install</button>
-                    <button>Cancel</button>
+                    <button data-res-byname="IDS_PREINSTALL_TINSTALL"></button>
+                    <button data-res-byname="IDS_PREINSTALL_CANCEL"></button>
                 </div>
             </div>
+            <div data-win-control="WinJS.UI.Flyout" id="moreinfo-flyout"></div>
         </div>
     </div>
 </body>
