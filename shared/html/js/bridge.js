@@ -10,7 +10,10 @@
         External: ext,
         Frame: {
             isIe10: function() { return ext.IEFrame.Version === 10; },
-            isIe11: function() { return ext.IEFrame.Version === 11; }
+            isIe11: function() { return ext.IEFrame.Version === 11; },
+            callEvent: function(funcName, e) {
+                ext.Window.CallEvent(funcName, e);
+            }
         },
         UI: {
             Splash: {
@@ -19,11 +22,12 @@
                 fadeOut: function() { ext.System.UI.FadeOutSplash(); }
             }
         },
-        String: {
-            trim: function(str) { return ext.String.Trim(str); },
-            tolower: function(str) { return ext.String.ToLower(str); },
-            toupper: function(str) { return ext.String.ToUpper(str); },
-        },
+        String: ext.String,
+        /*         {
+                    trim: function(str) { return ext.String.Trim(str); },
+                    tolower: function(str) { return ext.String.ToLower(str); },
+                    toupper: function(str) { return ext.String.ToUpper(str); },
+                }, */
         NString: {
             equals: function(str1, str2) { return ext.String.NString.NEquals(str1, str2); },
             compare: function(str1, str2) { return ext.String.NString.Compare(str1, str2); },
@@ -35,6 +39,26 @@
             byid: function(resid) { return ext.System.Resources.GetById(resid); },
             nameToId: function(resname) { return ext.System.Resources.ToId(resname); },
             idToName: function(resid) { return ext.System.Resources.ToName(resid); },
+        },
+        Package: {
+            filepaths: function() {
+                return JSON.parse(ext.Package.GetPackagesToJson() || "[]");
+            },
+            pkginfo: function(filepath) {
+                return JSON.parse(ext.Package.GetPackageInfoToJson(filepath) || "{}");
+            },
+            capabilityDisplayName: function(capability) {
+                return ext.Package.GetCapabilityDisplayName(capability);
+            },
+            installResult: function(filepath) {
+                return ext.Package.GetPackageInstallResult(filepath);
+            },
+        },
+        Locale: {
+            toLcid: function(localeName) { return ext.System.Locale.ToLcid(localeName); },
+            toLocaleName: function(lcid) { return ext.System.Locale.ToLocaleName(lcid); },
+            localeInfo: function(lcid, lcType) { return ext.System.Locale.LocaleInfo(lcid, lcType); },
+            localeInfoEx: function(localeName, lcType) { return ext.System.Locale.LocaleInfoEx(localeName, lcType); }
         }
     };
     Object.defineProperty(global.Bridge.Frame, "scale", {
@@ -55,6 +79,15 @@
     });
     Object.defineProperty(global.Bridge.UI, "dpi", {
         get: function() { return ext.System.UI.DPI; }
+    });
+    Object.defineProperty(global.Bridge.UI, "themeColor", {
+        get: function() { return ext.System.UI.ThemeColor; }
+    });
+    Object.defineProperty(global.Bridge.UI, "contrast", {
+        get: function() { return ext.System.UI.HighContrast; }
+    });
+    Object.defineProperty(global.Bridge.UI, "darkmode", {
+        get: function() { return ext.System.UI.DarkMode; }
     });
     Object.defineProperty(global.Bridge.UI.Splash, "backcolor", {
         get: function() { return ext.System.UI.SplashBackgroundColor; },

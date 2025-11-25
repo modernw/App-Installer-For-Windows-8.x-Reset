@@ -171,13 +171,35 @@
         }
 
         return {
+            /**
+             *  监听元素变化，并触发回调函数。
+             * @param {Element} el 目标元素
+             * @param {string} type 事件类型，如 "resize", "position", "attribute", "child"
+             * @param {function} callback 回调函数，参数为事件对象
+             */
             observe: observe,
+            /**
+             *  取消监听元素变化。
+             * @param {Element} el 目标元素
+             * @param {string} type 事件类型，如 "resize", "position", "attribute", "child"
+             * @param {function} [callback] 回调函数，如果指定，则只移除指定的回调函数，否则移除所有回调函数。
+             */
             detach: detach,
+            /**
+             *  清除所有监听。
+             */
             clearAll: clearAll,
+            /**
+             *  事件类型枚举。
+             */
             EventType: {
+                /** 元素尺寸变化 */
                 resize: "resize",
+                /** 元素位置变化 */
                 position: "position",
+                /** 元素属性变化 */
                 attribute: "attribute",
+                /** 子元素变化 */
                 child: "child"
             }
         };

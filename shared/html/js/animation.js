@@ -152,35 +152,114 @@
         }
         return swResult;
     }
-
+    /**
+     * 异步设置动画，返回一个 Promise 对象，动画结束后会执行
+     * @param {HTMLElement} element 元素节点
+     * @param {string|Array <string>} swKeyFrames 动画关键帧名称
+     * @param {number} uMillisecond 动画持续时间（毫秒）
+     * @param {string} [swTimingFunc] 缓动函数，默认 cubic-bezier(0.1, 0.9, 0.2, 1)
+     * @param {number} [uDelayMs] 延迟时间（毫秒），默认 0
+     * @param {string} [swIteration] 播放次数，默认 "1"
+     * @param {string} [swDirection] 播放方向，默认 "normal"
+     * @param {string} [swFillMode] 填充模式，默认 "forwards"
+     * @param {string} [swPlayState] 播放状态，默认 ""
+     * @returns {Promise}
+     */
+    function RunAsync(element, swKeyFrames, uMillisecond, swTimingFunc, uDelayMs, swIteration, swDirection, swFillMode, swPlayState) {
+        return new WinJS.Promise(function(complete) {
+            element.style.animation = generateAnimeString(swKeyFrames, uMillisecond, swTimingFunc, uDelayMs, swIteration, swDirection, swFillMode, swPlayState);
+            element.addEventListener("animationend", function() {
+                element.style.animation = "";
+                complete();
+            });
+        });
+    }
     module.exports = {
         Windows: {
             UI: {
                 Animation: {
                     Keyframes: AnimationKeyFrames,
                     Animation: generateAnimeString,
-                    /**
-                     * 异步设置动画，返回一个 Promise 对象，动画结束后会执行
-                     * @param {HTMLElement} element 元素节点
-                     * @param {string|Array <string>} swKeyFrames 动画关键帧名称
-                     * @param {number} uMillisecond 动画持续时间（毫秒）
-                     * @param {string} [swTimingFunc] 缓动函数，默认 cubic-bezier(0.1, 0.9, 0.2, 1)
-                     * @param {number} [uDelayMs] 延迟时间（毫秒），默认 0
-                     * @param {string} [swIteration] 播放次数，默认 "1"
-                     * @param {string} [swDirection] 播放方向，默认 "normal"
-                     * @param {string} [swFillMode] 填充模式，默认 "forwards"
-                     * @param {string} [swPlayState] 播放状态，默认 ""
-                     * @returns {Promise}
-                     */
-                    RunAsync: function(element, swKeyFrames, uMillisecond, swTimingFunc, uDelayMs, swIteration, swDirection, swFillMode, swPlayState) {
-                        return new WinJS.Promise(function(complete) {
-                            element.style.animation = generateAnimeString(swKeyFrames, uMillisecond, swTimingFunc, uDelayMs, swIteration, swDirection, swFillMode, swPlayState);
-                            element.addEventListener("animationend", function() {
-                                element.style.animation = "";
-                                complete();
-                            });
-                        });
-                    }
+                    animation: generateAnimeString,
+                    RunAsync: RunAsync,
+                    runAsync: RunAsync
+                }
+            }
+        }
+    };
+    if (!String.prototype.repeat) {
+        String.prototype.repeat = function(count) {
+            'use strict';
+            if (this == null) { throw new TypeError('can\'t convert ' + this + ' to object'); }
+            var str = '' + this;
+            count = +count;
+            if (count != count) { count = 0 }
+            if (count < 0) { throw new RangeError('repeat count must be non-negative'); }
+            if (count == Infinity) { throw new RangeError('repeat count must be less than infinity'); }
+            count = Math.floor(count);
+            if (str.length == 0 || count == 0) { return '' }
+            if (str.length * count >= 1 << 28) { throw new RangeError('repeat count must not overflow maximum string size'); }
+            var rpt = '';
+            for (var i = 0; i < count; i++) { rpt += str }
+            return rpt
+        }
+    }
+    var timers = {};
+
+    function DisplayLoadingAmineChar(containerId, shouldAnimate) {
+        var container = null;
+        if (containerId instanceof HTMLElement) {
+            if (typeof containerId.id === "string" && containerId.id.length > 0) {
+                container = containerId;
+                containerId = container.id;
+            } else {
+                containerId.id = "elementid-" + Math.floor(Math.random() * 1000000);
+                container = containerId;
+                containerId = container.id;
+            }
+        } else document.getElementById(containerId);
+        var textNode = container.firstChild;
+        if (!textNode || textNode.nodeType !== 3) {
+            textNode = document.createTextNode("");
+            container.innerHTML = "";
+            container.appendChild(textNode);
+        }
+        var chars = ''.repeat(10);
+        var index = 0;
+        var charGroupSize = 120;
+
+        function showNextChar() {
+            if (index < chars.length) {
+                textNode.nodeValue = chars.charAt(index);
+                index++;
+                if (index % charGroupSize === 0) {
+                    clearInterval(timers[containerId]);
+                    setTimeout(startAnimation, 200);
+                }
+            } else {
+                index = 0;
+                textNode.nodeValue = chars.charAt(index);
+            }
+        }
+
+        function startAnimation() {
+            if (timers[containerId]) {
+                clearInterval(timers[containerId]);
+            }
+            if (shouldAnimate) {
+                timers[containerId] = setInterval(showNextChar, 30);
+            } else {
+                clearInterval(timers[containerId]);
+                textNode.nodeValue = chars.charAt(chars.length - 1);
+            }
+        }
+        startAnimation();
+    }
+    module.exports = {
+        Windows: {
+            UI: {
+                Animation: {
+                    loading: DisplayLoadingAmineChar
                 }
             }
         }

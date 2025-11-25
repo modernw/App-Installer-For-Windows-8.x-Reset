@@ -57,6 +57,21 @@
     <ClInclude Include="themeinfo.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="module.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="rctools.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="filepath.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="typestrans.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="strcmp.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -70,11 +85,11 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
     <ResourceCompile Include="pkgread.rc">
       <Filter>资源文件</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

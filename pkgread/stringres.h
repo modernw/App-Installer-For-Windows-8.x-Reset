@@ -1,10 +1,16 @@
 #pragma once
 #include <string>
 #include <map>
+#include <pugiconfig.hpp>
+#include <pugixml.hpp>
 #include "version.h"
 #include "dynarr.h"
 #include "norstr.h"
 #include "syncutil.h"
+#include "resource1.h"
+#include "localeex.h"
+#include "rctools.h"
+#include "filepath.h"
 static const std::pair <UINT64, LPCWSTR> captable [] = {
 	{APPX_CAPABILITY_INTERNET_CLIENT, L"internetClient"},
 	{APPX_CAPABILITY_INTERNET_CLIENT_SERVER, L"internetClientServer"},
@@ -123,4 +129,202 @@ bool RemoveApplicationAttributeItem (const std::wstring &lpstr)
 		return appitems.size () < len1;
 	}
 	return false;
+}
+
+#define MAKENAMEIDMAP(_Res_Name_) {#_Res_Name_, _Res_Name_}
+std::map <std::string, unsigned> g_nameToId = {
+	MAKENAMEIDMAP (accessoryManager),
+	MAKENAMEIDMAP (activity),
+	MAKENAMEIDMAP (allJoyn),
+	MAKENAMEIDMAP (allowElevation),
+	MAKENAMEIDMAP (appDiagnostics),
+	MAKENAMEIDMAP (applicationData),
+	MAKENAMEIDMAP (applicationPackage),
+	MAKENAMEIDMAP (appLicensing),
+	MAKENAMEIDMAP (appointments),
+	MAKENAMEIDMAP (appointmentsSystem),
+	MAKENAMEIDMAP (appointmentSystem),
+	MAKENAMEIDMAP (authenticationManagerAuthentication),
+	MAKENAMEIDMAP (blockedChatMessages),
+	MAKENAMEIDMAP (bluetooth),
+	MAKENAMEIDMAP (bluetooth_genericAttributeProfile),
+	MAKENAMEIDMAP (bluetooth_rfcomm),
+	MAKENAMEIDMAP (broadFileSystemAccess),
+	MAKENAMEIDMAP (callHistory),
+	MAKENAMEIDMAP (callHistorySystem),
+	MAKENAMEIDMAP (cellularDeviceControl),
+	MAKENAMEIDMAP (cellularDeviceIdentity),
+	MAKENAMEIDMAP (cellularMessaging),
+	MAKENAMEIDMAP (chat),
+	MAKENAMEIDMAP (chatSystem),
+	MAKENAMEIDMAP (codeGeneration),
+	MAKENAMEIDMAP (confirmAppClose),
+	MAKENAMEIDMAP (contacts),
+	MAKENAMEIDMAP (contactsSystem),
+	MAKENAMEIDMAP (contactSystem),
+	MAKENAMEIDMAP (cortanaSpeechAccessory),
+	MAKENAMEIDMAP (customInstallActions),
+	MAKENAMEIDMAP (deviceManagementDmAccount),
+	MAKENAMEIDMAP (deviceManagementEmailAccount),
+	MAKENAMEIDMAP (deviceManagementFoundation),
+	MAKENAMEIDMAP (deviceManagementWapSecurityPolicies),
+	MAKENAMEIDMAP (deviceMangementFoundation),
+	MAKENAMEIDMAP (deviceUnlock),
+	MAKENAMEIDMAP (documentsLibrary),
+	MAKENAMEIDMAP (dualSimTiles),
+	MAKENAMEIDMAP (email),
+	MAKENAMEIDMAP (emailSystem),
+	MAKENAMEIDMAP (enterpriseAuthentication),
+	MAKENAMEIDMAP (enterpriseDataPolicy),
+	MAKENAMEIDMAP (enterpriseDeviceLockdown),
+	MAKENAMEIDMAP (extendedExecutionBackgroundAudio),
+	MAKENAMEIDMAP (extendedExecutionCritical),
+	MAKENAMEIDMAP (extendedExecutionUnconstrained),
+	MAKENAMEIDMAP (externalDependenciesVirtualCapability),
+	MAKENAMEIDMAP (firstSignInSettings),
+	MAKENAMEIDMAP (gameList),
+	MAKENAMEIDMAP (humaninterfacedevice),
+	MAKENAMEIDMAP (hyperLinkLearnMore),
+	MAKENAMEIDMAP (inputForegroundObservation),
+	MAKENAMEIDMAP (inputInjection),
+	MAKENAMEIDMAP (inputInjection_Brokered),
+	MAKENAMEIDMAP (inputObservation),
+	MAKENAMEIDMAP (inputSuppression),
+	MAKENAMEIDMAP (internetClient),
+	MAKENAMEIDMAP (internetClientServer),
+	MAKENAMEIDMAP (interopServices),
+	MAKENAMEIDMAP (localSystemServices),
+	MAKENAMEIDMAP (location),
+	MAKENAMEIDMAP (locationHistory),
+	MAKENAMEIDMAP (locationSystem),
+	MAKENAMEIDMAP (lockScreenCreatives),
+	MAKENAMEIDMAP (lowLevelDevices),
+	MAKENAMEIDMAP (microphone),
+	MAKENAMEIDMAP (modifiableApp),
+	MAKENAMEIDMAP (musicLibrary),
+	MAKENAMEIDMAP (networkConnectionManagerProvisioning),
+	MAKENAMEIDMAP (networkDataPlanProvisioning),
+	MAKENAMEIDMAP (networkingVpnProvider),
+	MAKENAMEIDMAP (objects3d),
+	MAKENAMEIDMAP (oemDeployment),
+	MAKENAMEIDMAP (oemPublicDirectory),
+	MAKENAMEIDMAP (optical),
+	MAKENAMEIDMAP (packagedServices),
+	MAKENAMEIDMAP (packageManagement),
+	MAKENAMEIDMAP (packagePolicySystem),
+	MAKENAMEIDMAP (packageQuery),
+	MAKENAMEIDMAP (packageWriteRedirectionCompatibilityShim),
+	MAKENAMEIDMAP (phoneCall),
+	MAKENAMEIDMAP (phoneCallHistory),
+	MAKENAMEIDMAP (phoneCallHistoryPublic),
+	MAKENAMEIDMAP (phoneCallHistorySystem),
+	MAKENAMEIDMAP (picturesLibrary),
+	MAKENAMEIDMAP (pointOfService),
+	MAKENAMEIDMAP (previewStore),
+	MAKENAMEIDMAP (previewUiComposition),
+	MAKENAMEIDMAP (privateNetworkClientServer),
+	MAKENAMEIDMAP (proximity),
+	MAKENAMEIDMAP (recordedCallsFolder),
+	MAKENAMEIDMAP (remotePassportAuthentication),
+	MAKENAMEIDMAP (removableStorage),
+	MAKENAMEIDMAP (runFullTrust),
+	MAKENAMEIDMAP (screenDuplication),
+	MAKENAMEIDMAP (sharedUserCertificates),
+	MAKENAMEIDMAP (smsSend),
+	MAKENAMEIDMAP (spatialPerception),
+	MAKENAMEIDMAP (systemManagement),
+	MAKENAMEIDMAP (teamEditionExperience),
+	MAKENAMEIDMAP (uiAccess),
+	MAKENAMEIDMAP (unvirtualizedResources),
+	MAKENAMEIDMAP (usb),
+	MAKENAMEIDMAP (userAccountInformation),
+	MAKENAMEIDMAP (userDataAccountSetup),
+	MAKENAMEIDMAP (userDataAccountsProvider),
+	MAKENAMEIDMAP (userDataSystem),
+	MAKENAMEIDMAP (userPrincipalName),
+	MAKENAMEIDMAP (userSigninSupport),
+	MAKENAMEIDMAP (videosLibrary),
+	MAKENAMEIDMAP (visualElementsSystem),
+	MAKENAMEIDMAP (visualVoiceMail),
+	MAKENAMEIDMAP (voipCall),
+	MAKENAMEIDMAP (walletSystem),
+	MAKENAMEIDMAP (webcam),
+	MAKENAMEIDMAP (wiFiControl),
+	MAKENAMEIDMAP (xboxAccessoryManagement)
+};
+#ifdef MAKENAMEIDMAP
+#undef MAKENAMEIDMAP
+#endif
+std::string GetSuitableLanguageValue (const std::map <std::nstring, std::string> &map, const std::nstring &localename)
+{
+	for (auto &it : map) if (it.first == localename) return it.second;
+	for (auto &it : map) if (LocaleNameCompare (pugi::as_wide (it.first), pugi::as_wide (localename))) return it.second;
+	for (auto &it : map) if (IsNormalizeStringEquals (GetLocaleRestrictedCodeA (it.first), GetLocaleRestrictedCodeA (localename))) return it.second;
+	for (auto &it : map) if (LocaleNameCompare (pugi::as_wide (GetLocaleRestrictedCodeA (it.first)), pugi::as_wide (GetLocaleRestrictedCodeA (localename)))) return it.second;
+	return "";
+}
+std::string GetSuitableLanguageValue (const std::map <std::nstring, std::string> &map)
+{
+	if (map.empty ()) return "";
+	std::string ret = GetSuitableLanguageValue (map, pugi::as_utf8 (GetComputerLocaleCodeW ()));
+	if (ret.empty ()) ret = GetSuitableLanguageValue (map, "en-US");
+	if (ret.empty ()) ret = map.begin ()->second;
+	return ret;
+}
+struct xmldoc
+{
+	pugi::xml_document doc;
+	bool isvalid = false;
+	void destroy ()
+	{
+		if (isvalid) doc.reset ();
+		isvalid = false;
+	}
+	bool create (const std::wstring &filepath)
+	{
+		destroy ();
+		auto res = doc.load_file (filepath.c_str ());
+		return isvalid = res;
+	}
+	xmldoc (const std::wstring &filepath) { create (filepath); }
+	~xmldoc () { destroy (); }
+	std::string get (const std::string &id) const
+	{
+		auto root = doc.first_child ();
+		auto nodes = root.children ();
+		for (auto &it : nodes)
+		{
+			if (IsNormalizeStringEquals (std::string (it.attribute ("id").as_string ()), id))
+			{
+				auto strings = it.children ();
+				std::map <std::nstring, std::string> lang_value;
+				for (auto &sub : strings)
+				{
+					std::nstring lang = sub.attribute ("name").as_string ();
+					if (!lang.empty ()) lang_value [lang] = sub.text ().get ();
+				}
+				return GetSuitableLanguageValue (lang_value);
+			}
+		}
+		return "";
+	}
+	std::wstring get (const std::wstring &id) const { return pugi::as_wide (get (pugi::as_utf8 (id))); }
+	std::wstring operator [] (const std::wstring &id) const { return get (id); }
+	std::wstring operator [] (const std::wstring &id) { return get (id); }
+	std::string operator [] (const std::string &id) const { return get (id); }
+	std::string operator [] (const std::string &id) { return get (id); }
+} cap_localeres (CombinePath (GetProgramRootDirectoryW (), L"locale\\capabilities.xml"));
+std::wstring GetCapabilityDisplayName (const std::wstring &capname)
+{
+	std::nstring searchname = pugi::as_utf8 (capname);
+	std::wstring ret = cap_localeres [capname];
+	if (IsNormalizeStringEmpty (ret))
+	{
+		for (auto &it : g_nameToId)
+		{
+			if (it.first == searchname) return GetRCStringSW (it.second);
+		}
+	}
+	else return ret;
+	return L"";
 }

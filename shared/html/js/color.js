@@ -24,6 +24,7 @@
         Object.defineProperty(this, "color", {
             get: function() { return parent; }
         });
+        this.stringify = function() { return "rgb(" + parent.red + "," + parent.green + "," + parent.blue + ")"; };
     }
 
     function RGBA(parent) {
@@ -34,6 +35,7 @@
         });
         this.toString = function() { return "rgba(" + parent.red + "," + parent.green + "," + parent.blue + "," + (parent.alpha / 255).toFixed(2) + ")"; };
         this.valueOf = function() { return parent.valueOf(); };
+        this.stringify = function() { return "rgba(" + parent.red + "," + parent.green + "," + parent.blue + "," + (parent.alpha / 255).toFixed(2) + ")"; };
     }
 
     function HSL(parent) {
@@ -196,6 +198,7 @@
         });
         this.toString = function() { return "hsl(" + this.hue + "," + (this.saturation * 100).toFixed(2) + "%," + (this.lightness * 100).toFixed(2) + "%)"; };
         this.valueOf = function() { return parent.valueOf(); };
+        this.stringify = function() { return "hsl(" + this.hue + "," + (this.saturation * 100).toFixed(2) + "%," + (this.lightness * 100).toFixed(2) + "%)"; };
     }
 
     function HSLA(parent) {
@@ -206,6 +209,7 @@
         });
         this.toString = function() { return "hsla(" + this.hue + "," + (this.saturation * 100).toFixed(2) + "%," + (this.lightness * 100).toFixed(2) + "%," + (parent.alpha / 255).toFixed(2) + ")"; };
         this.valueOf = function() { return parent.valueOf(); };
+        this.stringify = function() { return "hsla(" + this.hue + "," + (this.saturation * 100).toFixed(2) + "%," + (this.lightness * 100).toFixed(2) + "%," + (parent.alpha / 255).toFixed(2) + ")"; };
     }
 
     function HWB(parent) {
@@ -381,6 +385,13 @@
             }
         };
         this.valueOf = function() { return parent.valueOf(); };
+        this.stringify = function() {
+            if (parent.alpha == 255) {
+                return "hwb(" + this.hue + "," + (this.white * 100).toFixed(2) + "%," + (this.black * 100).toFixed(2) + "%)";
+            } else {
+                return "hwb(" + this.hue + "," + (this.white * 100).toFixed(2) + "%," + (this.black * 100).toFixed(2) + "% / " + (parent.alpha / 255).toFixed(2) + ")";
+            }
+        };
     }
     /**
      * 
@@ -390,26 +401,28 @@
      * @param {number} alpha 透明度通道值 0-255
      */
     function Color(red, green, blue, alpha) {
-        red = red & 0xFF;
-        green = green & 0xFF;
-        blue = blue & 0xFF;
-        alpha = (typeof alpha === "undefined") ? 255 : (alpha & 0xFF);
-        this.rgbData = (red << 16) | (green << 8) | blue;
-        this.alpha = alpha;
+        this._red = red & 0xFF;
+        this._green = green & 0xFF;
+        this._blue = blue & 0xFF;
+        this._alpha = (typeof alpha === "undefined") ? 255 : (alpha & 0xFF);
+        Object.defineProperty(this, "rgbData", {
+            get: function() { return this._rgbData; },
+            set: function(value) { this._rgbData = value & 0xFFFFFF; }
+        });
         // 红色通道
         Object.defineProperty(this, "red", {
-            get: function() { return (this.rgbData >>> 16) & 0xFF; },
-            set: function(value) { this.rgbData = ((value & 0xFF) << 16) | (this.rgbData & 0x00FFFF); }
+            get: function() { return this._red; },
+            set: function(value) { this._red = value & 0xFF; }
         });
         // 绿色通道
         Object.defineProperty(this, "green", {
-            get: function() { return (this.rgbData >>> 8) & 0xFF; },
-            set: function(value) { this.rgbData = (this.rgbData & 0xFF00FF) | ((value & 0xFF) << 8); }
+            get: function() { return this._green; },
+            set: function(value) { this._green = value & 0xFF; }
         });
         // 蓝色通道
         Object.defineProperty(this, "blue", {
-            get: function() { return this.rgbData & 0xFF; },
-            set: function(value) { this.rgbData = (this.rgbData & 0xFFFF00) | (value & 0xFF); }
+            get: function() { return this._blue; },
+            set: function(value) { this._blue = value & 0xFF; }
         });
         // Alpha 通道单独存储
         Object.defineProperty(this, "alpha", {
@@ -458,6 +471,16 @@
         this.HSL = new HSL(this);
         this.HSLA = new HSLA(this);
         this.HWB = new HWB(this);
+        this.stringify = function() { return this.hex; };
+    }
+    /**
+     * 解析颜色字符串
+     * @param {string} str 颜色字符串 
+     * @returns {Color} 解析得到的颜色对象
+     */
+    Color.parse = function(str) {
+        var json = JSON.parse(window.external.IEFrame.ParseHtmlColor(str));
+        return new Color(json.r, json.g, json.b, json.a);
     }
     module.exports = { Color: Color };
 })(this);

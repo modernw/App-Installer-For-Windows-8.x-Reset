@@ -15,9 +15,6 @@
 
 // TODO:  在此处引用程序需要的其他头文件
 #using <Windows.winmd>
-using namespace Platform;
-using namespace Windows::Foundation;
-using namespace Windows::Management::Deployment;
 #include <string>
 #include <vector>
 #include <objbase.h>
@@ -31,3 +28,6 @@ using namespace Windows::Management::Deployment;
 #include <shlobj.h>
 #include <stdio.h>
 #include <shobjidl.h>
+using namespace Platform;
+using namespace Windows::Foundation;
+using namespace Windows::Management::Deployment;

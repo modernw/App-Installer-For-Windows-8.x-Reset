@@ -20,7 +20,33 @@ std::wstring GetFullPathName (const std::wstring &lpFileName)
 
 std::wstring g_swExceptionCode = L"";
 std::wstring g_swExceptionDetail = L"";
+bool g_enableIterDeps = false;
 
+LPWSTR AllocWideString (const std::wstring &str)
+{
+	size_t size = (str.length () + 1) * sizeof (WCHAR);
+	LPWSTR buf = (LPWSTR)CoTaskMemAlloc (size);
+	if (!buf) return nullptr;
+	ZeroMemory (buf, size);
+	wcscpy (buf, str.c_str ());
+	return buf;
+}
+// ≤‚ ‘”√
+LPWSTR AllocWideString (LPCWSTR str)
+{
+	if (!str) return nullptr;
+	size_t size = (wcslen (str) + 1) * sizeof (WCHAR);
+	LPWSTR buf = (LPWSTR)CoTaskMemAlloc (size);
+	if (!buf) return nullptr;
+	ZeroMemory (buf, size);
+	wcscpy (buf, str);
+	return buf;
+}
+#define _wcsdup AllocWideString
+#define free CoTaskMemFree
+#define malloc CoTaskMemAlloc
+#define realloc CoTaskMemRealloc
+#define calloc(_cnt_, _size_) CoTaskMemAlloc (_cnt_ * _size_)
 struct destruct
 {
 	std::function <void ()> endtask = nullptr;
@@ -57,15 +83,15 @@ template <typename TAsyncOpCreator> HRESULT RunPackageManagerOperation (TAsyncOp
 		depopt->Progress = ref new onprogress ([pfCallback, pCustom] (progressopt operation, DeploymentProgress progress) {
 			if (pfCallback) pfCallback ((DWORD)progress.percentage, pCustom);
 		});
-		depopt->Completed = ref new onprogresscomp ([&hCompEvt] (progressopt, AsyncStatus) {
+		depopt->Completed = ref new onprogresscomp ([&hCompEvt] (progressopt, Windows::Foundation::AsyncStatus) {
 			SetEvent (hCompEvt);
 		});
 		WaitForSingleObject (hCompEvt, INFINITE);
 		switch (depopt->Status)
 		{
-			case AsyncStatus::Completed:
+			case Windows::Foundation::AsyncStatus::Completed:
 				return S_OK;
-			case AsyncStatus::Error:
+			case Windows::Foundation::AsyncStatus::Error:
 			{
 				auto depresult = depopt->GetResults ();
 				auto errorcode = depopt->ErrorCode;
@@ -77,11 +103,11 @@ template <typename TAsyncOpCreator> HRESULT RunPackageManagerOperation (TAsyncOp
 				if (pDetailMsg) *pDetailMsg = _wcsdup (g_swExceptionDetail.c_str ());
 				return (HRESULT)errorcode.Value;
 			}
-			case AsyncStatus::Canceled:
+			case Windows::Foundation::AsyncStatus::Canceled:
 				g_swExceptionDetail = L"Installation Canceled";
 				if (pDetailMsg) *pDetailMsg = _wcsdup (g_swExceptionDetail.c_str ());
 				return E_ABORT;
-			case AsyncStatus::Started:
+			case Windows::Foundation::AsyncStatus::Started:
 				g_swExceptionDetail = L"Installation is Running";
 				if (pDetailMsg) *pDetailMsg = _wcsdup (g_swExceptionDetail.c_str ());
 				return E_PENDING;
@@ -185,7 +211,8 @@ void SidToAccountName (const std::wstring &sidString, std::wstring &stringSid)
 		if (LookupAccountSidW (nullptr, sid, namebuf.data (), &nameCharCount, domainNameBuf.data (), &domainNameCharCount, &sidType))
 		{
 			stringSid = domainNameBuf.data ();
-			stringSid += stringSid + L"\\" + namebuf.data ();
+			if (!stringSid.empty ()) stringSid += L"\\";
+			stringSid += namebuf.data ();
 		}
 	}
 	if (stringSid.length () == 0) stringSid = sidString;
@@ -218,7 +245,7 @@ struct pkg_info
 	std::wstring users = L"";
 	std::wstring sids = L"";
 	std::vector <pkg_info> dependencies;
-	static pkg_info parse (Windows::ApplicationModel::Package ^pkg, Windows::Management::Deployment::PackageManager ^mgr)
+	static pkg_info parse (Windows::ApplicationModel::Package ^pkg, Windows::Management::Deployment::PackageManager ^mgr, bool iterdeps = true)
 	{
 		pkg_info pi;
 		if (!pkg) throw ref new InvalidArgumentException ("No package found.");
@@ -259,23 +286,30 @@ struct pkg_info
 					std::wstring sid;
 					WAPParseSetStringValue (sid, it->UserSecurityId);
 					if (i) pi.sids += L';';
-					pi.users += sid;
+					pi.sids += sid;
 				}
 				i ++;
 			}
 		}
 		catch (...) {}
-		try
+		if (g_enableIterDeps && iterdeps)
 		{
-			auto deps = pkg->Dependencies;
-			for (auto it : deps)
+			try
 			{
-				auto deppkg = pkg_info::parse (it, mgr);
-				deppkg.dependencies.clear ();
-				pi.dependencies.push_back (deppkg);
+				auto deps = pkg->Dependencies;
+				if (deps && deps->Size)
+				{
+					for (size_t i = 0; i < deps->Size; i ++)
+					{
+						auto it = deps->GetAt (i);
+						auto deppkg = pkg_info::parse (it, mgr, false);
+						deppkg.dependencies.clear ();
+						pi.dependencies.push_back (deppkg);
+					}
+				}
 			}
+			catch (...) {}
 		}
-		catch (...) {}
 		return pi;
 	#ifdef WAPParseSetStringValue
 	#undef WAPParseSetStringValue
@@ -319,6 +353,49 @@ struct pkg_info
 	}
 };
 [STAThread]
+HRESULT ProcessFoundAppxPackages (Windows::Foundation::Collections::IIterable <Windows::ApplicationModel::Package ^> ^pkgarr, PackageManager ^pkgmgr, std::function <void (pkg_info &)> pfCallback, LPWSTR *pErrorCode, LPWSTR *pDetailMsg)
+{
+	g_swExceptionCode = L"";
+	g_swExceptionDetail = L"";
+	try
+	{
+		if (pkgarr)
+		{
+			for each (auto pkg in pkgarr)
+			{
+				auto pkginfo = pkg_info::parse (pkg, pkgmgr);
+				if (pfCallback) pfCallback (pkginfo);
+			}
+		}
+		return S_OK;
+	}
+	catch (AccessDeniedException ^e)
+	{
+		g_swExceptionDetail = e->ToString ()->Data ();
+		if (pDetailMsg) *pDetailMsg = _wcsdup (g_swExceptionDetail.c_str ());
+		return (SUCCEEDED ((HRESULT)e->HResult) ? E_FAIL : (HRESULT)e->HResult);
+	}
+	catch (Exception ^e)
+	{
+		g_swExceptionDetail = e->ToString ()->Data ();
+		if (pDetailMsg) *pDetailMsg = _wcsdup (g_swExceptionDetail.c_str ());
+		return (SUCCEEDED ((HRESULT)e->HResult) ? E_FAIL : (HRESULT)e->HResult);
+	}
+	catch (const std::exception &e)
+	{
+		g_swExceptionDetail = StringToWString (e.what () ? e.what () : "Unknown exception.");
+		if (pDetailMsg) *pDetailMsg = _wcsdup (g_swExceptionDetail.c_str ());
+		return E_FAIL;
+	}
+	catch (...)
+	{
+		g_swExceptionDetail = L"Unknown exception";
+		if (pDetailMsg) *pDetailMsg = _wcsdup (g_swExceptionDetail.c_str ());
+		return E_FAIL;
+	}
+	return E_FAIL;
+}
+[STAThread]
 HRESULT FindAppxPackageByCallback (std::function <void (pkg_info &)> pfCallback, LPWSTR *pErrorCode, LPWSTR *pDetailMsg)
 {
 	g_swExceptionCode = L"";
@@ -327,12 +404,7 @@ HRESULT FindAppxPackageByCallback (std::function <void (pkg_info &)> pfCallback,
 	{
 		auto pkgmgr = ref new PackageManager ();
 		auto pkgarr = pkgmgr->FindPackages ();
-		for (auto pkg : pkgarr)
-		{
-			auto pkginfo = pkg_info::parse (pkg, pkgmgr);
-			if (pfCallback) pfCallback (pkginfo);
-		}
-		return S_OK;
+		return ProcessFoundAppxPackages (pkgarr, pkgmgr, pfCallback, pErrorCode, pDetailMsg);
 	}
 	catch (AccessDeniedException ^e)
 	{
@@ -632,6 +704,7 @@ LPCWSTR GetPackageManagerLastErrorDetailMessage () { return g_swExceptionDetail.
 
 HRESULT ActivateAppxApplication (LPCWSTR lpAppUserId, PDWORD pdwProcessId)
 {
+	if (FAILED (CoInitializeEx (NULL, COINIT_APARTMENTTHREADED))) return E_INVALIDARG;
 	if (!lpAppUserId) return E_INVALIDARG;
 	std::wstring strAppUserModelId (L"");
 	if (lpAppUserId) strAppUserModelId += lpAppUserId;
@@ -649,9 +722,112 @@ HRESULT ActivateAppxApplication (LPCWSTR lpAppUserId, PDWORD pdwProcessId)
 		{
 			// This call ensures that the app is launched as the foreground window
 			hResult = CoAllowSetForegroundWindow (spAppActivationManager, NULL);
+			DWORD dwProgressId = 0;
 			// Launch the app
-			if (SUCCEEDED (hResult)) hResult = spAppActivationManager->ActivateApplication (strAppUserModelId.c_str (), NULL, AO_NONE, pdwProcessId);
+			if (SUCCEEDED (hResult))
+			hResult = spAppActivationManager->ActivateApplication (strAppUserModelId.c_str (), NULL, AO_NONE, &dwProgressId);
+			if (pdwProcessId) *pdwProcessId = dwProgressId;
 		}
 	}
 	return hResult;
 }
+[STAThread]
+HRESULT FindAppxPackageByCallback (LPCWSTR lpPkgName, LPCWSTR lpPublisher, std::function <void (pkg_info &)> pfCallback, LPWSTR *pErrorCode, LPWSTR *pDetailMsg)
+{
+	g_swExceptionCode = L"";
+	g_swExceptionDetail = L"";
+	try
+	{
+		auto pkgmgr = ref new PackageManager ();
+		std::wstring pkgname = lpPkgName ? lpPkgName : L"";
+		std::wstring pkgpublisher = lpPublisher ? lpPublisher : L"";
+		auto refname = ref new Platform::String (pkgname.c_str ()),
+			refpublisher = ref new Platform::String (pkgpublisher.c_str ());
+		auto pkgarr = pkgmgr->FindPackages (refname, refpublisher);
+		return ProcessFoundAppxPackages (pkgarr, pkgmgr, pfCallback, pErrorCode, pDetailMsg);
+	}
+	catch (AccessDeniedException ^e)
+	{
+		g_swExceptionDetail = e->ToString ()->Data ();
+		if (pDetailMsg) *pDetailMsg = _wcsdup (g_swExceptionDetail.c_str ());
+		return (SUCCEEDED ((HRESULT)e->HResult) ? E_FAIL : (HRESULT)e->HResult);
+	}
+	catch (Exception ^e)
+	{
+		g_swExceptionDetail = e->ToString ()->Data ();
+		if (pDetailMsg) *pDetailMsg = _wcsdup (g_swExceptionDetail.c_str ());
+		return (SUCCEEDED ((HRESULT)e->HResult) ? E_FAIL : (HRESULT)e->HResult);
+	}
+	catch (const std::exception &e)
+	{
+		g_swExceptionDetail = StringToWString (e.what () ? e.what () : "Unknown exception.");
+		if (pDetailMsg) *pDetailMsg = _wcsdup (g_swExceptionDetail.c_str ());
+		return E_FAIL;
+	}
+	catch (...)
+	{
+		g_swExceptionDetail = L"Unknown exception";
+		if (pDetailMsg) *pDetailMsg = _wcsdup (g_swExceptionDetail.c_str ());
+		return E_FAIL;
+	}
+	return E_FAIL;
+}
+[STAThread]
+HRESULT FindAppxPackagesByIdentity (LPCWSTR lpPkgName, LPCWSTR lpPkgPublisher, PKGMGR_FINDENUMCALLBACK pfCallback, void *pCustom, LPWSTR *pErrorCode, LPWSTR *pDetailMsg)
+{
+	return FindAppxPackageByCallback (lpPkgName, lpPkgPublisher, [&pCustom, &pfCallback] (pkg_info &pi) {
+		std::vector <BYTE> bytes;
+		pi.to_c_struct (bytes);
+		if (pfCallback) pfCallback ((FIND_PACKAGE_INFO *)bytes.data (), pCustom);
+	}, pErrorCode, pDetailMsg);
+}
+[STAThread]
+HRESULT FindAppxPackageByCallback (LPCWSTR lpPkgFamilyName, std::function <void (pkg_info &)> pfCallback, LPWSTR *pErrorCode, LPWSTR *pDetailMsg)
+{
+	g_swExceptionCode = L"";
+	g_swExceptionDetail = L"";
+	try
+	{
+		auto pkgmgr = ref new PackageManager ();
+		std::wstring familyname = L"";
+		familyname += lpPkgFamilyName ? lpPkgFamilyName : L"";
+		auto reffamily = ref new Platform::String (familyname.c_str ());
+		auto pkgarr = pkgmgr->FindPackages (reffamily);
+		return ProcessFoundAppxPackages (pkgarr, pkgmgr, pfCallback, pErrorCode, pDetailMsg);
+	}
+	catch (AccessDeniedException ^e)
+	{
+		g_swExceptionDetail = e->ToString ()->Data ();
+		if (pDetailMsg) *pDetailMsg = _wcsdup (g_swExceptionDetail.c_str ());
+		return (SUCCEEDED ((HRESULT)e->HResult) ? E_FAIL : (HRESULT)e->HResult);
+	}
+	catch (Exception ^e)
+	{
+		g_swExceptionDetail = e->ToString ()->Data ();
+		if (pDetailMsg) *pDetailMsg = _wcsdup (g_swExceptionDetail.c_str ());
+		return (SUCCEEDED ((HRESULT)e->HResult) ? E_FAIL : (HRESULT)e->HResult);
+	}
+	catch (const std::exception &e)
+	{
+		g_swExceptionDetail = StringToWString (e.what () ? e.what () : "Unknown exception.");
+		if (pDetailMsg) *pDetailMsg = _wcsdup (g_swExceptionDetail.c_str ());
+		return E_FAIL;
+	}
+	catch (...)
+	{
+		g_swExceptionDetail = L"Unknown exception";
+		if (pDetailMsg) *pDetailMsg = _wcsdup (g_swExceptionDetail.c_str ());
+		return E_FAIL;
+	}
+	return E_FAIL;
+}
+[STAThread]
+HRESULT FindAppxPackagesByFamilyName (LPCWSTR lpPkgFamilyName, PKGMGR_FINDENUMCALLBACK pfCallback, void *pCustom, LPWSTR *pErrorCode, LPWSTR *pDetailMsg)
+{
+	return FindAppxPackageByCallback (lpPkgFamilyName, [&pCustom, &pfCallback] (pkg_info &pi) {
+		std::vector <BYTE> bytes;
+		pi.to_c_struct (bytes);
+		if (pfCallback) pfCallback ((FIND_PACKAGE_INFO *)bytes.data (), pCustom);
+	}, pErrorCode, pDetailMsg);
+}
+void PackageManagerFreeString (LPWSTR lpString) { if (lpString) free (lpString); }

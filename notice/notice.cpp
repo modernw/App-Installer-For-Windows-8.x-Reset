@@ -25,7 +25,31 @@ std::wstring GetFullPathName (const std::wstring &lpFileName)
 	if (result == 0) return L"";
 	return std::wstring (buffer.data (), result);
 }
-
+LPWSTR AllocWideString (const std::wstring &str)
+{
+	size_t size = (str.length () + 1) * sizeof (WCHAR);
+	LPWSTR buf = (LPWSTR)CoTaskMemAlloc (size);
+	if (!buf) return nullptr;
+	ZeroMemory (buf, size);
+	wcscpy (buf, str.c_str ());
+	return buf;
+}
+// 测试用
+LPWSTR AllocWideString (LPCWSTR str)
+{
+	if (!str) return nullptr;
+	size_t size = (wcslen (str) + 1) * sizeof (WCHAR);
+	LPWSTR buf = (LPWSTR)CoTaskMemAlloc (size);
+	if (!buf) return nullptr;
+	ZeroMemory (buf, size);
+	wcscpy (buf, str);
+	return buf;
+}
+#define _wcsdup AllocWideString
+#define free CoTaskMemFree
+#define malloc CoTaskMemAlloc
+#define realloc CoTaskMemRealloc
+#define calloc(_cnt_, _size_) CoTaskMemAlloc (_cnt_ * _size_)
 struct destruct
 {
 	std::function <void ()> endtask = nullptr;
@@ -243,6 +267,7 @@ Windows::Data::Xml::Dom::XmlDocument ^SimpleToastNoticeXml2 (const std::wstring 
 		{
 			case 1: templatename = L"ToastText01"; break;  // 仅正文
 			case 3: templatename = L"ToastText02"; break;  // 标题 + 正文
+			case 6:
 			case 5: templatename = L"ToastImageAndText01"; break; // 图 + 正文
 			case 7: templatename = L"ToastImageAndText02"; break; // 图 + 标题 + 正文
 			default:    templatename = L"ToastText01"; break;
@@ -342,12 +367,12 @@ HRESULT CreateToastNoticeFromXml (const std::wstring &lpIdName, Windows::Data::X
 		else notifier = ToastMgr::CreateToastNotifier ();
 		auto &xmldoc = pIXml;
 		auto toast = ref new Toast (xmldoc);
-		toast->Activated += ref new Windows::Foundation::TypedEventHandler <
-			Windows::UI::Notifications::ToastNotification ^,
-			Platform::Object ^
-		> ([=] (Windows::UI::Notifications::ToastNotification ^sender, Platform::Object ^args) {
-			if (pfCallback) pfCallback (pCustom);
-		});
+		//toast->Activated += ref new Windows::Foundation::TypedEventHandler <
+		//	Windows::UI::Notifications::ToastNotification ^,
+		//	Platform::Object ^
+		//> ([=] (Windows::UI::Notifications::ToastNotification ^sender, Platform::Object ^args) {
+		//	if (pfCallback) pfCallback (pCustom);
+		//});
 		notifier->Show (toast);
 		return hr = S_OK;
 	}
@@ -445,7 +470,7 @@ std::wstring IStreamToTempFile (IStream *p, const std::wstring &ext = L".tmp")
 	if (FAILED (hr)) throw Platform::Exception::CreateException (hr);
 	LARGE_INTEGER liZero = {};
 	stream->Seek (liZero, STREAM_SEEK_SET, nullptr);
-	HANDLE hFile = CreateFileW (outpath.c_str (), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_TEMPORARY | FILE_FLAG_DELETE_ON_CLOSE, nullptr);
+	HANDLE hFile = CreateFileW (outpath.c_str (), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_TEMPORARY, nullptr);
 	const size_t bufsize = 4096;
 	BYTE buf [bufsize] = {0};
 	ULONG bytesRead = 0;
@@ -553,4 +578,72 @@ HRESULT CreateShortcutWithAppIdW (LPCWSTR pszShortcutPath, LPCWSTR pszTargetPath
 	if (SUCCEEDED (hr)) hr = pPersistFile->Save (pszShortcutPath, TRUE);
 	else pPersistFile = nullptr;
 	return hr;
+}
+
+void NoticeApiFreeString (LPWSTR lpstr)
+{
+	if (!lpstr) return;
+	CoTaskMemFree (lpstr);
+}
+
+size_t Base64ToBytes (const std::wstring &base64OrDataUri, std::vector <BYTE> &retbytes)
+{
+	retbytes.clear ();
+	std::wstring base64 = base64OrDataUri;
+	size_t commaPos = base64.find (L',');
+	if (commaPos != std::wstring::npos) base64 = base64.substr (commaPos + 1);
+	DWORD binLen = 0;
+	if (!CryptStringToBinaryW (base64.c_str (), static_cast <DWORD> (base64.length ()), CRYPT_STRING_BASE64, nullptr, &binLen, nullptr, nullptr))
+		return 0; 
+	retbytes.resize (binLen);
+	if (!CryptStringToBinaryW (base64.c_str (), static_cast <DWORD> (base64.length ()), CRYPT_STRING_BASE64, retbytes.data (), &binLen, nullptr, nullptr))
+	{
+		retbytes.clear ();
+		return 0; // 解码失败
+	}
+	return binLen;
+}
+HRESULT BytesToIStream (const std::vector <BYTE> &data, IStream **ppStream)
+{
+	if (!ppStream) return E_POINTER;
+	*ppStream = nullptr;
+	HGLOBAL hMem = GlobalAlloc (GMEM_MOVEABLE, data.size ());
+	if (!hMem) return E_OUTOFMEMORY;
+	void *pMem = GlobalLock (hMem);
+	if (!pMem)
+	{
+		GlobalFree (hMem);
+		return E_FAIL;
+	}
+	memcpy (pMem, data.data (), data.size ());
+	GlobalUnlock (hMem);
+	HRESULT hr = CreateStreamOnHGlobal (hMem, TRUE, ppStream);
+	if (FAILED (hr)) GlobalFree (hMem);
+	return hr;
+}
+HRESULT CreateToastNoticeWithImgBase64 (LPCWSTR lpIdName, LPCWSTR lpText, LPCWSTR lpImgBase64, NOTICE_ACTIVECALLBACK pfCallback, void *pCustom, LPWSTR *lpExceptMsg)
+{
+	IStream *ist = nullptr;
+	destruct relt ([&ist] () {
+		if (ist) ist->Release ();
+		ist = nullptr;
+	});
+	std::vector <BYTE> bytes;
+	Base64ToBytes (lpImgBase64 ? lpImgBase64 : L"", bytes);
+	if (bytes.size ())
+	{ if (FAILED (BytesToIStream (bytes, &ist))) ist = nullptr; }
+	return CreateToastNoticeWithIStream (lpIdName, lpText, ist, pfCallback, pCustom, lpExceptMsg);
+}
+HRESULT CreateToastNotice2WithImgBase64 (LPCWSTR lpIdName, LPCWSTR lpTitle, LPCWSTR lpText, LPCWSTR lpImgBase64, NOTICE_ACTIVECALLBACK pfCallback, void *pCustom, LPWSTR *lpExceptMsg)
+{
+	IStream *ist = nullptr;
+	destruct relt ([&ist] () {
+		if (ist) ist->Release ();
+		ist = nullptr;
+	});
+	std::vector <BYTE> bytes;
+	Base64ToBytes (lpImgBase64 ? lpImgBase64 : L"", bytes);
+	if (bytes.size ())
+	{ if (FAILED (BytesToIStream (bytes, &ist))) ist = nullptr; }
+	return CreateToastNoticeWithIStream2 (lpIdName, lpTitle, lpText, ist, pfCallback, pCustom, lpExceptMsg);
 }

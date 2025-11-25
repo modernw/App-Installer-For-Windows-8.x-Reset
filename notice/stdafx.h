@@ -32,8 +32,13 @@
 #include <Shlwapi.h>
 #include <algorithm>
 #include <random>
+#include <ppltasks.h>
+#include <thread>
+#include <vector>
+#include <combaseapi.h>
 #using <Windows.winmd>
 using namespace Microsoft::WRL;
 using namespace ABI::Windows::UI::Notifications;
 using namespace ABI::Windows::Data::Xml::Dom;
 using namespace Microsoft::WRL::Wrappers;
+#include <wincrypt.h>

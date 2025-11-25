@@ -20,6 +20,7 @@
     <link rel="stylesheet" href="fonts/fonts.css">
     <link rel="stylesheet" href="css/pages.css">
     <script type="text/javascript" src="js/event.js"></script>
+    <script type="text/javascript" src="js/tileback.js"></script>
     <script type="text/javascript" src="js/pages.js"></script>
     <script type="text/javascript" src="js/load.js"></script>
     <script type="text/javascript" src="js/init.js"></script>
@@ -27,11 +28,12 @@
 
 <body>
     <div id="page-container" class="pagecontainer full">
-        <div class="page splash">
+        <div class="page preinstall">
             <!-- Splash Screen -->
             <img class="splash" src="images/splash.default.png" alt="Splash Screen" width="620" height="300">
             <div class="content splash">
                 <progress class="win-ring"></progress>
+                <p class="status-text"></p>
             </div>
             <script>
                 (function() {
@@ -54,44 +56,160 @@
                 <span data-res-byname="IDS_PLEASEWAIT">Please wait...</span>
             </div>
             <!-- Main Page -->
-            <div class="content select preinstall installing installsuccess installfailed">
+            <div class="content select preinstall installing installsuccess installfailed main">
                 <div style="width: 100%; box-sizing: border-box;" class="currentfile multiple">
-                    <h1 class="win-type-x-large" data-res-byname="IDS_PREINSTALL_MTTITLE"></h1>
-                    <label for="select-package" class="win-label" data-res-byname="IDS_PREINSTALL_MSELECT">在这里请选择一个包查看信息。</label><br />
-                    <select id="select-package"></select><br />
+                    <h1 class="win-type-x-large title multiple" data-res-byname="IDS_PREINSTALL_MTTITLE"></h1>
+                    <label for="select-package" class="win-label" data-res-byname="IDS_PREINSTALL_MSELECT"></label><br />
+                    <select id="select-package" style="width: 100%;"></select><br />
                 </div>
-                <div class="storelogo">
+                <div class="storelogo" style="margin-left: 24px;">
                     <div class="filter">
                         <img src="images/splash.default.png" alt="App Store Logo">
                     </div>
                 </div>
-                <h1 class="win-type-x-large pkgtitle" data-res-byname="IDS_PREINSTALL_TITLE"></h1>
+                <h1 class="win-type-x-large pkgtitle title single" data-res-byname="IDS_PREINSTALL_TITLE"></h1>
+                <script>
+                    (function() {
+                        "use strict";
+                        var monitor = Windows.UI.Event.Monitor;
+                        var htitle = document.body.querySelector(".page .content h1.pkgtitle");
+                        if (!htitle) return;
+
+                        function getHeight(ele) {
+                            if (typeof ele === "string") ele = document.getElementById(ele);
+                            try {
+                                return ele.offsetHeight;
+                            } catch (e) {
+                                try {
+                                    return ele.clientHeight;
+                                } catch (e) {
+                                    return ele.getBoundingClientRect().height;
+                                }
+                            }
+                            return 0;
+                        }
+
+                        function onChildChangeEventHandler(e) {
+                            var span = htitle.querySelector("span");
+                            if (!span) return;
+                            if (!span.hasAttribute("data-original")) span.setAttribute("data-original", span.textContent);
+                            else span.textContent = span.getAttribute("data-original");
+                            if (!span.hasAttribute("data-showlength")) span.setAttribute("data-showlength", (span.textContent || "").length);
+                            else span.setAttribute("data-showlength", (span.textContent || "").length);
+                            var totalheight = getHeight(htitle);
+                            var limitheight = (parseFloat(("" + (getComputedStyle(htitle, null).lineHeight || 25 / 72 * 96)).replace("px", "")) + 1) * 2;
+                            while (totalheight > limitheight && span.textContent.length) {
+                                totalheight = getHeight(htitle);
+                                if (totalheight > limitheight) {
+                                    span.textContent = (span.textContent || "").slice(0, -1);
+                                    span.setAttribute("data-showlength", span.textContent.length);
+                                    // console.log(totalheight, limitheight, span.textContent.length, span.getAttribute("data-showlength"), span.getAttribute("data-original").length)
+                                }
+                            }
+                            if (!(totalheight > limitheight && span.textContent.length)) {
+                                var isfulllen =
+                                    span.getAttribute("data-original").length <=
+                                    parseInt(span.getAttribute("data-showlength"), 10);
+                                if (isfulllen) {
+                                    span.removeAttribute("data-overflow");
+                                } else {
+                                    span.setAttribute("data-overflow", true);
+                                }
+                            }
+                        }
+                        monitor.observe(htitle, monitor.EventType.child, onChildChangeEventHandler);
+
+                        function getWidth(ele) {
+                            if (typeof ele === "string") ele = document.getElementById(ele);
+                            try {
+                                return ele.getBoundingClientRect().width;
+                            } catch (e) {
+                                try {
+                                    return ele.offsetWidth;
+                                } catch (e) {
+                                    return ele.clientWidth;
+                                }
+                            }
+                            return 0;
+                        }
+                        var lastWidth = getWidth(htitle);
+
+                        function onSizeChangeEventHandler(e) {
+                            if (lastWidth === getWidth(htitle)) return;
+                            lastWidth = getWidth(htitle);
+                            onChildChangeEventHandler(e);
+                        }
+                        var deb_sizechange = debounce(onSizeChangeEventHandler, 500);
+                        monitor.observe(htitle, monitor.EventType.resize, deb_sizechange);
+                        var lastAttr = htitle.getAttribute("data-titlefmt") || "";
+
+                        function onAttributeChangeEventHandler(e) {
+                            if (lastAttr === htitle.getAttribute("data-titlefmt")) return;
+                            lastAttr = htitle.getAttribute("data-titlefmt");
+                            htitle.innerHTML = Bridge.String.formatInnerHtml(lastAttr, htitle.getAttribute("data-pkgname") || "");
+                        }
+                        monitor.observe(htitle, monitor.EventType.attribute, onAttributeChangeEventHandler);
+                    })();
+                </script>
                 <p class="pkgtitle multiple" data-res-byname="IDS_PREINSTALL_MPKGNAME"></p>
-                <p data-res-byname="IDS_MSAPP"></p>
+                <p class="pkgapplabel" data-res-byname="IDS_MSAPP"></p>
                 <p class="pkgpublisher" data-res-byname="IDS_PUBLISHER"></p>
                 <p class="pkgversion" data-res-byname="IDS_VERSION"></p><br />
                 <p class="pkgfunctions-label" data-res-byname="IDS_FUNCTIONNAME"></p>
                 <div class="functions">
                     <ul>
-                        <li>使用全部的系统资源</li>
                     </ul>
                 </div>
-                <a class="moreinfo" data-res-byname="IDS_MOREINFO"></a>
+                <a class="moreinfo" data-res-byname="IDS_MOREINFO" tabindex="0"></a>
+                <div data-win-control="WinJS.UI.Flyout" id="moreinfo-flyout" style="max-width: 80%; max-height: 80%;">
+                    <div id="moreinfo-flyout-content" style="-ms-user-select: element; user-select: text; padding: 0 0 25px 0; box-sizing: border-box;;">
+                        <div style="width: 100%;">
+                            <p><span colspan="2" style="font-weight: bold;" data-res-byname="IDS_MOREINFO_ID"></span></p>
+                            <p><span data-res-byname="IDS_MOREINFO_IDNAME"></span>: <span class="id name"></span></p>
+                            <p><span data-res-byname="IDS_MOREINFO_IDPUBLISHER"></span>: <span class="id publisher"></span></p>
+                            <p><span data-res-byname="IDS_MOREINFO_IDVERSION"></span>: <span class="id version"></span></p>
+                            <p><span data-res-byname="IDS_MOREINFO_IDARCH"></span>: <span class="id arch"></span></p>
+                            <p><span data-res-byname="IDS_MOREINFO_IDFAMILY"></span>: <span class="id family"></span></p>
+                            <p><span data-res-byname="IDS_MOREINFO_IDFULL"></span>: <span class="id full"></span></p>
+                        </div>
+                        <div style="width: 100%; display: none;">
+                            <p><span colspan="2" style="font-weight:bold;" data-res-byname="IDS_MOREINFO_PROP"></span></p>
+                            <p><span data-res-byname="IDS_MOREINFO_PROPFREAMWORK"></span>: <span class="prop framework"></span></p>
+                            <p><span data-res-byname="IDS_MOREINFO_PROPRESPKG"></span>: <span class="prop respkg"></span></p>
+                        </div>
+                        <div style="width: 100%;">
+                            <p><span colspan="2" style="font-weight:bold;" data-res-byname="IDS_MOREINFO_INFO"></span></p>
+                            <p><span data-res-byname="IDS_MOREINFO_INFOSYS"></span>: <span class="info sys"></span></p>
+                            <p><span data-res-byname="IDS_MOREINFO_INFOLANG"></span>: </p>
+                            <ul class="info langs"></ul>
+                        </div>
+                    </div>
+                </div>
                 <script>
                     (function() {
                         "use strict";
                         var monitor = Windows.UI.Event.Monitor;
                         var page = document.querySelector(".page");
-                        var content = page.querySelector(".content.preinstall");
+                        var content = page.querySelector(".content.main");
                         var functions = page.querySelector(".functions");
                         var funculist = functions.querySelector("ul");
+                        var moreinfo = page.querySelector(".moreinfo");
 
                         function sizeChangeEvent(e) {
+                            // var height = parseFloat((getComputedStyle(content, null).height || ("" + content.getBoundingClientRect().height)).replace("px", ""));
                             var height = content.getBoundingClientRect().height;
+                            var iscomputedheight = false;
+                            if (height < ("" + content.getBoundingClientRect().height)) iscomputedheight = true;
+                            if (height <= 0) height = height || content.offsetHeight || content.clientHeight;
                             var top = functions.getBoundingClientRect().top;
-                            var newheight = parseInt((height - top - 10));
+                            var newheight = 0;
+                            if (iscomputedheight) {
+                                newheight = height - top;
+                            } else {
+                                newheight = parseInt((height - top - (moreinfo.offsetHeight || moreinfo.getBoundingClientRect().height || 10)));
+                            }
                             var listheight = (funculist.scrollHeight || funculist.offsetHeight || funculist.clientHeight || funculist.getBoundingClientRect().height || 10) + 20;
-                            console.log(newheight, listheight);
+                            // console.log(newheight, listheight);
                             if (newheight > listheight) newheight = listheight;
                             functions.style.height = newheight + "px";
                         }
@@ -102,12 +220,87 @@
                         setTimeout(sizeChangeEvent, 0);
                     })();
                 </script>
+                <script>
+                    (function() {
+                        "use strict";
+                        var eutils = Windows.UI.Event.Util;
+                        var select = document.getElementById("select-package");
+                        eutils.addEvent(select, "change", function() {
+                            var strutils = Bridge.External.String;
+                            var page = document.querySelector(".page");
+                            var pkgtitle = page.querySelector(".pkgtitle.multiple");
+                            var pkgpublisher = page.querySelector(".pkgpublisher");
+                            var pkgversion = page.querySelector(".pkgversion");
+                            var funculist = page.querySelector(".functions ul");
+                            var storelogo = page.querySelector(".storelogo");
+                            var slimg = storelogo.querySelector("img");
+                            var slfilter = storelogo.querySelector(".filter");
+                            var pi = Bridge.Package.pkginfo(this.value);
+                            var reason = page.querySelector(".reason textarea");
+                            if (pi && pi.valid) {
+                                var res = Bridge.Resources;
+                                pkgtitle.textContent = strutils.format(res.byname("IDS_PREINSTALL_MPKGNAME"), pi.properties.display_name);
+                                slimg.src = pi.properties.logo_base64;
+                                pkgpublisher.textContent = strutils.format(res.byname("IDS_PUBLISHER"), pi.properties.publisher_display_name);
+                                pkgversion.textContent = strutils.format(res.byname("IDS_VERSION"), stringifyVersion(pi.identity.version));
+                                funculist.innerHTML = "";
+                                storelogo.setAttribute("data-logoimg", pi.properties.logo);
+                                for (var j = 0; j < pi.capabilities.capabilities_name.length; j++) {
+                                    var li = document.createElement("li");
+                                    var capname = pi.capabilities.capabilities_name[j];
+                                    li.setAttribute("data-capability", capname);
+                                    li.textContent = Bridge.Package.capabilityDisplayName(capname);
+                                    if (Bridge.NString.empty(li.textContent)) li.textContent = capname;
+                                    funculist.appendChild(li);
+                                }
+                                for (var j = 0; j < pi.capabilities.device_capabilities.length; j++) {
+                                    var capname = pi.capabilities.device_capabilities[j];
+                                    var cdname = Bridge.Package.capabilityDisplayName(capname);
+                                    if (!Bridge.NString.empty(cdname)) {
+                                        var li = document.createElement("li");
+                                        li.setAttribute("data-capability", capname);
+                                        li.textContent = Bridge.Package.capabilityDisplayName(capname);
+                                        funculist.appendChild(li);
+                                    }
+                                }
+                                try {
+                                    var bc = pi.applications[0].BackgroundColor || Bridge.UI.themeColor;
+                                    storelogo.style.backgroundColor = bc;
+                                    slfilter.style.background = Color.genTileBackFilter(bc);
+                                } catch (e) {
+                                    var bc = Bridge.UI.themeColor;
+                                    storelogo.style.backgroundColor = bc;
+                                    slfilter.style.background = Color.genTileBackFilter(bc);
+                                }
+                                setFlyoutDisplayInfo(pi);
+                                var hres = Bridge.Package.installResult(this.value);
+                                if (hres) {
+                                    reason.textContent = hres.message;
+                                } else {
+                                    reason.textContent = Bridge.Resources.byname("IDS_FAILED_MSUCCESS");
+                                }
+                            }
+                        });
+                    })();
+                </script>
+                <script>
+                    (function() {
+                        "Use strict";
+                        var page = document.querySelector(".page");
+                        var content = page.querySelector(".content.preinstall");
+                        var moreinfo = page.querySelector(".moreinfo");
+                        Windows.UI.Event.Util.addEvent(moreinfo, "click", function() {
+                            var flyout = document.getElementById("moreinfo-flyout").winControl;
+                            flyout.show(this);
+                        });
+                    })();
+                </script>
             </div>
             <div class="progress installing">
                 <div>
                     <span class="ring-loading">&#57543;</span>&nbsp;<span class="status" data-res-byname="IDS_INSTALLING_SLOADING"></span>
                 </div>
-                <progress min="0" max="100" value="50" class="win-progress-bar"></progress>
+                <progress min="0" max="100" class="win-progress-bar"></progress>
             </div>
             <div class="reason installfailed">
                 <p data-res-byname="IDS_FAILED_REASONNAME"></p>
@@ -119,11 +312,10 @@
                     <label for="preinst-enablelaunch" data-res-byname="IDS_LAUNCHWHENREADY"></label>
                 </div>
                 <div class="command">
-                    <button data-res-byname="IDS_PREINSTALL_TINSTALL"></button>
-                    <button data-res-byname="IDS_PREINSTALL_CANCEL"></button>
+                    <button data-res-byname="IDS_PREINSTALL_TINSTALL" onclick="Bridge.Frame.callEvent ('OnPress_Button1')"></button>
+                    <button data-res-byname="IDS_PREINSTALL_CANCEL" onclick="Bridge.Frame.callEvent ('OnPress_Button2')"></button>
                 </div>
             </div>
-            <div data-win-control="WinJS.UI.Flyout" id="moreinfo-flyout"></div>
         </div>
     </div>
 </body>

@@ -24,6 +24,7 @@ body * {
     margin: 0px;
     padding: 0px;
     border: 0px;
+    background-color: #f3f3f3;
 }
 
 .pagecontainer.full {
@@ -72,6 +73,17 @@ body * {
     border-style: none;
     background-color: transparent;
     color: white;
+}
+
+.page.splash .content.splash .status-text {
+    width: 100%;
+    padding: 0 20px;
+    box-sizing: border-box;
+    margin-top: 10px;
+    overflow-y: hidden;
+    overflow-x: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .page.splash .content.splash progress {
@@ -257,9 +269,53 @@ progress.win-ring:indeterminate::-ms-fill {
     box-sizing: border-box;
     transition: width 0.5s cubic-bezier(0.1, 0.9, 0.2, 1), height 0.5s cubic-bezier(0.1, 0.9, 0.2, 1), top 0.5s cubic-bezier(0.1, 0.9, 0.2, 1), left 0.5s cubic-bezier(0.1, 0.9, 0.2, 1), right 0.5s cubic-bezier(0.1, 0.9, 0.2, 1), bottom 0.5s cubic-bezier(0.1, 0.9, 0.2, 1), margin 0.5s cubic-bezier(0.1, 0.9, 0.2, 1), padding 0.5s cubic-bezier(0.1, 0.9, 0.2, 1);
     list-style-position: outside;
+    color: rgb(113, 113, 113);
     /*test*/
-    border: 1px solid black;
-    padding: 5px;
+    /*border: 1px solid black;
+    padding: 5px;*/
+}
+
+.page .content p,
+.page .content span,
+.page .content h1,
+.page .content label,
+.page .content select,
+.page .content .functions ul li,
+.page .content .reason {
+    font-weight: normal;
+}
+
+.page .content .pkgtitle.multiple {
+    font-weight: bold;
+    -ms-overflow-x: hidden;
+    -ms-overflow-y: hidden;
+    -ms-text-overflow: ellipsis;
+    white-space: nowrap;
+    max-height: 1.3em;
+    max-width: 100%;
+}
+
+.page .content .pkgtitle.multiple span {
+    font-weight: bold;
+    -ms-overflow-x: hidden;
+    -ms-overflow-y: hidden;
+    -ms-text-overflow: ellipsis;
+    max-height: 1.3em;
+    white-space: nowrap;
+    max-width: 100%;
+}
+
+.pkgtitle span[data-overflow]::after {
+    content: "...";
+}
+
+.page>.content h1 {
+    font-size: 25pt;
+    margin-bottom: 8px;
+}
+
+.page>.content .pkgapplabel {
+    color: rgb(0, 120, 215);
 }
 
 .page>.progress {
@@ -271,6 +327,14 @@ progress.win-ring:indeterminate::-ms-fill {
     height: auto;
     padding: 0 24px;
     box-sizing: border-box;
+}
+
+.content #moreinfo-flyout-content p>span:nth-child(1) {
+    -ms-user-select: none;
+}
+
+.content #moreinfo-flyout-content>span:nth-child(2) {
+    color: darkgray;
 }
 
 .progress * {
@@ -364,7 +428,7 @@ progress.win-ring:indeterminate::-ms-fill {
 }
 
 .page.select>.controls.select>.command button:nth-of-type(2) {
-    display: none;
+    /*display: none;*/
 }
 
 .page.select>.content.select,
@@ -449,5 +513,33 @@ progress.win-ring:indeterminate::-ms-fill {
 .page.installing.multiple>.content .currentfile label,
 .page.installing.multiple>.content .currentfile select,
 .page.installing.multiple>.content .currentfile br {
+    display: none;
+}
+
+@keyframes scale-visible {
+    from {
+        transform: translateX(50px) scale(0.8);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0) scale(1);
+        opacity: 1;
+    }
+}
+
+.page.installsuccess.multiple>.content.installsuccess * {
+    display: none;
+}
+
+.page.installsuccess.multiple>.content.installsuccess>.currentfile {
+    display: block;
+}
+
+.page.installsuccess.multiple>.content.installsuccess>.currentfile h1.title {
+    display: block;
+}
+
+.page.installsuccess>.controls.installsuccess>.command button:nth-of-type(2),
+.page.installfailed>.controls.installsuccess>.command button:nth-of-type(2) {
     display: none;
 }

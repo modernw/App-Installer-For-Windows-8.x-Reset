@@ -47,16 +47,14 @@ System::Drawing::Color GetDwmThemeColor ()
 	BOOL opaqueBlend = FALSE;
 	// 调用 DwmGetColorizationColor 获取 Aero 颜色
 	HRESULT hr = DwmGetColorizationColor (&color, &opaqueBlend);
-	if (SUCCEEDED (hr)) {
+	if (SUCCEEDED (hr)) 
+	{
 		BYTE r = (BYTE)((color & 0x00FF0000) >> 16);
 		BYTE g = (BYTE)((color & 0x0000FF00) >> 8);
 		BYTE b = (BYTE)(color & 0x000000FF);
 		return System::Drawing::Color::FromArgb (r, g, b);
 	}
-	else {
-		// 如果获取失败，返回默认颜色
-		return System::Drawing::Color::FromArgb (0, 120, 215);
-	}
+	else return System::Drawing::Color::FromArgb (0, 120, 215); // 如果获取失败，返回默认颜色
 }
 String ^ColorToHtml (System::Drawing::Color color)
 {

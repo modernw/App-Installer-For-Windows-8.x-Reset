@@ -251,6 +251,7 @@ extern "C"
 	PKGREAD_API BOOL GetPackagePrerequisite (_In_ HPKGREAD hReader, _In_ LPCWSTR lpName, _Outptr_ VERSION *pVerRet);
 #define GetPackagePrerequisiteOsMinVersion(_In_hReader_, _Outptr_pVerRet_) GetPackagePrerequisite (_In_hReader_, PKG_PREREQUISITE_OS_MIN_VERSION, _Outptr_pVerRet_)
 #define GetPackagePrerequisiteOsMaxVersionTested(_In_hReader_, _Outptr_pVerRet_) GetPackagePrerequisite (_In_hReader_, PKG_PREREQUISITE_OS_MAX_VERSION_TESTED, _Outptr_pVerRet_)
+	PKGREAD_API LPWSTR GetPackagePrerequistieSystemVersionName (_In_ HPKGREAD hReader, _In_ LPCWSTR lpName);
 
 	// File Stream
 	// 从 Appx 包中获取 Appx 中的文件的文件流。
@@ -282,6 +283,9 @@ extern "C"
 	PKGREAD_API LPWSTR StreamToBase64W (_In_ HANDLE hFileStream, _Out_writes_ (dwCharCount) LPWSTR lpMimeBuf, _In_ DWORD dwCharCount, _Outptr_ LPWSTR *lpBase64Head);
 	// 获取 AppxBundle 包中的应用包文件流。最后通过 DestroyAppxFileStream 销毁。
 	PKGREAD_API HANDLE GetAppxBundleApplicationPackageFile (_In_ HPKGREAD hReader);
+	// 获取功能名的显示名，如 internetClient 对应“访问您的 Internet 连接”。返回的是适应于系统区域语言的文本。
+	// 注意：返回的字符串一定要通过 free 释放。
+	PKGREAD_API LPWSTR GetPackageCapabilityDisplayName (LPCWSTR lpCapabilityName);
 #ifdef _DEFAULT_INIT_VALUE_
 #undef _DEFAULT_INIT_VALUE_
 #endif
@@ -320,6 +324,35 @@ const std::vector <std::wstring> g_filepathitems =
 	L"Wide310x150Logo",
 	L"Executable"
 };
+std::map <std::wstring, std::wstring> g_capnamemap;
+std::wstring GetPackageCapabilityDisplayName (const std::wstring &capname)
+{
+	try
+	{
+		if (g_capnamemap.find (capname) != g_capnamemap.end () && !g_capnamemap.at (capname).empty ()) return g_capnamemap.at (capname);
+		else
+		{
+			LPWSTR lpstr = GetPackageCapabilityDisplayName (capname.c_str ());
+			std::wstring ret = L"";
+			ret += lpstr ? lpstr : L"";
+			if (lpstr) free (lpstr);
+			lpstr = nullptr;
+			g_capnamemap [capname] = ret;
+			return ret;
+		}
+	}
+	catch (...)
+	{
+		LPWSTR lpstr = GetPackageCapabilityDisplayName (capname.c_str ());
+		std::wstring ret = L"";
+		ret += lpstr ? lpstr : L"";
+		if (lpstr) free (lpstr);
+		lpstr = nullptr;
+		g_capnamemap [capname] = ret;
+		return ret;
+	}
+	return L"";
+}
 class package_reader
 {
 	private:
@@ -984,6 +1017,17 @@ class package_reader
 		}
 		VERSION os_min_version () const { return get_version (PKG_PREREQUISITE_OS_MIN_VERSION); }
 		VERSION os_max_version_tested () const { return get_version (PKG_PREREQUISITE_OS_MAX_VERSION_TESTED); }
+		std::wstring get_description (const std::wstring &name) const
+		{
+			LPWSTR lpstr = GetPackagePrerequistieSystemVersionName (hReader, name.c_str ());
+			deconstr relt ([&lpstr] () {
+				if (lpstr) free (lpstr);
+				lpstr = nullptr;
+			});
+			return lpstr ? lpstr : L"";
+		}
+		std::wstring os_min_version_description () const { return get_description (PKG_PREREQUISITE_OS_MIN_VERSION); }
+		std::wstring os_max_version_tested_description () const { return get_description (PKG_PREREQUISITE_OS_MAX_VERSION_TESTED); }
 	};
 	package_reader (): hReader (CreatePackageReader ()) {}
 	package_reader (const std::wstring &fpath): hReader (CreatePackageReader ())

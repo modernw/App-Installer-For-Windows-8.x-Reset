@@ -8,13 +8,11 @@
 #include <cstdlib>
 #include <cstdbool>
 #include <cstring>
-#include <cstdint>
 #else
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#include <cstdint>
 #endif
 unsigned _wtou (const wchar_t *str)
 {

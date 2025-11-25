@@ -12,6 +12,7 @@
 #include "nstring.h"
 #include "priformatcli.h"
 #include "pkgread.h"
+
 static std::string ws2utf8 (const std::wstring &ws)
 {
 	std::wstring_convert <std::codecvt_utf8 <wchar_t>> conv;
@@ -37,7 +38,7 @@ struct pkginfo
 	// 对于 AppxBundle 包永远返回是资源包（因为框架包无法打包成 AppxBundle，资源包必须与应用包一同打包进 AppxBundle）。
 	// 返回 PKGROLE_* 宏。
 	WORD role = 0;
-	struct
+	struct 
 	{
 		std::wstring name,
 			publisher,
@@ -47,6 +48,39 @@ struct pkginfo
 		VERSION version, realver;
 		DWORD architecture;
 	} identity;
+	// x86: 0
+	// x64: 9
+	// Arm: 5
+	// Neutral: 11
+	// Arm64: 12
+	std::set <WORD> get_architectures () const
+	{
+		std::set <WORD> ret;
+		switch (type)
+		{
+			case PKGTYPE_APPX: {
+				switch (identity.architecture)
+				{
+					case PKG_ARCHITECTURE_X86: ret.insert (0); break;
+					case PKG_ARCHITECTURE_X64: ret.insert (9); break;
+					case PKG_ARCHITECTURE_ARM: ret.insert (5); break;
+					case PKG_ARCHITECTURE_ARM64: ret.insert (12); break;
+					case PKG_ARCHITECTURE_NEUTRAL: ret.insert (11); break;
+				}
+			} break;
+			case PKGTYPE_BUNDLE: {
+				if (identity.architecture & PKG_ARCHITECTURE_X86) ret.insert (0);
+				if (identity.architecture & PKG_ARCHITECTURE_X64) ret.insert (9);
+				if (identity.architecture & PKG_ARCHITECTURE_ARM) ret.insert (5);
+				if (identity.architecture & PKG_ARCHITECTURE_ARM64) ret.insert (12);
+				// 由于架构历史发展原因：这样做是对的。
+				if (identity.architecture & (PKG_ARCHITECTURE_X86 | PKG_ARCHITECTURE_X64 | PKG_ARCHITECTURE_ARM))
+				{ ret.clear (); ret.insert (11); }
+				if (identity.architecture & PKG_ARCHITECTURE_NEUTRAL) { ret.clear (); ret.insert (11); }
+			}
+		}
+		return ret;
+	}
 	struct
 	{
 		std::wstring display_name;
@@ -91,6 +125,7 @@ struct pkginfo
 	struct
 	{
 		VERSION os_min_version, os_max_version_tested;
+		std::wstring os_min_version_description, os_max_version_tested_description;
 	} prerequisites;
 	static pkginfo parse (const std::wstring &filepath)
 	{
@@ -128,6 +163,8 @@ struct pkginfo
 			auto prer = pread.get_prerequisites ();
 			pkg.prerequisites.os_min_version = prer.os_min_version ();
 			pkg.prerequisites.os_max_version_tested = prer.os_max_version_tested ();
+			pkg.prerequisites.os_min_version_description = prer.os_min_version_description ();
+			pkg.prerequisites.os_max_version_tested_description = prer.os_max_version_tested_description ();
 		}
 		{
 			auto apps = pread.get_applications ();
@@ -299,10 +336,12 @@ struct pkginfo
 			Value obj (kObjectType);
 			obj.AddMember ("os_min_version", ver_to_json (prerequisites.os_min_version, alloc), alloc);
 			obj.AddMember ("os_max_version_tested", ver_to_json (prerequisites.os_max_version_tested, alloc), alloc);
+			obj.AddMember ("os_min_version_description", Value (ws2utf8 (prerequisites.os_min_version_description).c_str (), alloc), alloc);
+			obj.AddMember ("os_max_version_tested_description", Value (ws2utf8 (prerequisites.os_max_version_tested_description).c_str (), alloc), alloc);
 			doc.AddMember ("prerequisites", obj, alloc);
 		}
 		StringBuffer buffer;
-		Writer<StringBuffer> writer (buffer);
+		Writer <StringBuffer> writer (buffer);
 		doc.Accept (writer);
 		std::string utf8 = buffer.GetString ();
 		std::wstring_convert <std::codecvt_utf8 <wchar_t>> conv;

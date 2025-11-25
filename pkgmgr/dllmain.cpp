@@ -10,13 +10,13 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 	{
 	case DLL_PROCESS_ATTACH:
 	case DLL_THREAD_ATTACH:
-		CoInitializeEx (NULL, COINIT_MULTITHREADED | COINIT_APARTMENTTHREADED);
-		RoInitialize (RO_INIT_MULTITHREADED);
+		// CoInitializeEx (NULL, COINIT_MULTITHREADED | COINIT_APARTMENTTHREADED);
+		// RoInitialize (RO_INIT_MULTITHREADED);
 		break;
 	case DLL_THREAD_DETACH:
 	case DLL_PROCESS_DETACH:
-		CoUninitialize ();
-		RoUninitialize ();
+		// CoUninitialize ();
+		// RoUninitialize ();
 		break;
 	}
 	return TRUE;

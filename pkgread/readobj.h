@@ -9,27 +9,14 @@
 #include <atlbase.h>
 #include <functional>
 #include <utility>
+#include <xmllite.h>
 #include "dynarr.h"
 #include "version.h"
 #include "stringres.h"
 #include "norstr.h"
 #include "raii.h"
 #include "priformatcli.h"
-
-bool IsFileExistsW (LPCWSTR filename)
-{
-	DWORD dwAttrib = GetFileAttributesW (filename);
-	return (dwAttrib != INVALID_FILE_ATTRIBUTES && !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
-}
-bool IsFileExistsA (LPCSTR filename)
-{
-	DWORD dwAttrib = GetFileAttributesA (filename);
-	return (dwAttrib != INVALID_FILE_ATTRIBUTES && !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
-}
-bool IsFileExists (LPWSTR filePath) { return IsFileExistsW (filePath); }
-bool IsFileExists (LPCSTR filePath) { return IsFileExistsA (filePath); }
-bool IsFileExists (std::string filePath) { return IsFileExistsA (filePath.c_str ()); }
-bool IsFileExists (std::wstring filePath) { return IsFileExistsW (filePath.c_str ()); }
+#include "filepath.h"
 
 HRESULT GetBundleReader (_In_ LPCWSTR inputFileName, _Outptr_ IAppxBundleReader** bundleReader)
 {
@@ -615,9 +602,53 @@ namespace appx_info
 	{
 		using Base = com_info <IAppxManifestDeviceCapabilitiesEnumerator>;
 		APPX_CAPABILITIES cflags;
+		std::vector <std::wnstring> cnames;
 		public:
 		using Base::Base;
-		appx_capabs (IAppxManifestDeviceCapabilitiesEnumerator *devicec, APPX_CAPABILITIES capa): cflags (capa), com_info (devicec) {}
+		appx_capabs (IAppxManifestDeviceCapabilitiesEnumerator *devicec, APPX_CAPABILITIES capa, IAppxManifestReader *&r): cflags (capa), com_info (devicec) 
+		{
+			if (!r) return;
+			CComPtr <IStream> xmlstream;
+			if (FAILED (r->GetStream (&xmlstream))) return;
+			CComPtr <IXmlReader> xmlreader;
+			if (FAILED (CreateXmlReader (__uuidof (IXmlReader), (void **)&xmlreader, nullptr))) return;
+			xmlreader->SetInput (xmlstream.p);
+			XmlNodeType nodeType;
+			bool inPackage = false;
+			bool inCapabilities = false;
+			HRESULT hr = S_OK;
+			auto &reader = xmlreader;
+			while (SUCCEEDED (hr = xmlreader->Read (&nodeType)) && hr == S_OK)
+			{
+				if (nodeType == XmlNodeType_Element)
+				{
+					LPCWSTR localName = nullptr;
+					reader->GetLocalName (&localName, nullptr);
+					// <Package>
+					if (!inPackage && _wcsicmp (localName, L"Package") == 0) inPackage = true;
+					// <Capabilities>
+					else if (inPackage && !inCapabilities && _wcsicmp (localName, L"Capabilities") == 0) inCapabilities = true;
+					// <Capability>
+					else if (inCapabilities && _wcsicmp (localName, L"Capability") == 0)
+					{
+						if (SUCCEEDED (reader->MoveToAttributeByName (L"Name", nullptr)))
+						{
+							LPCWSTR value = nullptr;
+							reader->GetValue (&value, nullptr);
+							if (value && *value) cnames.push_back (value);
+						}
+						reader->MoveToElement ();
+					}
+				}
+				else if (nodeType == XmlNodeType_EndElement)
+				{
+					LPCWSTR localName = nullptr;
+					reader->GetLocalName (&localName, nullptr);
+					if (inCapabilities && _wcsicmp (localName, L"Capabilities") == 0) inCapabilities = false;
+					else if (inPackage && _wcsicmp (localName, L"Package") == 0) break; 
+				}
+			}
+		}
 		appx_capabs () = default;
 		APPX_CAPABILITIES capabilities () const { return cflags; }
 		size_t device_capabilities (_Out_ std::vector <std::wstring> &output) const
@@ -634,7 +665,8 @@ namespace appx_info
 		size_t capabilities_names (_Out_ std::vector <std::wstring> &output) const
 		{
 			output.clear ();
-			CapabilitiesFlagsToNames (cflags, output);
+			if (cnames.empty ()) CapabilitiesFlagsToNames (cflags, output);
+			else for (auto &it : cnames) output.push_back (it);
 			return output.size ();
 		}
 		// 获取功能和设备功能的所有功能名
@@ -889,8 +921,9 @@ class appxreader: virtual public com_info_quote <IAppxPackageReader>
 	{
 		APPX_CAPABILITIES caps;
 		IAppxManifestDeviceCapabilitiesEnumerator *ip = nullptr;
-		get_device_capabilities (&ip);
-		if (SUCCEEDED (get_capabilities (&caps))) return appx_info::appx_capabs (ip, caps);
+		CComPtr <IAppxManifestReader> im;
+		if (SUCCEEDED (manifest (&im))) im->GetDeviceCapabilities (&ip);
+		if (SUCCEEDED (get_capabilities (&caps))) return appx_info::appx_capabs (ip, caps, im.p);
 		return appx_info::appx_capabs (ip);
 	}
 	HRESULT get_dependencies (_Outptr_ IAppxManifestPackageDependenciesEnumerator **output) const { return get_from_manifest <IAppxManifestPackageDependenciesEnumerator *> (&Manifest::GetPackageDependencies, output); }

@@ -5,6 +5,9 @@
 #include <MsHTML.h>
 #include <ExDisp.h>
 #include <atlbase.h>
+#include <fstream>
+#include <comdef.h>
+#include <vcclr.h>
 #include "cmdargs.h"
 #include "themeinfo.h"
 #include "mpstr.h"
@@ -14,6 +17,10 @@
 #include "ieshell.h"
 #include "resmap.h"
 #include "appxinfo.h"
+#include "localeex.h"
+#include "pkgmgr.h"
+#include "notice.h"
+#include "certmgr.h"
 
 using namespace System;
 using namespace System::Runtime::InteropServices;
@@ -24,6 +31,13 @@ using namespace System::Runtime::InteropServices;
 #define DEBUGMODE false
 #endif
 #define JS_SAFE [MarshalAs (UnmanagedType::SafeArray, SafeArraySubType = VarEnum::VT_VARIANT)]
+enum class CMDPARAM: DWORD
+{
+	NONE = 0b000,
+	SILENT = 0b001,
+	VERYSILENT = 0b011,
+	MULTIPLE = 0b100
+};
 
 LPCWSTR g_lpAppId = L"Microsoft.DesktopAppInstaller";
 auto &g_identity = g_lpAppId;
@@ -49,8 +63,21 @@ resxmldoc g_scaleres (
 	CombinePath (GetProgramRootDirectoryW (), L"VisualElementsManifest.xml")
 );
 WORD g_wcmdflags = 0;
-std::set <std::wnstring> g_pkgfiles;
+std::vector <std::wnstring> g_pkgfiles;
 std::vector <pkginfo> g_pkginfo;
+std::wstring g_lastfile;
+struct package_installresult
+{
+	HRESULT result = S_OK;
+	std::wstring error;
+	std::wstring reason;
+	bool succeeded () const { return SUCCEEDED (result); }
+	bool failed () const { return FAILED (result); }
+	package_installresult (HRESULT result, const std::wstring &err, const std::wstring &msg): result (result), reason (msg), error (err) {}
+	package_installresult (HRESULT result, const std::wstring &msg): result (result), reason (msg) {}
+	package_installresult () = default;
+};
+std::map <std::wnstring, package_installresult> g_pkgresult;
 
 HRESULT GetWebBrowser2Interface (System::Windows::Forms::WebBrowser ^fwb, IWebBrowser2 **output)
 {
@@ -245,36 +272,167 @@ public ref class SplashForm: public System::Windows::Forms::Form
 		}
 	}
 };
-bool ReadPackagesTask ()
+System::String ^FormatString (System::String ^fmt, ... array <Object ^> ^args) { return System::String::Format (fmt, args); }
+std::wstring HResultToMessage (HRESULT hr)
 {
-	std::set <std::wstring> noread;
-	std::set <std::wstring> hasread;
-	for (auto &it : g_pkgfiles)
+	_com_error err (hr);
+	auto msgptr = err.ErrorMessage ();
+	return msgptr ? msgptr : L"";
+}
+String ^ EscapeToInnerXml (String ^str)
+{
+	using namespace System::Xml;
+	auto doc = gcnew System::Xml::XmlDocument ();
+	doc->LoadXml ("<body></body>");
+	auto root = doc->FirstChild;
+	root->InnerText = str;
+	return root->InnerXml;
+}
+std::wstring EscapeToInnerXml (const std::wstring &str) { return MPStringToStdW (EscapeToInnerXml (CStringToMPString (str))); }
+enum class InstallType
+{
+	normal,
+	update,
+	reinstall
+};
+inline std::wstring ToStdWString (const std::wstring &str) { return str; }
+size_t ExploreFile (HWND hParent, std::vector <std::wstring> &results, LPWSTR lpFilter = L"Windows Store App Package (*.appx; *.appxbundle)\0*.appx;*.appxbundle", DWORD dwFlags = OFN_EXPLORER | OFN_ALLOWMULTISELECT | OFN_PATHMUSTEXIST, const std::wstring &swWndTitle = std::wstring (L"Please select the file(-s): "), const std::wstring &swInitDir = GetFileDirectoryW (g_lastfile))
+{
+	results.clear ();
+	const DWORD BUFFER_SIZE = 65536; // 64KB
+	std::vector <WCHAR> buffer (BUFFER_SIZE, 0);
+	OPENFILENAME ofn;
+	ZeroMemory (&ofn, sizeof (ofn));
+	ofn.hwndOwner = hParent;
+	ofn.lpstrFile = (LPWSTR)buffer.data ();
+	ofn.nMaxFile = BUFFER_SIZE;
+	ofn.lpstrFilter = lpFilter;
+	ofn.nFilterIndex = 1;
+	ofn.lpstrTitle = swWndTitle.c_str ();
+	ofn.Flags = dwFlags;
+	ofn.lpstrInitialDir = swInitDir.c_str ();
+	ofn.lStructSize = sizeof (ofn);
+	if (GetOpenFileNameW (&ofn))
 	{
-		bool isfind = false;
-		for (auto &rit : g_pkginfo)
+		LPCWSTR p = buffer.data ();
+		std::wstring dir = p;
+		p += dir.length () + 1;
+		if (*p == 0) results.push_back (dir);
+		else
 		{
-			if (rit.filepath == it)
+			while (*p)
 			{
-				isfind == true;
-				hasread.insert (it);
-				break;
+				std::wstring fullPath = dir + L"\\" + p;
+				results.push_back (fullPath);
+				p += wcslen (p) + 1;
 			}
 		}
-		if (!isfind) noread.insert (it);
+		if (!results.empty ()) g_lastfile = results.back ();
 	}
-	for (auto &it : noread)
+	return results.size ();
+}
+public delegate void InstallProgressCallbackDelegate (DWORD progress);
+#pragma managed(push, off)
+void NativeProgressCallback (DWORD progress, void* context)
+{
+	(void)progress;
+	(void)context;
+}
+#pragma managed(pop)
+static void ManagedThunk (DWORD progress, void *context)
+{
+	if (context == nullptr) return;
+	GCHandle handle = GCHandle::FromIntPtr (IntPtr (context));
+	auto cb = (InstallProgressCallbackDelegate ^)handle.Target;
+	if (cb != nullptr) cb (progress);
+}
+HRESULT AddAppxPackageFromPath (
+	const std::wstring &pkgpath,
+	const std::vector <std::wstring> &deplist,
+	DWORD deployoption,
+	InstallProgressCallbackDelegate ^callback,
+	std::wstring &errorcode,
+	std::wstring &detailmsg
+)
+{
+	std::vector <BYTE> bytes (sizeof (REGISTER_PACKAGE_DEFENDENCIES) + sizeof (LPWSTR) * deplist.size ());
+	auto lpdeplist = (PREGISTER_PACKAGE_DEFENDENCIES)bytes.data ();
+	lpdeplist->dwSize = (DWORD)deplist.size ();
+	for (size_t i = 0; i < deplist.size (); ++i)
+		lpdeplist->alpDepUris [i] = (LPWSTR)deplist [i].c_str ();
+	GCHandle handle;
+	void *ctx = nullptr;
+	PKGMRR_PROGRESSCALLBACK pfnCallback = nullptr;
+	if (callback != nullptr)
 	{
-		auto pi = pkginfo::parse (it);
-		if (pi.valid)
-		{
-			hasread.insert (it);
-			g_pkginfo.push_back (pi);
-		}
+		handle = GCHandle::Alloc (callback);
+		ctx = (void *)GCHandle::ToIntPtr (handle).ToPointer ();
+		pfnCallback = (PKGMRR_PROGRESSCALLBACK)&ManagedThunk; // 传托管 thunk 给 native
 	}
-	g_pkgfiles.clear ();
-	for (auto &it : hasread) g_pkgfiles.insert (it);
-	return hasread.size ();
+	LPWSTR lperr = nullptr, lpmsg = nullptr;
+	destruct relt ([&] () {
+		if (lperr) PackageManagerFreeString (lperr);
+		if (lpmsg) PackageManagerFreeString (lpmsg);
+		lperr = nullptr;
+		lpmsg = nullptr;
+	});
+	HRESULT hr = AddAppxPackageFromPath (
+		pkgpath.c_str (),
+		lpdeplist,
+		deployoption,
+		pfnCallback,
+		ctx,
+		&lperr,
+		&lpmsg
+	);
+	if (callback != nullptr && handle.IsAllocated) handle.Free ();
+	errorcode = lperr ? lperr : L"";
+	detailmsg = lpmsg ? lpmsg : L"";
+	return hr;
+}
+HRESULT UpdateAppxPackageFromPath (
+	const std::wstring &pkgpath,
+	const std::vector <std::wstring> &deplist,
+	DWORD deployoption,
+	InstallProgressCallbackDelegate ^callback,
+	std::wstring &errorcode,
+	std::wstring &detailmsg
+)
+{
+	std::vector <BYTE> bytes (sizeof (REGISTER_PACKAGE_DEFENDENCIES) + sizeof (LPWSTR) * deplist.size ());
+	auto lpdeplist = (PREGISTER_PACKAGE_DEFENDENCIES)bytes.data ();
+	lpdeplist->dwSize = (DWORD)deplist.size ();
+	for (size_t i = 0; i < deplist.size (); ++i)
+		lpdeplist->alpDepUris [i] = (LPWSTR)deplist [i].c_str ();
+	GCHandle handle;
+	void *ctx = nullptr;
+	PKGMRR_PROGRESSCALLBACK pfnCallback = nullptr;
+	if (callback != nullptr)
+	{
+		handle = GCHandle::Alloc (callback);
+		ctx = (void *)GCHandle::ToIntPtr (handle).ToPointer ();
+		pfnCallback = (PKGMRR_PROGRESSCALLBACK)&ManagedThunk; // 传托管 thunk 给 native
+	}
+	LPWSTR lperr = nullptr, lpmsg = nullptr;
+	destruct relt ([&] () {
+		if (lperr) PackageManagerFreeString (lperr);
+		if (lpmsg) PackageManagerFreeString (lpmsg);
+		lperr = nullptr;
+		lpmsg = nullptr;
+	});
+	HRESULT hr = UpdateAppxPackageFromPath (
+		pkgpath.c_str (),
+		lpdeplist,
+		deployoption,
+		pfnCallback,
+		ctx,
+		&lperr,
+		&lpmsg
+	);
+	if (callback != nullptr && handle.IsAllocated) handle.Free ();
+	errorcode = lperr ? lperr : L"";
+	detailmsg = lpmsg ? lpmsg : L"";
+	return hr;
 }
 [ComVisible (true)]
 public ref class MainHtmlWnd: public System::Windows::Forms::Form
@@ -284,6 +442,9 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 	private:
 	WebBrowser ^webui;
 	SplashForm ^splash;
+	String ^pagetag = "splash";
+	InstallType insmode = InstallType::normal;
+	size_t nowinstall = 0;
 	public:
 	[ComVisible (true)]
 	ref class IBridge
@@ -292,6 +453,30 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 		MainHtmlWnd ^wndinst = nullptr;
 		public:
 		IBridge (MainHtmlWnd ^wnd): wndinst (wnd) {}
+		ref class _I_HResult
+		{
+			private:
+			HRESULT hr = S_OK;
+			String ^errorcode = "";
+			String ^detailmsg = "";
+			public:
+			_I_HResult (HRESULT hres)
+			{
+				hr = hres;
+				detailmsg = CStringToMPString (HResultToMessage (hres));
+			}
+			_I_HResult (HRESULT hres, String ^error, String ^message)
+			{
+				hr = hres;
+				errorcode = error;
+				detailmsg = message;
+			}
+			property HRESULT HResult { HRESULT get () { return hr; }}
+			property String ^ErrorCode { String ^get () { return errorcode; }}
+			property String ^Message { String ^get () { return detailmsg; }}
+			property bool Succeeded { bool get () { return SUCCEEDED (hr); }}
+			property bool Failed { bool get () { return FAILED (hr); }}
+		};
 		ref class _I_System
 		{
 			private:
@@ -333,6 +518,29 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 				void ShowSplash () { if (wndinst->SplashScreen->IsHandleCreated) wndinst->SplashScreen->Show (); else wndinst->SplashScreen->ReInit (); }
 				void FadeAwaySplash () { wndinst->SplashScreen->FadeAway (); }
 				void FadeOutSplash () { wndinst->SplashScreen->FadeOut (); }
+				property String ^ThemeColor { String ^get () { return ColorToHtml (GetDwmThemeColor ()); } }
+				property bool DarkMode { bool get () { return IsAppInDarkMode (); }}
+				property String ^HighContrast
+				{
+					String ^get ()
+					{
+						auto highc = GetHighContrastTheme ();
+						switch (highc)
+						{
+							case HighContrastTheme::None: return "none";
+								break;
+							case HighContrastTheme::Black: return "black";
+								break;
+							case HighContrastTheme::White: return "white";
+								break;
+							case HighContrastTheme::Other: return "high";
+								break;
+							default: return "none";
+								break;
+						}
+						return "none";
+					}
+				}
 			};
 			ref class _I_Resources
 			{
@@ -414,9 +622,26 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 				String ^ToString () override { return Stringify (); }
 				bool Valid () { return Major != 0 && Minor != 0 && Build != 0 && Revision != 0; }
 			};
+			ref class _I_Locale
+			{
+				public:
+				property String ^CurrentLocale { String ^get () { return CStringToMPString (GetComputerLocaleCodeW ()); } }
+				property LCID CurrentLCID { LCID get () { return LocaleCodeToLcid (GetComputerLocaleCodeW ()); } }
+				String ^ToLocaleName (LCID lcid) { return CStringToMPString (LcidToLocaleCodeW (lcid)); }
+				LCID ToLCID (String ^localename) { return LocaleCodeToLcidW (MPStringToStdW (localename)); }
+				Object ^LocaleInfo (LCID lcid, LCTYPE lctype) { return CStringToMPString (GetLocaleInfoW (lcid, lctype)); }
+				Object ^LocaleInfoEx (String ^localeName, LCTYPE lctype)
+				{
+					std::wstring output = L"";
+					int ret = GetLocaleInfoEx (MPStringToStdW (localeName), lctype, output);
+					if (output.empty ()) return ret;
+					else return CStringToMPString (output);
+				}
+			};
 			private:
 			_I_UI ^ui = gcnew _I_UI (wndinst);
 			_I_Resources ^ires = gcnew _I_Resources ();
+			_I_Locale ^locale = gcnew _I_Locale ();
 			public:
 			_I_System (MainHtmlWnd ^wnd): wndinst (wnd) {}
 			property _I_UI ^UI { _I_UI ^get () { return ui; } }
@@ -448,6 +673,7 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 				#pragma warning(pop)
 				}
 			}
+			property _I_Locale ^Locale { _I_Locale ^get () { return locale; }}
 			property bool IsWindows10
 			{
 				bool get ()
@@ -475,6 +701,26 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 				void set (int value) { return wndinst->PageScale = value; }
 			}
 			property int Version { int get () { return GetInternetExplorerVersionMajor (); }}
+			String ^ParseHtmlColor (String ^color)
+			{
+				auto dcolor = Drawing::ColorTranslator::FromHtml (color);
+				{
+					rapidjson::Document doc;
+					doc.SetObject ();
+					auto &alloc = doc.GetAllocator ();
+					doc.AddMember ("r", (uint16_t)dcolor.R, alloc);
+					doc.AddMember ("g", (uint16_t)dcolor.G, alloc);
+					doc.AddMember ("b", (uint16_t)dcolor.B, alloc);
+					doc.AddMember ("a", (uint16_t)dcolor.A, alloc);
+					rapidjson::StringBuffer buffer;
+					rapidjson::Writer <rapidjson::StringBuffer> writer (buffer);
+					doc.Accept (writer);
+					std::string utf8 = buffer.GetString ();
+					std::wstring_convert <std::codecvt_utf8 <wchar_t>> conv;
+					return CStringToMPString (conv.from_bytes (utf8));
+				}
+				return "{}";
+			}
 		};
 		ref class _I_Storage
 		{
@@ -509,11 +755,85 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 			}
 			String ^ToLower (String ^src) { return CStringToMPString (StringToLower (MPStringToStdW (src))); }
 			String ^ToUpper (String ^src) { return CStringToMPString (StringToUpper (MPStringToStdW (src))); }
+			String ^Format (String ^fmt, ... array <Object ^> ^args) { return FormatString (fmt, args); }
+			String ^FormatInnerHTML (String ^fmt, ... array <Object ^> ^args)
+			{
+				std::wstring ihtml = EscapeToInnerXml (MPStringToStdW (fmt));
+				auto pih = CStringToMPString (ihtml);
+				auto newargs = gcnew array <Object ^> (args->Length);
+				for (size_t i = 0; i < args->Length; i ++)
+				{
+					auto %p = newargs [i];
+					p = Format ("<span>{0}</span>",  EscapeToInnerXml (Format ("{0}", args [i])));
+				}
+				return Format (pih, newargs);
+			}
 		};
 		ref class _I_Package
 		{
 			public:
-
+			ref class _I_Package_Manager
+			{
+				public:
+				_I_Package_Manager () {}
+			};
+			private:
+			_I_Package_Manager ^mgr = gcnew _I_Package_Manager ();
+			public:
+			String ^GetPackagesToJson ()
+			{
+				rapidjson::Document doc;
+				doc.SetArray ();
+				auto &alloc = doc.GetAllocator ();
+				for (auto &it : g_pkginfo)
+				{
+					rapidjson::Value member (rapidjson::kStringType);
+					member.SetString (ws2utf8 (it.filepath).c_str (), alloc);
+					doc.PushBack (member, alloc);
+				}
+				rapidjson::StringBuffer buffer;
+				rapidjson::Writer <rapidjson::StringBuffer> writer (buffer);
+				doc.Accept (writer);
+				std::string utf8 = buffer.GetString ();
+				std::wstring_convert <std::codecvt_utf8 <wchar_t>> conv;
+				return CStringToMPString (conv.from_bytes (utf8));
+			}
+			String ^GetPackageInfoToJson (String ^filepath)
+			{
+				std::wstring fpath = MPStringToStdW (filepath);
+				for (auto &it : g_pkginfo)
+				{
+					if (PathEquals (it.filepath, fpath))
+					{
+						return CStringToMPString (it.parseJson ());
+					}
+				}
+				return "{}";
+			}
+			property _I_Package_Manager ^Manager { _I_Package_Manager ^get () { return mgr; }}
+			String ^GetCapabilityDisplayName (String ^capabilityName)
+			{
+				return CStringToMPString (GetPackageCapabilityDisplayName (MPStringToStdW (capabilityName)));
+			}
+			_I_HResult ^GetPackageInstallResult (String ^filepath)
+			{
+				std::wstring path = MPStringToStdW (filepath);
+				if (g_pkgresult.find (path) == g_pkgresult.end ()) return nullptr;
+				auto &pres = g_pkgresult.at (path);
+				return gcnew _I_HResult (
+					pres.result,
+					CStringToMPString (pres.error),
+					CStringToMPString (pres.reason)
+				);
+			}
+		};
+		ref class _I_Window
+		{
+			private:
+			MainHtmlWnd ^wndinst = nullptr;
+			public: 
+			_I_Window (MainHtmlWnd ^wnd): wndinst (wnd) {}
+			Object ^CallEvent (String ^name, ... array <Object ^> ^args) { return wndinst->CallEvent (name, args [0]); }
 		};
 		private:
 		_I_System ^system = gcnew _I_System (wndinst);
@@ -521,39 +841,50 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 		_I_Storage ^storage = gcnew _I_Storage (wndinst);
 		_I_String ^str = gcnew _I_String ();
 		_I_Package ^pkg = gcnew _I_Package ();
+		_I_Window ^wnd = gcnew _I_Window (wndinst);
 		public:
 		property _I_System ^System { _I_System ^get () { return system; }}
 		property _I_IEFrame ^IEFrame { _I_IEFrame ^get () { return ieframe; }}
 		property _I_Storage ^Storage { _I_Storage ^get () { return storage; }}
 		property _I_String ^String { _I_String ^get () { return str; }}
 		property _I_Package ^Package { _I_Package ^get () { return pkg; }}
+		property _I_Window ^Window { _I_Window ^get () { return wnd; }}
 	};
 	protected:
 	property WebBrowser ^WebUI { WebBrowser ^get () { return this->webui; } }
 	property SplashForm ^SplashScreen { SplashForm ^get () { return this->splash; } }
 	property int DPIPercent { int get () { return GetDPI (); }}
 	property double DPI { double get () { return DPIPercent * 0.01; }}
+	property String ^PageTag { String ^get () { return GetPage (); } void set (String ^tag) { SetPage (tag); }}
 	void InitSize ()
 	{
 		unsigned ww = 0, wh = 0;
 		auto &ini = g_initfile;
 		auto setsect = ini ["Settings"];
-		if (setsect [L"SavePosAndSizeBeforeCancel"].read_bool ())
+		auto savepos = setsect [L"AppInstaller:SavePosAndSizeBeforeCancel"];
+		auto lastw = setsect [L"AppInstaller:LastWidth"];
+		auto lasth = setsect [L"AppInstaller:LastHeight"];
+		auto defw = setsect [L"AppInstaller:DefaultWidth"];
+		auto defh = setsect [L"AppInstaller:DefaultHeight"];
+		auto minw = setsect [L"AppInstaller:MinimumWidth"];
+		auto minh = setsect [L"AppInstaller:MinimumHeight"];
+		auto lasts = setsect [L"AppInstaller:LastWndState"];
+		if (savepos.read_bool ())
 		{
-			ww = setsect [L"LastWidth"].read_uint (setsect [L"DefaultWidth"].read_uint (rcInt (IDS_DEFAULTWIDTH)));
-			wh = setsect [L"LastHeight"].read_uint (setsect [L"DefaultHeight"].read_uint (rcInt (IDS_DEFAULTHEIGHT)));
+			ww = lastw.read_uint (defw.read_uint (rcInt (IDS_DEFAULTWIDTH)));
+			wh = lastw.read_uint (defh.read_uint (rcInt (IDS_DEFAULTHEIGHT)));
 		}
 		else
 		{
-			ww = setsect [L"DefaultWidth"].read_uint (rcInt (IDS_DEFAULTWIDTH));
-			wh = setsect [L"DefaultHeight"].read_uint (rcInt (IDS_DEFAULTHEIGHT));
+			ww = defw.read_uint (rcInt (IDS_DEFAULTWIDTH));
+			wh = defw.read_uint (rcInt (IDS_DEFAULTHEIGHT));
 		}
 		this->MinimumSize = System::Drawing::Size (
-			setsect [L"MinimumWidth"].read_uint (rcInt (IDS_MINWIDTH)) * DPI,
-			setsect [L"MinimumHeight"].read_uint (rcInt (IDS_MINHIEHGT)) * DPI
+			minw.read_uint (rcInt (IDS_MINWIDTH)) * DPI,
+			minh.read_uint (rcInt (IDS_MINHIEHGT)) * DPI
 		);
 		this->ClientSize = System::Drawing::Size (ww * DPI, wh * DPI);
-		this->WindowState = (System::Windows::Forms::FormWindowState)setsect [L"LastWndState"].read_int ((int)System::Windows::Forms::FormWindowState::Normal);
+		this->WindowState = (System::Windows::Forms::FormWindowState)lasts.read_int ((int)System::Windows::Forms::FormWindowState::Normal);
 	}
 	void Init ()
 	{
@@ -585,8 +916,15 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 
 			ExecScript ("Windows.UI.DPI.mode = 1");
 			ExecScript ("Bridge.Frame.scale = Bridge.Frame.scale * Bridge.UI.dpi");
-			// splash->FadeOut ();
+			auto &ini = g_initfile;
+			auto setsect = ini ["Settings"];
+			auto lwr = setsect [L"AppInstaller:LaunchWhenReady"];
+			bool launchwhenready = lwr.read_bool (true);
+			if (g_wcmdflags & (DWORD)CMDPARAM::SILENT) launchwhenready = false;
+			InvokeCallScriptFunction ("setLaunchWhenReady", launchwhenready, g_wcmdflags & (DWORD)CMDPARAM::SILENT);
+			SetPage ("splash");
 			splash->FadeAway ();
+			ThreadPackageLoadTask ();
 		}
 	}
 	void OnCreate (System::Object ^sender, System::EventArgs ^e)
@@ -632,9 +970,417 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 			"}) ();"
 		);
 	}
+	System::Threading::Thread ^ThreadPackageLoadTask ()
+	{
+		auto thread = gcnew Threading::Thread (gcnew Threading::ThreadStart (this, &MainHtmlWnd::PackageLoadTask));
+		thread->IsBackground = true;
+		thread->Start ();
+		return thread;
+	}
 	void PackageLoadTask ()
 	{
-		if (!g_pkginfo.size ())
+		bool res = ReadPackagesTask (gcnew Action <String ^> (this, &MainHtmlWnd::ReadPackageCallback));
+		InvokeCallScriptFunction ("setSplashPageStatusText", "");
+		if (res)
+		{
+			String ^fmt = GetRCStringCli (IDS_PREINSTALL_TITLE);
+			String ^btn1 = GetRCStringCli (IDS_PREINSTALL_TINSTALL);
+			String ^btn2 = GetRCStringCli (IDS_PREINSTALL_CANCEL);
+			if (g_pkginfo.size () == 1)
+			{
+				try 
+				{
+					const auto &pi = *g_pkginfo.begin ();
+					const std::wstring
+						&name = pi.identity.name,
+						&publisher = pi.identity.publisher,
+						&family = pi.identity.package_family_name,
+						&fullname = pi.identity.package_full_name;
+					std::vector <find_pkginfo> fpkgs;
+					std::wstring err, msg;
+					HRESULT hr = GetAppxPackages (family, fpkgs, err, msg);
+					bool isfind = false;
+					find_pkginfo findpkg;
+					if (fpkgs.size () > 0)
+					{
+						for (auto &it : fpkgs)
+						{
+							if (it.identity.name != pi.identity.name) continue;
+							auto archs = pi.get_architectures ();
+							for (auto &arch : archs)
+							{
+								if (arch == it.identity.architecture)
+								{
+									isfind = true;
+									findpkg = it;
+									break;
+								}
+								else if (arch == 11 || it.identity.architecture == 11)
+								{
+									isfind = true;
+									findpkg = it;
+									break;
+								}
+							}
+							if (isfind) break;
+							if (it.properties.resource_package && pi.properties.resource_package && it.identity.resource_id == pi.identity.resource_id)
+							{
+								isfind = true;
+								findpkg = it;
+								break;
+							}
+							if (archs.size () == 0 && it.identity.architecture == (WORD)-1)
+							{
+								isfind = true;
+								findpkg = it;
+								break;
+							}
+						}
+					}
+					if (isfind)
+					{
+						version fver = findpkg.identity.version,
+							pver (pi.identity.realver.major, pi.identity.realver.minor, pi.identity.realver.build, pi.identity.realver.revision);
+						if (pver > fver) // 更新模式 
+						{
+							insmode = InstallType::update;
+							fmt = GetRCStringCli (IDS_PREINSTALL_TUPDATE);
+							btn1 = GetRCStringCli (IDS_PREINSTALL_CUPDATE);
+							btn2 = GetRCStringCli (IDS_PREINSTALL_CANCEL);
+						}
+						else if (pver == fver)
+						{
+							insmode = InstallType::reinstall;
+							fmt = GetRCStringCli (IDS_PREINSTALL_TREINSTALL);
+							btn1 = GetRCStringCli (IDS_PREINSTALL_CREINSTALL);
+							btn2 = GetRCStringCli (IDS_SUCCESS_LAUNCH);
+						}
+						else
+						{
+							insmode = InstallType::reinstall;
+							fmt = GetRCStringCli (IDS_PREINSTALL_HASINSTALLED);
+							btn1 = GetRCStringCli (IDS_PREINSTALL_CREINSTALL);
+							btn2 = GetRCStringCli (IDS_SUCCESS_LAUNCH);
+						}
+					}
+				}
+				catch (...) {}
+			}
+			InvokeCallScriptFunction ("noticeLoadPreinstallPage", g_pkginfo.size () > 1);
+			InvokeCallScriptFunction ("setPreinstallPagePkgTitleFormatSingle", fmt);
+			InvokeCallScriptFunction ("setControlButtonState", 1, btn1, true, false);
+			InvokeCallScriptFunction ("setControlButtonState", 2, btn2, true, false);
+			pagetag = "preinstall";
+			if (g_wcmdflags & (DWORD)CMDPARAM::SILENT) ThreadPackageInstallTask ();
+		}
+		else
+		{
+			InvokeCallScriptFunction ("noticeLoadSelectPage", g_pkginfo.size () > 1);
+			pagetag = "select";
+		}
+	}
+	void ReadPackageCallback (String ^lpPath)
+	{
+		size_t pkgfilelen = g_pkgfiles.size ();
+		if (pkgfilelen > 1)
+		{
+			InvokeCallScriptFunction (
+				"setSplashPageStatusText",
+				System::String::Format (GetRCStringCli (IDS_SPLASH_MLOAD), lpPath)
+			);
+		}
+	}
+	bool ReadPackagesTask (System::Action <String ^> ^callback)
+	{
+		std::vector <std::wstring> noread;
+		std::vector <std::wstring> hasread;
+		for (auto &it : g_pkgfiles)
+		{
+			bool isfind = false;
+			for (auto &rit : g_pkginfo)
+			{
+				if (rit.filepath == it)
+				{
+					isfind == true;
+					push_unique <std::wstring> (hasread, it);
+					break;
+				}
+			}
+			if (!isfind) push_unique <std::wstring> (noread, it);
+		}
+		for (auto &it : noread)
+		{
+			try { if (callback) callback (gcnew String (it.c_str ())); }
+			catch (Exception ^e) { if (DEBUGMODE) OutputDebugStringW (MPStringToPtrW (e->Message)); }
+			auto pi = pkginfo::parse (it);
+			if (pi.valid)
+			{
+				push_unique (hasread, pi.filepath);
+				g_pkginfo.push_back (pi);
+			}
+		}
+		g_pkgfiles.clear ();
+		for (auto &it : hasread) push_unique <std::wnstring> (g_pkgfiles, it);
+		return hasread.size ();
+	}
+	void InstallProgressCallback (DWORD dwProgress)
+	{
+		InvokeCallScriptFunction ("setInstallingProgress", dwProgress);
+		InvokeCallScriptFunction ("setInstallingStatus", String::Format (GetRCStringCli (IDS_INSTALLING_SINSTALLING_PROGRESS), dwProgress));
+	}
+	void InstallProgressCallbackMultiple (DWORD dwProgress)
+	{
+		double progress = (dwProgress * 0.01 + nowinstall) / (double)g_pkginfo.size () * 100;
+		InvokeCallScriptFunction ("setInstallingProgress", progress);
+		InvokeCallScriptFunction ("setInstallingStatus", String::Format (GetRCStringCli (IDS_INSTALLING_MSINSTALLING_PROGRESS), dwProgress, nowinstall + 1, g_pkginfo.size ()));
+	}
+	System::Threading::Thread ^ThreadPackageInstallTask ()
+	{
+		auto thread = gcnew Threading::Thread (gcnew Threading::ThreadStart (this, &MainHtmlWnd::PackageInstallTask));
+		thread->IsBackground = true;
+		thread->Start ();
+		return thread;
+	}
+	void PackageInstallTask ()
+	{
+		InvokeCallScriptFunction ("noticeLoadInstallingPage", g_pkginfo.size () > 1);
+		std::vector <std::wstring> blankdeplist;
+		if (g_pkginfo.size () == 1)
+		{
+			auto &pi = *g_pkginfo.begin ();
+			InvokeCallScriptFunction ("setInstallingStatus", GetRCStringCli (IDS_INSTALLING_SLOADCER));
+			LoadCertFromSignedFile (pi.filepath.c_str ());
+			InvokeCallScriptFunction ("setInstallingStatus", GetRCStringCli (IDS_INSTALLING_SINSTALLING));
+			InvokeCallScriptFunction ("setInstallingProgress", 0);
+			package_installresult pir;
+			if (insmode == InstallType::update)
+			{
+				pir.result = UpdateAppxPackageFromPath (pi.filepath, blankdeplist, DEPOLYOPTION_NONE, gcnew InstallProgressCallbackDelegate (this, &MainHtmlWnd::InstallProgressCallback), pir.error, pir.reason);
+				if (FAILED (pir.result))
+					pir.result = AddAppxPackageFromPath (pi.filepath, blankdeplist, DEPOLYOPTION_NONE, gcnew InstallProgressCallbackDelegate (this, &MainHtmlWnd::InstallProgressCallback), pir.error, pir.reason);
+			}
+			else
+			{
+				pir.result = AddAppxPackageFromPath (pi.filepath, blankdeplist, DEPOLYOPTION_NONE, gcnew InstallProgressCallbackDelegate (this, &MainHtmlWnd::InstallProgressCallback), pir.error, pir.reason);
+			}
+			g_pkgresult [pi.filepath] = pir;
+			if (pir.succeeded ())
+			{
+				InvokeCallScriptFunction ("noticeLoadInstallSuccessPage", false);
+				pagetag = "installsuccess";
+				CreateToastNoticeWithImgBase64 (
+					g_identity,
+					MPStringToStdW (
+						System::String::Format (
+							GetRCStringCli (IDS_SUCCESS_TITLE),
+							CStringToMPString (pi.properties.display_name)
+						)
+					),
+					pi.properties.logo_base64
+				);
+				ThreadPackageSuccessInstallCountTask ();
+			}
+			else
+			{
+				InvokeCallScriptFunction ("noticeLoadInstallFailedPage", false);
+				pagetag = "installfailed";
+				CreateToastNotice2WithImgBase64 (
+					g_identity,
+					MPStringToStdW (
+						System::String::Format (
+							GetRCStringCli (IDS_FAILED_STITLE),
+							CStringToMPString (pi.properties.display_name)
+						)
+					),
+					pir.reason,
+					pi.properties.logo_base64
+				);
+			}
+		}
+		else
+		{
+			for (nowinstall = 0; nowinstall < g_pkginfo.size (); nowinstall ++)
+			{
+				auto &it = g_pkginfo.at (nowinstall);
+				InvokeCallScriptFunction ("setInstallingPackageInfoMultiple", CStringToMPString (it.filepath));
+				InvokeCallScriptFunction (
+					"setInstallingStatus", 
+					String::Format (
+						GetRCStringCli (IDS_INSTALLING_MLOADCER),
+						nowinstall + 1,
+						g_pkginfo.size ()
+					)
+				);
+				LoadCertFromSignedFile (it.filepath.c_str ());
+				InvokeCallScriptFunction (
+					"setInstallingStatus",
+					String::Format (
+						GetRCStringCli (IDS_INSTALLING_MPKGNAME),
+						nowinstall + 1,
+						g_pkginfo.size ()
+					)
+				);
+				package_installresult pir;
+				pir.result = AddAppxPackageFromPath (
+					it.filepath, 
+					blankdeplist, 
+					DEPOLYOPTION_NONE, 
+					gcnew InstallProgressCallbackDelegate (this, &MainHtmlWnd::InstallProgressCallbackMultiple),
+					pir.error, 
+					pir.reason
+				);
+				g_pkgresult [it.filepath] = pir;
+			}
+			bool allsuccess = true;
+			for (auto &it : g_pkgresult)
+			{
+				allsuccess = allsuccess && it.second.succeeded ();
+				if (!allsuccess) break;
+			}
+			if (allsuccess)
+			{
+				InvokeCallScriptFunction ("noticeLoadInstallSuccessPage", true);
+				pagetag = "installsuccess";
+				CreateToastNotice (g_identity, GetRCStringSW (IDS_SUCCESS_MTITLE), L"");
+				ThreadPackageSuccessInstallCountTask ();
+			}
+			else
+			{
+				InvokeCallScriptFunction ("noticeLoadInstallFailedPage", true);
+				CreateToastNotice (g_identity, GetRCStringSW (IDS_FAILED_MTITLE), L"");
+				pagetag = "installfailed";
+			}
+		}
+	}
+	System::Threading::Thread ^ThreadPackageSuccessInstallCountTask ()
+	{
+		auto thread = gcnew Threading::Thread (gcnew Threading::ThreadStart (this, &MainHtmlWnd::PackageSuccessInstallCountTask));
+		thread->IsBackground = true;
+		thread->Start ();
+		return thread;
+	}
+	void PackageSuccessInstallCountTask ()
+	{
+		System::Threading::Thread::Sleep (System::TimeSpan (0, 0, 5));
+		this->InvokeClose ();
+	}
+	void InvokeClose ()
+	{
+		if (this->InvokeRequired) this->Invoke (gcnew Action (this, &MainHtmlWnd::Close));
+		else this->Close ();
+	}
+	String ^GetPage () { return pagetag; }
+	String ^SetPage (String ^tag)
+	{
+		InvokeCallScriptFunction ("setPage", tag, g_pkginfo.size () > 1);
+		return pagetag = tag;
+	}
+#define nequals(_str1_, _str2_) IsNormalizeStringEquals (ToStdWString (_str1_), ToStdWString (_str2_))
+	void OnPress_Button1 ()
+	{
+		std::wstring current = MPStringToStdW (pagetag);
+		if (nequals (current, L"select"))
+		{
+			std::vector <std::wstring> files;
+			std::wstring item1 = GetRCStringSW (IDS_SELECT_DLGAPPX),
+				item1type = L"*.appx;*.appxbundle",
+				item2 = GetRCStringSW (IDS_SELECT_DLGALL),
+				item2type = L"*.*";
+			std::vector <WCHAR> buf (item1.capacity () + item1type.capacity () + item2.capacity () + item2type.capacity () + 5);
+			strcpynull (buf.data (), item1.c_str (), buf.size ());
+			strcpynull (buf.data (), item1type.c_str (), buf.size ());
+			strcpynull (buf.data (), item2.c_str (), buf.size ());
+			strcpynull (buf.data (), item2type.c_str (), buf.size ());
+			ExploreFile (
+				this->InvokeGetHWND (),
+				files,
+				buf.data (),
+				OFN_EXPLORER | OFN_ALLOWMULTISELECT | OFN_PATHMUSTEXIST,
+				GetRCStringSW (IDS_SELECT_DLGTITLE)
+			);
+			if (files.empty ()) return;
+			for (auto &it : files) g_pkgfiles.push_back (it);
+			this->PageTag = "loading";
+			ThreadPackageLoadTask ();
+			return;
+		}
+		else if (nequals (current, L"preinstall"))
+		{
+			if (g_pkginfo.size () == 1)
+			{
+				switch (insmode)
+				{
+					case InstallType::reinstall:
+						ThreadPackageInstallTask ();
+						break;
+					default:
+					case InstallType::normal:
+					case InstallType::update:
+						ThreadPackageInstallTask ();
+						break;
+				}
+			}
+			else ThreadPackageInstallTask ();
+			return;
+		}
+		else if (nequals (current, L"installsuccess"))
+		{
+
+		}
+		else if (nequals (current, L"installfailed")) this->Close ();
+		return;
+		System::Windows::Forms::MessageBox::Show ("Button1 按下事件");
+	}
+	void OnPress_Button2 ()
+	{
+		std::wstring current = MPStringToStdW (pagetag);
+		if (nequals (current, L"select"))
+		{
+			this->Close ();
+			return;
+		}
+		else if (nequals (current, L"preinstall"))
+		{
+			if (g_pkginfo.size () == 1)
+			{
+				switch (insmode)
+				{
+					case InstallType::reinstall: {
+						auto &pi = *g_pkginfo.begin ();
+						if (pi.applications.size () == 1) ActivateAppxApplication (pi.identity.package_family_name + L"!" + pi.applications.at (0).at (L"Id"));
+
+					} break;
+					default:
+					case InstallType::normal:
+					case InstallType::update:
+						this->Close ();
+						break;
+				}
+			}
+			else
+			{
+				this->Close ();
+			}
+			return;
+		}
+		else if (nequals (current, L"installfailed")) this->Close ();
+		return;
+		System::Windows::Forms::MessageBox::Show ("Button2 按下事件");
+	}
+#ifdef nequals
+#undef nequals
+#endif
+	IntPtr GetHWnd () { return this->Handle; }
+	delegate IntPtr GetHwndDelegate ();
+	HWND InvokeGetHWND ()
+	{
+		if (this->InvokeRequired)
+		{
+			GetHwndDelegate ^del = gcnew GetHwndDelegate (this, &MainHtmlWnd::GetHWnd);
+			IntPtr result = safe_cast <IntPtr> (this->Invoke (del));
+			return static_cast <HWND> (result.ToPointer ());
+		}
+		else return static_cast <HWND> (this->Handle.ToPointer ());
 	}
 	public:
 	MainHtmlWnd ()
@@ -681,6 +1427,13 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 		return nullptr;
 	}
 	Object ^ExecScript (... array <Object ^> ^alpScript) { return InvokeCallScriptFunction ("eval", alpScript); }
+	Object ^CallEvent (String ^funcName, Object ^e)
+	{
+		std::wstring fname = MPStringToStdW (funcName);
+		if (IsNormalizeStringEquals (fname.c_str (), L"OnPress_Button1")) OnPress_Button1 ();
+		else if (IsNormalizeStringEquals (fname.c_str (), L"OnPress_Button2")) OnPress_Button2 ();
+		return nullptr;
+	}
 	property int PageScale
 	{
 		int get ()
@@ -713,59 +1466,30 @@ using MainWnd = MainHtmlWnd;
 std::vector <std::wstring> LoadFileListW (const std::wstring &filePath)
 {
 	std::vector <std::wstring> result;
-	HANDLE hFile = CreateFileW (
-		filePath.c_str (),
-		GENERIC_READ,
-		FILE_SHARE_READ,
-		nullptr,
-		OPEN_EXISTING,
-		FILE_ATTRIBUTE_NORMAL,
-		nullptr);
-
-	if (hFile == INVALID_HANDLE_VALUE) return result;
-	LARGE_INTEGER fileSize {};
-	if (!GetFileSizeEx (hFile, &fileSize) || fileSize.QuadPart == 0)
+	std::wifstream file (filePath);
+	if (!file.is_open ()) return result;
+	file.imbue (std::locale (file.getloc (), new std::codecvt_utf8_utf16 <wchar_t>));
+	std::wstring line;
+	while (std::getline (file, line))
 	{
-		CloseHandle (hFile);
-		return result;
-	}
-	DWORD size = static_cast <DWORD> (fileSize.QuadPart);
-	std::vector <WCHAR> buf;
-	std::wstring buffer;
-	buffer.resize (size / sizeof (wchar_t) + 2 + 2);
-	DWORD readBytes = 0;
-	ReadFile (hFile, buf.data (), size, &readBytes, nullptr);
-	buffer += buf.data ();
-	CloseHandle (hFile);
-	buffer [readBytes / sizeof (wchar_t)] = L'\0';
-	size_t start = 0;
-	while (true)
-	{
-		size_t pos = buffer.find (L'\n', start);
-		std::wstring line;
-		if (pos == std::wstring::npos)
-		{
-			line = buffer.substr (start);
-		}
-		else
-		{
-			line = buffer.substr (start, pos - start);
-			start = pos + 1;
-		}
 		if (!line.empty () && line.back () == L'\r') line.pop_back ();
-		if (!line.empty ()) result.push_back (line);
-		if (pos == std::wstring::npos) break;
+		if (!line.empty () && !std::wnstring::empty (line) && IsFileExists (line)) result.push_back (line);
 	}
 	return result;
 }
-enum class CMDPARAM: DWORD
+
+std::wstring GenerateCmdHelper ()
 {
-	NONE = 0b000,
-	SILENT = 0b001,
-	VERYSILENT = 0b011,
-	MULTIPLE = 0b100
-};
-DWORD CmdMapsToFlags (std::map <cmdkey, cmdvalue> cmdpairs, std::set <std::wnstring> &files, std::set <std::wnstring> &uris)
+	std::wstring ret = GetRCStringSW (IDS_CMDTIP_PRETEXT) + L"\r\n";
+	for (auto &it : g_argslist)
+	{
+		ret += L"\r\n";
+		ret += L"\t" + (it.prefixs.size () ? it.prefixs.at (0) : L"") + it.commands.at (0) + L"\r\n";
+		ret += L"\t" + it.description + L"\r\n";
+	}
+	return ret;
+}
+DWORD CmdMapsToFlags (std::map <cmdkey, cmdvalue> cmdpairs, std::vector <std::wnstring> &files = std::vector <std::wnstring> (), std::vector <std::wnstring> &uris = std::vector <std::wnstring> ())
 {
 	DWORD dwret = 0;
 	for (auto &it : cmdpairs)
@@ -773,10 +1497,10 @@ DWORD CmdMapsToFlags (std::map <cmdkey, cmdvalue> cmdpairs, std::set <std::wnstr
 		switch (it.first.type)
 		{
 			case paramtype::file: {
-				if (IsFileExists (it.first.key)) files.insert (it.first.key);
+				if (IsFileExists (it.first.key)) push_unique (files, it.first.key);
 			} break;
 			case paramtype::uri: {
-				uris.insert (it.first.key);
+				push_unique (uris, it.first.key);
 			} break;
 			default:
 			case paramtype::string: {
@@ -798,7 +1522,7 @@ DWORD CmdMapsToFlags (std::map <cmdkey, cmdvalue> cmdpairs, std::set <std::wnstr
 							if (!IsFileExists (filepath)) filepath = CombinePath (listdir, filepath);
 							if (!IsFileExists (filepath)) filepath = CombinePath (listdir, it_s);
 							if (!IsFileExists (filepath)) continue;
-							else files.insert (filepath);
+							else push_unique (files, filepath);
 						}
 					}
 				}
@@ -808,6 +1532,7 @@ DWORD CmdMapsToFlags (std::map <cmdkey, cmdvalue> cmdpairs, std::set <std::wnstr
 	if (files.size () > 1) dwret |= (DWORD)CMDPARAM::MULTIPLE;
 	return dwret;
 }
+
 HRESULT SetCurrentAppUserModelID (PCWSTR appID)
 {
 	typedef HRESULT (WINAPI *SetAppUserModelIDFunc)(PCWSTR);
@@ -840,15 +1565,22 @@ int APIENTRY wWinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCm
 		std::wnstring rootdir = GetProgramRootDirectoryW ();
 		if (!PathEquals (currdir, rootdir)) SetCurrentDirectoryW (rootdir.c_str ());
 	}
-	CoInitializeEx (NULL, COINIT_MULTITHREADED);
+	CoInitializeEx (NULL, COINIT_MULTITHREADED | COINIT_APARTMENTTHREADED);
 	destruct relco ([] () {
 		CoUninitialize ();
 	});
 	{
 		std::map <cmdkey, cmdvalue> pair_cmdkv;
 		ParseCmdLine (lpCmdLine, pair_cmdkv);
-		std::set <std::wnstring> uris;
-		g_wcmdflags = CmdMapsToFlags (pair_cmdkv, g_pkgfiles, uris);
+		for (auto pair : pair_cmdkv)
+		{
+			if (pair.first.key == std::wnstring (L"help"))
+			{
+				MessageBox (nullptr, GenerateCmdHelper ().c_str (), GetRCStringSW (IDS_WINTITLE).c_str (), 0);
+				return 0;
+			}
+		}
+		g_wcmdflags = CmdMapsToFlags (pair_cmdkv, g_pkgfiles);
 	}
 	System::Windows::Forms::Application::EnableVisualStyles ();
 	System::Windows::Forms::Application::SetCompatibleTextRenderingDefault (false);

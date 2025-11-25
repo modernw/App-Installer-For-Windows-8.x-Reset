@@ -1171,3 +1171,46 @@ LPWSTR StreamToBase64W (_In_ HANDLE hFileStream, _Out_writes_ (dwCharCount) LPWS
 	if (lpBase64Head) *lpBase64Head = retptr + head;
 	return retptr;
 }
+
+LPWSTR GetPackagePrerequistieSystemVersionName (_In_ HPKGREAD hReader, _In_ LPCWSTR lpName)
+{
+	auto ptr = ToPtrPackage (hReader);
+	if (!ptr) return nullptr;
+	switch (ptr->type ())
+	{
+		case PackageType::single: {
+			auto read = ptr->appx_reader ();
+			auto pre = read.prerequisites ();
+			auto ver = pre.get_version (lpName ? lpName : L"");
+			auto str = GetPrerequistOSVersionDescription (ver);
+			return _wcsdup (str.c_str ());
+		} break;
+		case PackageType::bundle: {
+			auto br = ptr->bundle_reader ();
+			CComPtr <IAppxFile> iaf;
+			if (FAILED (br.random_application_package (&iaf))) return nullptr;
+			CComPtr <IStream> ist;
+			if (FAILED (iaf->GetStream (&ist))) return nullptr;
+			CComPtr <IAppxPackageReader> iar;
+			if (FAILED (GetAppxPackageReader (ist, &iar))) return nullptr;
+			appxreader read (iar.p);
+			auto pre = read.prerequisites ();
+			auto ver = pre.get_version (lpName ? lpName : L"");
+			auto str = GetPrerequistOSVersionDescription (ver);
+			return _wcsdup (str.c_str ());
+		}
+		default:
+			break;
+	}
+	return nullptr;
+}
+
+LPWSTR GetPackageCapabilityDisplayName (LPCWSTR lpCapabilityName)
+{
+	if (!lpCapabilityName) return nullptr;
+	std::wnstring capname = (lpCapabilityName ? lpCapabilityName : L"");
+	if (capname.empty ()) return nullptr;
+	std::wstring ret = GetCapabilityDisplayName (capname);
+	if (IsNormalizeStringEmpty (ret)) return nullptr;
+	else return _wcsdup (ret.c_str ());
+}

@@ -7,6 +7,7 @@
 #include "rctools.h"
 #include "filepath.h"
 #include "raii.h"
+#include "resource.h"
 
 // 允许忽视命令行前缀。如当命令行前缀为“-”"/"时，且开启此项，则输入“-args”与"/args"和"args" 是等效的
 #define CMDARG_IGNOREPREFIXS 0b001
@@ -24,12 +25,14 @@ struct cmdarg
 	std::wstring description; // 描述，用于生成帮助文本
 	DWORD flags; // 标志
 };
-#define CMDARG_PREFIXS_DEFAULT {L"-", L"/"}
+#define CMDARG_PREFIXS_DEFAULT {L"/", L"-"}
 #define CMDARG_POSTFIXS_DEFAULT {}
+#define CMDARG_HELP {CMDARG_PREFIXS_DEFAULT, {L"?", L"help", L"h"}, CMDARG_PREFIXS_DEFAULT, L"help", GetRCStringSW (IDS_CMDPARAM_HELP), CMDARG_IGNOREPREFIXS}
 std::vector <cmdarg> g_argslist = {
-	{CMDARG_PREFIXS_DEFAULT, {L"silent", L"quiet", L"passive"}, CMDARG_POSTFIXS_DEFAULT, L"silent", GetRCStringSW (0), CMDARG_IGNOREPREFIXS},
-	{CMDARG_PREFIXS_DEFAULT, {L"verysilent", L"veryquiet"}, CMDARG_POSTFIXS_DEFAULT, L"verysilent", GetRCStringSW (0), CMDARG_IGNOREPREFIXS},
-	{CMDARG_PREFIXS_DEFAULT, {L"multiple", L"filelist"}, {L"="}, L"multiple", GetRCStringSW (0), CMDARG_IGNOREPREFIXS | CMDARG_ENABLEPARAMS}
+	CMDARG_HELP,
+	{CMDARG_PREFIXS_DEFAULT, {L"silent", L"quiet", L"passive"}, CMDARG_POSTFIXS_DEFAULT, L"silent", GetRCStringSW (IDS_CMDPARAM_SILENT), CMDARG_IGNOREPREFIXS},
+	{CMDARG_PREFIXS_DEFAULT, {L"verysilent", L"veryquiet"}, CMDARG_POSTFIXS_DEFAULT, L"verysilent", GetRCStringSW (IDS_CMDPARAM_VERYSILENT), CMDARG_IGNOREPREFIXS},
+	{CMDARG_PREFIXS_DEFAULT, {L"multiple", L"filelist"}, {L"="}, L"multiple", GetRCStringSW (IDS_CMDPARAM_MULTIPLE), CMDARG_IGNOREPREFIXS | CMDARG_ENABLEPARAMS}
 };
 bool IsFile (const std::wstring &path)
 {
