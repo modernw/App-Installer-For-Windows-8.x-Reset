@@ -7,7 +7,14 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" href="libs/winjs/2.0/css/ui-light.css">
-    <script src="js/bridge.js"></script>
+    <script type="text/javascript" src="js/module.js"></script>
+    <script type="text/javascript" src="js/polyfill-ie.js"></script>
+    <script type="text/javascript" src="js/bridge.js"></script>
+    <script type="text/javascript" src="js/dpimodes.js"></script>
+    <script type="text/javascript" src="js/resources.js"></script>
+    <script type="text/javascript" src="js/event.js"></script>
+    <script type="text/javascript" src="js/load.js"></script>
+    <script type="text/javascript" src="js/init.js"></script>
     <style>
         html,
         body {
@@ -35,6 +42,7 @@
         .applist-font-title {
             color: black;
             font-size: 11pt;
+            font-weight: normal;
         }
         
         .applist-font-text {
@@ -42,6 +50,7 @@
             font-size: 11pt;
             word-wrap: break-word;
             overflow-wrap: break-word;
+            font-weight: normal;
         }
         
         .applist-window {
@@ -131,6 +140,7 @@
         
         .applist-item-divide {
             width: 12px;
+            min-width: 12px;
             height: 100%;
             background-color: transparent;
         }
@@ -167,6 +177,7 @@
             text-overflow: ellipsis;
             max-height: 3.9em;
             line-height: 1.3em;
+            font-weight: normal;
         }
         
         .applist-btn-cancel {
@@ -192,6 +203,7 @@
         
         .win10 .applist-font-title {
             font-size: 13pt;
+            font-weight: normal;
         }
         
         .win10.applist-window {
@@ -225,10 +237,12 @@
         
         .win10 .applist-item-divide {
             width: 12px;
+            min-width: 12px;
         }
         
         .win10 .applist-item-title {
             padding-top: 5pt;
+            font-weight: normal;
         }
     </style>
 </head>
@@ -247,12 +261,12 @@
         </div>
         <div class="applist-window win10">
             <div class="applist-title">
-                <span class="applist-font-title">你要如何打开这个文件？</span>
+                <span class="applist-font-title" data-res-byname="IDS_APPLIST_TITLE"></span>
             </div>
             <div class="applist-listview">
             </div>
             <div class="applist-control">
-                <button class="applist-btn-cancel win-commandbutton div-button-size div-std-button-center" onclick="EventCancelWindow()" tabindex="0">Cancel</button>
+                <button class="applist-btn-cancel win-commandbutton div-button-size div-std-button-center" onclick="Bridge.Frame.callEvent ('OnPress_CancelButton')" tabindex="0" data-res-byname="IDS_APPLIST_CANCEL"></button>
             </div>
         </div>
     </div>
@@ -336,6 +350,13 @@
                 inode.logo = logo;
                 inode.appid = appid;
                 inode.color = color;
+                item.itemInfo = inode;
+                item.addEventListener("click", function() {
+                    setTimeout(function() {
+                        external.Package.activate(appid);
+                        Bridge.Frame.callEvent("OnPress_AppItem", appid);
+                    });
+                });
                 return item;
             }
 
@@ -350,6 +371,20 @@
                     add: addItem
                 }
             };
+            global.addAppToList = function(title, logo, appid, color) {
+                var item = createItem(title, logo, appid, color);
+                addItem(item);
+            };
+
+            function setWindows10Style(bIsSet) {
+                var applist = document.querySelector(".applist-window");
+                if (bIsSet) {
+                    if (!applist.classList.contains("win10")) applist.classList.add("win10");
+                } else {
+                    if (applist.classList.contains("win10")) applist.classList.remove("win10");
+                }
+            }
+            global.setWindows10Style = setWindows10Style;
         })(this);
     </script>
 </body>

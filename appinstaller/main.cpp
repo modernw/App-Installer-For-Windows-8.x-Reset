@@ -183,7 +183,7 @@ public ref class SplashForm: public System::Windows::Forms::Form
 				picbox->Image = img;
 			}
 		}
-		catch (...) { }
+		catch (...) {}
 		if (splashimg) picbox->Image = splashimg;
 		if (backcolor != Drawing::Color::Transparent)
 		{
@@ -434,6 +434,512 @@ HRESULT UpdateAppxPackageFromPath (
 	detailmsg = lpmsg ? lpmsg : L"";
 	return hr;
 }
+bool IsWindows10 ()
+{
+#pragma warning(push)
+#pragma warning(disable:4996)
+	OSVERSIONINFOEX osvi = {0};
+	osvi.dwOSVersionInfoSize = sizeof (OSVERSIONINFOEX);
+	osvi.dwMajorVersion = 10;
+	DWORDLONG conditionMask = 0;
+	VER_SET_CONDITION (conditionMask, VER_MAJORVERSION, VER_GREATER_EQUAL);
+	if (VerifyVersionInfoW (&osvi, VER_MAJORVERSION, conditionMask)) return TRUE;
+	DWORD error = GetLastError ();
+	return (error == ERROR_OLD_WIN_VERSION) ? FALSE : FALSE;
+#pragma warning(pop)
+}
+void ActivateApp (Object ^appid)
+{
+	auto res = ActivateAppxApplication (MPStringToStdW (appid->ToString ()));
+}
+[ComVisible (true)]
+public ref class AppListWnd: public System::Windows::Forms::Form
+{
+	public:
+	using WebBrowser = System::Windows::Forms::WebBrowser;
+	using Timer = System::Windows::Forms::Timer;
+	[ComVisible (true)]
+	ref class IBridge
+	{
+		private:
+		AppListWnd ^wndinst = nullptr;
+		public:
+		IBridge (AppListWnd ^wnd): wndinst (wnd) {}
+		ref class _I_HResult
+		{
+			private:
+			HRESULT hr = S_OK;
+			String ^errorcode = "";
+			String ^detailmsg = "";
+			public:
+			_I_HResult (HRESULT hres)
+			{
+				hr = hres;
+				detailmsg = CStringToMPString (HResultToMessage (hres));
+			}
+			_I_HResult (HRESULT hres, String ^error, String ^message)
+			{
+				hr = hres;
+				errorcode = error;
+				detailmsg = message;
+			}
+			property HRESULT HResult { HRESULT get () { return hr; }}
+			property String ^ErrorCode { String ^get () { return errorcode; }}
+			property String ^Message { String ^get () { return detailmsg; }}
+			property bool Succeeded { bool get () { return SUCCEEDED (hr); }}
+			property bool Failed { bool get () { return FAILED (hr); }}
+		};
+		ref class _I_System
+		{
+			private:
+			AppListWnd ^wndinst = nullptr;
+			public:
+			ref class _I_UI
+			{
+				private:
+				AppListWnd ^wndinst = nullptr;
+				public:
+				ref struct _I_UI_Size
+				{
+					private:
+					int m_width = 0;
+					int m_height = 0;
+					public:
+					property int width { int get () { return m_width; } }
+					property int height { int get () { return m_height; }}
+					property int Width { int get () { return m_width; } }
+					property int Height { int get () { return m_height; }}
+					int getWidth () { return m_width; }
+					int getHeight () { return m_height; }
+					_I_UI_Size (int w, int h): m_width (w), m_height (h) {}
+				};
+				_I_UI (AppListWnd ^wnd): wndinst (wnd) {}
+				property int DPIPercent { int get () { return GetDPI (); }}
+				property double DPI { double get () { return DPIPercent * 0.01; }}
+				property _I_UI_Size ^WndSize { _I_UI_Size ^get () { return gcnew _I_UI_Size (wndinst->Width, wndinst->Height); } }
+				property _I_UI_Size ^ClientSize { _I_UI_Size ^get () { auto cs = wndinst->ClientSize; return gcnew _I_UI_Size (cs.Width, cs.Height); } }
+				property String ^ThemeColor { String ^get () { return ColorToHtml (GetDwmThemeColor ()); } }
+				property bool DarkMode { bool get () { return IsAppInDarkMode (); }}
+				property String ^HighContrast
+				{
+					String ^get ()
+					{
+						auto highc = GetHighContrastTheme ();
+						switch (highc)
+						{
+							case HighContrastTheme::None: return "none";
+								break;
+							case HighContrastTheme::Black: return "black";
+								break;
+							case HighContrastTheme::White: return "white";
+								break;
+							case HighContrastTheme::Other: return "high";
+								break;
+							default: return "none";
+								break;
+						}
+						return "none";
+					}
+				}
+			};
+			ref class _I_Resources
+			{
+				public:
+				String ^GetById (unsigned int uiResId) { return GetRCStringCli (uiResId); }
+				unsigned ToId (String ^lpResName)
+				{
+					auto it = g_nameToId.find (MPStringToStdA (lpResName));
+					return (it != g_nameToId.end ()) ? it->second : 0;
+				}
+				String ^ToName (unsigned int ulResId)
+				{
+					for (auto &it : g_nameToId) { if (it.second == ulResId) return CStringToMPString (it.first); }
+					return "";
+				}
+				String ^GetByName (String ^lpResId) { return GetById (ToId (lpResId)); }
+				String ^operator [] (unsigned int uiResId) { return GetRCStringCli (uiResId); }
+			};
+			private:
+			_I_UI ^ui = gcnew _I_UI (wndinst);
+			_I_Resources ^ires = gcnew _I_Resources ();
+			public:
+			_I_System (AppListWnd ^wnd): wndinst (wnd) {}
+			property _I_UI ^UI { _I_UI ^get () { return ui; } }
+			property _I_Resources ^Resources { _I_Resources ^get () { return ires; } }
+			property bool IsWindows10
+			{
+				bool get ()
+				{
+					OSVERSIONINFOEX osvi = {0};
+					osvi.dwOSVersionInfoSize = sizeof (OSVERSIONINFOEX);
+					osvi.dwMajorVersion = 10;
+					DWORDLONG conditionMask = 0;
+					VER_SET_CONDITION (conditionMask, VER_MAJORVERSION, VER_GREATER_EQUAL);
+					if (VerifyVersionInfoW (&osvi, VER_MAJORVERSION, conditionMask)) return TRUE;
+					DWORD error = GetLastError ();
+					return (error == ERROR_OLD_WIN_VERSION) ? FALSE : FALSE;
+				}
+			}
+		};
+		ref class _I_IEFrame
+		{
+			private:
+			AppListWnd ^wndinst = nullptr;
+			public:
+			_I_IEFrame (AppListWnd ^wnd): wndinst (wnd) {}
+			property int Scale
+			{
+				int get () { return wndinst->PageScale; }
+				void set (int value) { return wndinst->PageScale = value; }
+			}
+			property int Version { int get () { return GetInternetExplorerVersionMajor (); }}
+			String ^ParseHtmlColor (String ^color)
+			{
+				auto dcolor = Drawing::ColorTranslator::FromHtml (color);
+				{
+					rapidjson::Document doc;
+					doc.SetObject ();
+					auto &alloc = doc.GetAllocator ();
+					doc.AddMember ("r", (uint16_t)dcolor.R, alloc);
+					doc.AddMember ("g", (uint16_t)dcolor.G, alloc);
+					doc.AddMember ("b", (uint16_t)dcolor.B, alloc);
+					doc.AddMember ("a", (uint16_t)dcolor.A, alloc);
+					rapidjson::StringBuffer buffer;
+					rapidjson::Writer <rapidjson::StringBuffer> writer (buffer);
+					doc.Accept (writer);
+					std::string utf8 = buffer.GetString ();
+					std::wstring_convert <std::codecvt_utf8 <wchar_t>> conv;
+					return CStringToMPString (conv.from_bytes (utf8));
+				}
+				return "{}";
+			}
+		};
+		ref class _I_String
+		{
+			public:
+			ref class _I_NString
+			{
+				public:
+				bool NEquals (String ^l, String ^r) { return IsNormalizeStringEquals (MPStringToPtrW (l), MPStringToPtrW (r)); }
+				bool Empty (String ^l) { return IsNormalizeStringEmpty (MPStringToStdW (l)); }
+				int Compare (String ^l, String ^r) { return NormalizeStringCompare (MPStringToPtrW (l), MPStringToPtrW (r)); }
+				int Length (String ^l) { return GetNormalizeStringLength (MPStringToStdW (l)); }
+			};
+			private:
+			_I_NString ^nstr = gcnew _I_NString ();
+			public:
+			property _I_NString ^NString { _I_NString ^get () { return nstr; }}
+			String ^Trim (String ^src)
+			{
+				std::wstring csrc = MPStringToStdW (src);
+				return CStringToMPString (::StringTrim (csrc));
+			}
+			String ^ToLower (String ^src) { return CStringToMPString (StringToLower (MPStringToStdW (src))); }
+			String ^ToUpper (String ^src) { return CStringToMPString (StringToUpper (MPStringToStdW (src))); }
+			String ^Format (String ^fmt, ... array <Object ^> ^args) { return FormatString (fmt, args); }
+			String ^FormatInnerHTML (String ^fmt, ... array <Object ^> ^args)
+			{
+				std::wstring ihtml = EscapeToInnerXml (MPStringToStdW (fmt));
+				auto pih = CStringToMPString (ihtml);
+				auto newargs = gcnew array <Object ^> (args->Length);
+				for (size_t i = 0; i < args->Length; i ++)
+				{
+					auto %p = newargs [i];
+					p = Format ("<span>{0}</span>", EscapeToInnerXml (Format ("{0}", args [i])));
+				}
+				return Format (pih, newargs);
+			}
+		};
+		ref class _I_Package
+		{
+			public:
+			String ^GetPackagesToJson ()
+			{
+				rapidjson::Document doc;
+				doc.SetArray ();
+				auto &alloc = doc.GetAllocator ();
+				for (auto &it : g_pkginfo)
+				{
+					rapidjson::Value member (rapidjson::kStringType);
+					member.SetString (ws2utf8 (it.filepath).c_str (), alloc);
+					doc.PushBack (member, alloc);
+				}
+				rapidjson::StringBuffer buffer;
+				rapidjson::Writer <rapidjson::StringBuffer> writer (buffer);
+				doc.Accept (writer);
+				std::string utf8 = buffer.GetString ();
+				std::wstring_convert <std::codecvt_utf8 <wchar_t>> conv;
+				return CStringToMPString (conv.from_bytes (utf8));
+			}
+			String ^GetPackageInfoToJson (String ^filepath)
+			{
+				std::wstring fpath = MPStringToStdW (filepath);
+				for (auto &it : g_pkginfo)
+				{
+					if (PathEquals (it.filepath, fpath))
+					{
+						return CStringToMPString (it.parseJson ());
+					}
+				}
+				return "{}";
+			}
+			String ^GetCapabilityDisplayName (String ^capabilityName)
+			{
+				return CStringToMPString (GetPackageCapabilityDisplayName (MPStringToStdW (capabilityName)));
+			}
+			_I_HResult ^GetPackageInstallResult (String ^filepath)
+			{
+				std::wstring path = MPStringToStdW (filepath);
+				if (g_pkgresult.find (path) == g_pkgresult.end ()) return nullptr;
+				auto &pres = g_pkgresult.at (path);
+				return gcnew _I_HResult (
+					pres.result,
+					CStringToMPString (pres.error),
+					CStringToMPString (pres.reason)
+				);
+			}
+			void Activate (String ^appid) { ActivateApp (appid); }
+		};
+		ref class _I_Window
+		{
+			private:
+			AppListWnd ^wndinst = nullptr;
+			public:
+			_I_Window (AppListWnd ^wnd): wndinst (wnd) {}
+			Object ^CallEvent (String ^name, ... array <Object ^> ^args) { return wndinst->CallEvent (name, args [0]); }
+		};
+		private:
+		_I_System ^system = gcnew _I_System (wndinst);
+		_I_IEFrame ^ieframe = gcnew _I_IEFrame (wndinst);
+		_I_String ^str = gcnew _I_String ();
+		_I_Package ^pkg = gcnew _I_Package ();
+		_I_Window ^wnd = gcnew _I_Window (wndinst);
+		public:
+		property _I_System ^System { _I_System ^get () { return system; }}
+		property _I_IEFrame ^IEFrame { _I_IEFrame ^get () { return ieframe; }}
+		property _I_String ^String { _I_String ^get () { return str; }}
+		property _I_Package ^Package { _I_Package ^get () { return pkg; }}
+		property _I_Window ^Window { _I_Window ^get () { return wnd; }}
+	};
+	private:
+	WebBrowser ^webui = nullptr;
+	Timer ^showtimer = gcnew Timer ();
+	Timer ^hidetimer = gcnew Timer ();
+	int aminedelay = 150;
+	int framedelay = 25;
+	double movelen = 10 * DPI;
+	int frametotal = aminedelay / framedelay;
+	double movestep = movelen / (double)frametotal;
+	int framenow = 0;
+	int finaltop = 0;
+	public:
+	property WebBrowser ^WebUI { WebBrowser ^get () { return this->webui; } }
+	property int DPIPercent { int get () { return GetDPI (); }}
+	property double DPI { double get () { return DPIPercent * 0.01; }}
+	AppListWnd ()
+	{
+		this->Visible = false;
+		this->DoubleBuffered = true;
+		this->FormBorderStyle = System::Windows::Forms::FormBorderStyle::None;
+		this->ShowInTaskbar = false;
+		this->TopMost = true;
+		this->Size = System::Drawing::Size (392 * DPI, 494 * DPI);
+		if (IsWindows10 ()) this->MinimumSize = System::Drawing::Size (392 * DPI, 226 * DPI);
+		else this->MinimumSize = System::Drawing::Size (392 * DPI, 129 * DPI);
+		if (IsWindows10 ()) this->MaximumSize = System::Drawing::Size (392 * DPI, 522 * DPI);
+		else this->MaximumSize = System::Drawing::Size (368 * DPI, 394 * DPI);
+		this->Text = GetRCStringCli (IDS_APPLIST_WINTITLE);
+		webui = gcnew System::Windows::Forms::WebBrowser ();
+		webui->Dock = System::Windows::Forms::DockStyle::Fill;
+		this->Controls->Add (webui);
+		webui->Visible = false;
+		webui->ObjectForScripting = gcnew IBridge (this);
+		this->webui->DocumentCompleted += gcnew System::Windows::Forms::WebBrowserDocumentCompletedEventHandler (this, &AppListWnd::OnDocumentCompleted);
+		this->Load += gcnew EventHandler (this, &AppListWnd::OnCreate);
+		this->StartPosition = System::Windows::Forms::FormStartPosition::CenterScreen;
+		this->Deactivate += gcnew EventHandler (this, &AppListWnd::OnDeactivate);
+		webui->Navigate (CStringToMPString (CombinePath (GetProgramRootDirectoryW (), L"html\\applist.html")));
+		showtimer->Interval = framedelay;
+		hidetimer->Interval = framedelay;
+		showtimer->Tick += gcnew EventHandler (this, &AppListWnd::OnTick_ShowTimer);
+		hidetimer->Tick += gcnew EventHandler (this, &AppListWnd::OnTick_HideTimer);
+		this->Opacity = 0;
+	}
+	protected:
+	void OnCreate (System::Object ^sender, System::EventArgs ^e) {}
+	void OnDocumentCompleted (Object ^sender, System::Windows::Forms::WebBrowserDocumentCompletedEventArgs ^e)
+	{
+		if (e->Url->ToString () == webui->Url->ToString ())
+		{
+
+			ExecScript ("Windows.UI.DPI.mode = 1");
+			ExecScript ("Bridge.Frame.scale = Bridge.Frame.scale * Bridge.UI.dpi");
+			InvokeCallScriptFunction ("setWindows10Style", IsWindows10 ());
+			size_t cnt = 0;
+			for (auto &it : g_pkginfo)
+			{
+				for (auto &app : it.applications)
+				{
+					std::wstring launchid = it.identity.package_family_name + L'!' + app [L"Id"];
+					auto &color = app [L"BackgroundColor"];
+					std::wnstring displayName = app [L"DisplayName"];
+					if (displayName.empty ()) displayName = app [L"ShortName"];
+					auto &logo = app [L"Square44x44Logo"];
+					InvokeCallScriptFunction (
+						"addAppToList",
+						CStringToMPString (displayName),
+						CStringToMPString (logo),
+						CStringToMPString (launchid),
+						CStringToMPString (color)
+					);
+					cnt ++;
+				}
+			}
+			if (cnt == 0) this->Close ();
+			{
+				bool isWin10 = IsWindows10 ();
+				size_t height = ((cnt) * (isWin10 ? 50 : 60) * DPI) + (isWin10 ? 206 : 120) * DPI;
+				if (height < (isWin10 ? 522 : 394) * DPI) this->Height = height;
+				else this->Height = 522 * DPI;
+				this->Left = (GetScreenWidth () - this->Width) / 2;
+				this->Top = (GetScreenHeight () - this->Height) / 2;
+			}
+			finaltop = this->Top;
+			this->Top -= movelen;
+			webui->Visible = true;
+			this->Visible = true;
+		}
+	}
+	void OnPress_Cancel ()
+	{
+		if (!this->IsHandleCreated) return;
+		if (InvokeRequired) this->Invoke (gcnew Action (this, &AppListWnd::HideAmine));
+		else this->HideAmine ();
+		return;
+	}
+	void OnPress_AppItem ()
+	{
+		OnPress_Cancel ();
+	}
+	void OnDeactivate (Object ^sender, EventArgs ^e)
+	{
+		OnPress_Cancel ();
+	}
+	void OnTick_ShowTimer (Object ^sender, EventArgs ^e)
+	{
+		framenow ++;
+		if (framenow > frametotal)
+		{
+			showtimer->Stop ();
+			this->Top = finaltop;
+			this->Opacity = 1;
+		}
+		else
+		{
+			this->Top = finaltop + movestep * (frametotal - framenow);
+			this->Opacity = framenow / (double)frametotal;
+		}
+	}
+	void OnTick_HideTimer (Object ^sender, EventArgs ^e)
+	{
+		framenow ++;
+		if (framenow > frametotal)
+		{
+			showtimer->Stop ();
+			this->Opacity = 0;
+			this->Close ();
+		}
+		else
+		{
+			this->Opacity = 1.0 - framenow / (double)frametotal;
+		}
+	}
+	public:
+	static void DisplayWindow ()
+	{
+		auto wnd = gcnew AppListWnd ();
+		wnd->ShowAmine ();
+	}
+	Object ^CallScriptFunction (String ^lpFuncName, ... array <Object ^> ^alpParams)
+	{
+		try { return this->webui->Document->InvokeScript (lpFuncName, alpParams); }
+		catch (Exception ^e) {}
+		return nullptr;
+	}
+	Object ^CallScriptFunction (String ^lpScriptName)
+	{
+		try { return this->webui->Document->InvokeScript (lpScriptName); }
+		catch (Exception ^e) {}
+		return nullptr;
+	}
+	Object ^InvokeCallScriptFunction (String ^lpFuncName, ... array <Object ^> ^alpParams)
+	{
+		try
+		{
+			if (this->InvokeRequired) return (Object ^)this->Invoke (gcnew Func <String ^, array <Object ^> ^, Object ^> (this, &AppListWnd::CallScriptFunction), lpFuncName, alpParams);
+			else return CallScriptFunction (lpFuncName, alpParams);
+		}
+		catch (Exception ^e) {}
+		return nullptr;
+	}
+	Object ^InvokeCallScriptFunction (String ^lpScriptName)
+	{
+		try
+		{
+			if (this->InvokeRequired) return (Object ^)this->Invoke (gcnew Func <String ^, Object ^> (this, &AppListWnd::CallScriptFunction), lpScriptName);
+			else return CallScriptFunction (lpScriptName);
+		}
+		catch (Exception ^e) {}
+		return nullptr;
+	}
+	Object ^ExecScript (... array <Object ^> ^alpScript) { return InvokeCallScriptFunction ("eval", alpScript); }
+	Object ^CallEvent (String ^funcName, Object ^e)
+	{
+		std::wstring fname = MPStringToStdW (funcName);
+		if (IsNormalizeStringEquals (fname.c_str (), L"OnPress_CancelButton")) OnPress_Cancel ();
+		else if (IsNormalizeStringEquals (fname.c_str (), L"OnPress_AppItem")) OnPress_AppItem ();
+		return nullptr;
+	}
+	property int PageScale
+	{
+		int get ()
+		{
+			CComPtr <IWebBrowser2> web2;
+			HRESULT hr = GetWebBrowser2Interface (webui, &web2);
+			if (FAILED (hr)) return 0;
+			VARIANT v;
+			VariantInit (&v);
+			hr = web2->ExecWB (OLECMDID_OPTICAL_ZOOM, OLECMDEXECOPT_DODEFAULT, nullptr, &v);
+			if (FAILED (hr) || v.vt != VT_I4) return 0;
+			int val = v.lVal;
+			VariantClear (&v);
+			return val;
+		}
+		void set (int value)
+		{
+			CComPtr <IWebBrowser2> web2;
+			HRESULT hr = GetWebBrowser2Interface (webui, &web2);
+			if (FAILED (hr)) return;
+			VARIANT v;
+			VariantInit (&v);
+			v.vt = VT_I4;
+			v.lVal = value;
+			web2->ExecWB (OLECMDID_OPTICAL_ZOOM, OLECMDEXECOPT_DONTPROMPTUSER, &v, nullptr);
+		}
+	}
+	void ShowAmine ()
+	{
+		this->Show ();
+		hidetimer->Stop ();
+		showtimer->Start ();
+	}
+	void HideAmine ()
+	{
+		framenow = 0;
+		showtimer->Stop ();
+		hidetimer->Start ();
+	}
+};
 [ComVisible (true)]
 public ref class MainHtmlWnd: public System::Windows::Forms::Form
 {
@@ -506,13 +1012,13 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 				property double DPI { double get () { return DPIPercent * 0.01; }}
 				property _I_UI_Size ^WndSize { _I_UI_Size ^get () { return gcnew _I_UI_Size (wndinst->Width, wndinst->Height); } }
 				property _I_UI_Size ^ClientSize { _I_UI_Size ^get () { auto cs = wndinst->ClientSize; return gcnew _I_UI_Size (cs.Width, cs.Height); } }
-				property String ^SplashImage 
-				{ 
-					String ^get () 
-					{ 
-						auto uri = gcnew Uri (CStringToMPString (wndinst->GetSuitSplashImage ())); 
+				property String ^SplashImage
+				{
+					String ^get ()
+					{
+						auto uri = gcnew Uri (CStringToMPString (wndinst->GetSuitSplashImage ()));
 						return uri->AbsoluteUri;
-					} 
+					}
 				}
 				property String ^SplashBackgroundColor { String ^get () { return CStringToMPString (g_vemani.splash_screen_backgroundcolor (L"App")); } }
 				void ShowSplash () { if (wndinst->SplashScreen->IsHandleCreated) wndinst->SplashScreen->Show (); else wndinst->SplashScreen->ReInit (); }
@@ -553,7 +1059,7 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 				}
 				String ^ToName (unsigned int ulResId)
 				{
-					for (auto &it : g_nameToId) {if (it.second == ulResId) return CStringToMPString (it.first);}
+					for (auto &it : g_nameToId) { if (it.second == ulResId) return CStringToMPString (it.first); }
 					return "";
 				}
 				String ^GetByName (String ^lpResId) { return GetById (ToId (lpResId)); }
@@ -568,7 +1074,7 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 				property UINT16 Minor { UINT16 get () { return minor; } void set (UINT16 value) { minor = value; } }
 				property UINT16 Build { UINT16 get () { return build; } void set (UINT16 value) { build = value; } }
 				property UINT16 Revision { UINT16 get () { return revision; } void set (UINT16 value) { revision = value; } }
-				property array <UINT16> ^Data 
+				property array <UINT16> ^Data
 				{
 					array <UINT16> ^get ()
 					{
@@ -736,7 +1242,7 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 		ref class _I_String
 		{
 			public:
-			ref class _I_NString 
+			ref class _I_NString
 			{
 				public:
 				bool NEquals (String ^l, String ^r) { return IsNormalizeStringEquals (MPStringToPtrW (l), MPStringToPtrW (r)); }
@@ -764,7 +1270,7 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 				for (size_t i = 0; i < args->Length; i ++)
 				{
 					auto %p = newargs [i];
-					p = Format ("<span>{0}</span>",  EscapeToInnerXml (Format ("{0}", args [i])));
+					p = Format ("<span>{0}</span>", EscapeToInnerXml (Format ("{0}", args [i])));
 				}
 				return Format (pih, newargs);
 			}
@@ -831,7 +1337,7 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 		{
 			private:
 			MainHtmlWnd ^wndinst = nullptr;
-			public: 
+			public:
 			_I_Window (MainHtmlWnd ^wnd): wndinst (wnd) {}
 			Object ^CallEvent (String ^name, ... array <Object ^> ^args) { return wndinst->CallEvent (name, args [0]); }
 		};
@@ -900,7 +1406,7 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 			try { this->Icon = System::Drawing::Icon::FromHandle (IntPtr (g_hIconMain.hIcon)); }
 			catch (...) {}
 		}
-		this->Text = rcString (IDS_WINTITLE);
+		this->Text = GetRCStringCli (IDS_WINTITLE);
 		this->ResumeLayout (false);
 		webui->ObjectForScripting = gcnew IBridge (this);
 		this->webui->DocumentCompleted += gcnew System::Windows::Forms::WebBrowserDocumentCompletedEventHandler (this, &MainHtmlWnd::OnDocumentCompleted);
@@ -988,7 +1494,7 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 			String ^btn2 = GetRCStringCli (IDS_PREINSTALL_CANCEL);
 			if (g_pkginfo.size () == 1)
 			{
-				try 
+				try
 				{
 					const auto &pi = *g_pkginfo.begin ();
 					const std::wstring
@@ -1204,7 +1710,7 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 				auto &it = g_pkginfo.at (nowinstall);
 				InvokeCallScriptFunction ("setInstallingPackageInfoMultiple", CStringToMPString (it.filepath));
 				InvokeCallScriptFunction (
-					"setInstallingStatus", 
+					"setInstallingStatus",
 					String::Format (
 						GetRCStringCli (IDS_INSTALLING_MLOADCER),
 						nowinstall + 1,
@@ -1222,11 +1728,11 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 				);
 				package_installresult pir;
 				pir.result = AddAppxPackageFromPath (
-					it.filepath, 
-					blankdeplist, 
-					DEPOLYOPTION_NONE, 
+					it.filepath,
+					blankdeplist,
+					DEPOLYOPTION_NONE,
 					gcnew InstallProgressCallbackDelegate (this, &MainHtmlWnd::InstallProgressCallbackMultiple),
-					pir.error, 
+					pir.error,
 					pir.reason
 				);
 				g_pkgresult [it.filepath] = pir;
@@ -1261,6 +1767,7 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 	}
 	void PackageSuccessInstallCountTask ()
 	{
+		return;
 		System::Threading::Thread::Sleep (System::TimeSpan (0, 0, 5));
 		this->InvokeClose ();
 	}
@@ -1325,7 +1832,19 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 		}
 		else if (nequals (current, L"installsuccess"))
 		{
-
+			std::vector <std::wnstring> appids;
+			for (auto &it : g_pkginfo)
+				for (auto &it_s : it.applications)
+					if (!it_s [L"Id"].empty ()) 
+						appids.emplace_back (it.identity.package_family_name + L'!' + it_s [L"Id"]);
+			if (appids.size () == 1)
+			{
+				ActivateAppxApplication (appids.at (0));
+			}
+			else if (appids.size () > 1)
+			{
+				AppListWnd::DisplayWindow ();
+			}
 		}
 		else if (nequals (current, L"installfailed")) this->Close ();
 		return;
@@ -1348,7 +1867,7 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 					case InstallType::reinstall: {
 						auto &pi = *g_pkginfo.begin ();
 						if (pi.applications.size () == 1) ActivateAppxApplication (pi.identity.package_family_name + L"!" + pi.applications.at (0).at (L"Id"));
-
+						else AppListWnd::DisplayWindow ();
 					} break;
 					default:
 					case InstallType::normal:
@@ -1357,10 +1876,7 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 						break;
 				}
 			}
-			else
-			{
-				this->Close ();
-			}
+			else this->Close ();
 			return;
 		}
 		else if (nequals (current, L"installfailed")) this->Close ();
@@ -1576,7 +2092,7 @@ int APIENTRY wWinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCm
 		{
 			if (pair.first.key == std::wnstring (L"help"))
 			{
-				MessageBox (nullptr, GenerateCmdHelper ().c_str (), GetRCStringSW (IDS_WINTITLE).c_str (), 0);
+				MessageBoxW (nullptr, GenerateCmdHelper ().c_str (), GetRCStringSW (IDS_WINTITLE).c_str (), 0);
 				return 0;
 			}
 		}

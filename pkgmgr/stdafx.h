@@ -28,6 +28,7 @@
 #include <shlobj.h>
 #include <stdio.h>
 #include <shobjidl.h>
+#include <comdef.h>
 using namespace Platform;
 using namespace Windows::Foundation;
 using namespace Windows::Management::Deployment;

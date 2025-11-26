@@ -5,7 +5,8 @@
         function nextstep() {
             Resources.processAll();
         }
-        WinJS.UI.processAll().done(nextstep);
+        if (typeof WinJS !== "undefined") WinJS.UI.processAll().done(nextstep);
+        else nextstep();
     }
     OnLoad.add(ready);
 })(this);

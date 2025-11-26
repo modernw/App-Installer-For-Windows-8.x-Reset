@@ -611,6 +611,23 @@ class package_reader
 						lpstr = nullptr;
 					});
 					lpstr = StreamToBase64W (pic, nullptr, 0, nullptr);
+					if (!(lpstr && *lpstr))
+					{
+						if (lpstr) free (lpstr);
+						HANDLE pkg1 = nullptr, pic1 = nullptr;
+						destruct relp1 ([&pic1, &pkg1] () {
+							if (pic1) DestroyAppxFileStream (pic1);
+							if (pkg1) DestroyAppxFileStream (pkg1);
+							pkg1 = nullptr;
+							pic1 = nullptr;
+						});
+						pkg1 = GetAppxBundleApplicationPackageFile (hReader);
+						if (pkg1)
+						{
+							pic1 = GetFileFromPayloadPackage (pkg1, logo ().c_str ());
+							lpstr = StreamToBase64W (pic1, nullptr, 0, nullptr);
+						}
+					}
 					return lpstr ? lpstr : L"";
 				} break;
 			}

@@ -70,7 +70,7 @@ extern "C"
 	NOTICE_API LPCWSTR NoticeGetLastDetailMessage ();
 	// 创建快捷方式
 	// （不用安装程序原生的创建，因为需要 AppUserID 才能使用 Toast 通知，当然这个限制只有 Windows 8.x 有，Windows 10 没有这个限制了）
-	NOTICE_API HRESULT CreateShortcutWithAppIdW (LPCWSTR pszShortcutPath, LPCWSTR pszTargetPath, LPCWSTR pszAppId);
+	NOTICE_API HRESULT CreateShortcutWithAppIdW (LPCWSTR pszShortcutPath, LPCWSTR pszTargetPath, LPCWSTR pszAppId, LPWSTR *lpException);
 	// 由 notice.dll 获取到的动态字符串必须由此释放。
 	NOTICE_API void NoticeApiFreeString (LPWSTR lpstr);
 	// 创建一个简单的 Toast 通知。支持两段文本和一张图片（图片是 data uri 或者只是 Base64 编码后的字符串，如果不想设置则置 NULL）
@@ -80,6 +80,7 @@ extern "C"
 	// lpText 可以设置为 NULL 或空文本。此时函数的作用与 CreateToastNoticeWithIStream 一致。
 	// 一些参数作用与 CreateToastNoticeFromXmlDocument 中的同名参数作用一致。
 	NOTICE_API HRESULT CreateToastNotice2WithImgBase64 (LPCWSTR lpIdName, LPCWSTR lpTitle, LPCWSTR lpText, LPCWSTR lpImgBase64, NOTICE_ACTIVECALLBACK pfCallback, void *pCustom, LPWSTR *lpExceptMsg);
+
 #ifdef _DEFAULT_INIT_VALUE_
 #undef _DEFAULT_INIT_VALUE_
 #endif
@@ -185,7 +186,14 @@ notice::hresult CreateToastNoticeWithIStream (notice::qcwstring idname, notice::
 notice::hresult CreateToastNotice (notice::qcwstring idname, notice::qcwstring xmlstring, std::function <void ()> callback) { return CreateToastNoticeFromXmlDocument (idname, xmlstring, callback); }
 notice::hresult CreateToastNotice (notice::qcwstring idname, notice::qcwstring text, IStream *imgstream, std::function <void ()> callback = nullptr) { return CreateToastNoticeWithIStream (idname, text, imgstream, callback); }
 notice::hresult CreateToastNotice (notice::qcwstring idname, notice::qcwstring title, notice::qcwstring text, IStream *imgstream, std::function <void ()> callback = nullptr) { return CreateToastNoticeWithIStream2 (idname, title, text, imgstream, callback); }
-HRESULT CreateShortcutWithAppIdW (notice::qcwstring shortcut_path, notice::qcwstring targetpath, notice::qcwstring appid) { return CreateShortcutWithAppIdW (shortcut_path.c_str (), targetpath.c_str (), appid.c_str ()); }
+notice::hresult CreateShortcutWithAppIdW (notice::qcwstring shortcut_path, notice::qcwstring targetpath, notice::qcwstring appid)
+{
+	notice::autostr exp;
+	notice::hresult hr;
+	hr.hr = CreateShortcutWithAppIdW (shortcut_path.c_str (), targetpath.c_str (), appid.c_str (), &exp.lpstr);
+	hr.message = exp.get_string ();
+	return hr;
+}
 HRESULT CreateToastNoticeWithImgBase64 (notice::qcwstring idname, notice::qcwstring text, notice::qcwstring imgbase64, std::function <void ()> callback = nullptr)
 {
 	notice::autostr exp;
@@ -202,4 +210,6 @@ HRESULT CreateToastNotice2WithImgBase64 (notice::qcwstring idname, notice::qcwst
 	hr.message = exp.get_string ();
 	return hr;
 }
+// WinRT API 测试用
+
 #endif

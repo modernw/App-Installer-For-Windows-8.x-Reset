@@ -539,44 +539,63 @@ HRESULT CreateToastNoticeWithIStream (LPCWSTR lpIdName, LPCWSTR lpText, HANDLE p
 }
 HRESULT NoticeGetLastHResult () { return g_lasthr; }
 LPCWSTR NoticeGetLastDetailMessage () { return g_lastexc.c_str (); }
-HRESULT CreateShortcutWithAppIdW (LPCWSTR pszShortcutPath, LPCWSTR pszTargetPath, LPCWSTR pszAppId)
+HRESULT CreateShortcutWithAppIdW (LPCWSTR pszShortcutPath, LPCWSTR pszTargetPath, LPCWSTR pszAppId, LPWSTR *lpException)
 {
-	HRESULT hr;
-	if (FAILED (hr)) return hr;
-	IShellLinkW *pShellLinkW = nullptr;
-	raii reltask1 ([&] () {
-		if (pShellLinkW) pShellLinkW->Release ();
-		pShellLinkW = nullptr;
+	HRESULT &hr = g_lasthr;
+	destruct relt ([&] () {
+		if (FAILED (hr))
+		{
+			if (lpException && !*lpException)
+			{
+				_com_error ex (hr);
+				g_lastexc = ex.ErrorMessage () ? ex.ErrorMessage () : L"";
+				*lpException = _wcsdup (g_lastexc.c_str ());
+			}
+		}
 	});
-	hr = CoCreateInstance (CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLinkW, (void **)&pShellLinkW);
-	if (FAILED (hr)) return hr;
-	hr = pShellLinkW->SetPath (pszTargetPath); return hr;
-	IPropertyStore *pPropStore = nullptr;
-	raii reltask2 ([&] () {
-		if (pPropStore) pPropStore->Release ();
-		pPropStore = nullptr;
-	});
-	hr = pShellLinkW->QueryInterface (IID_IPropertyStore, (void **)&pPropStore);
-	if (SUCCEEDED (hr))
+	if (lpException) *lpException = nullptr;
+	try
 	{
-		PROPVARIANT propvar;
-		hr = InitPropVariantFromString (pszAppId, &propvar);
+		hr = CoInitialize (NULL);
+		if (FAILED (hr)) return hr;
+		IShellLinkW *pShellLinkW = nullptr;
+		raii reltask1 ([&] () {
+			if (pShellLinkW) pShellLinkW->Release ();
+			pShellLinkW = nullptr;
+		});
+		hr = CoCreateInstance (CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLinkW, (void **)&pShellLinkW);
+		if (FAILED (hr)) return hr;
+		hr = pShellLinkW->SetPath (pszTargetPath); 
+		if (FAILED (hr)) return hr;
+		IPropertyStore *pPropStore = nullptr;
+		raii reltask2 ([&] () {
+			if (pPropStore) pPropStore->Release ();
+			pPropStore = nullptr;
+		});
+		hr = pShellLinkW->QueryInterface (IID_IPropertyStore, (void **)&pPropStore);
 		if (SUCCEEDED (hr))
 		{
-			hr = pPropStore->SetValue (PKEY_AppUserModel_ID, propvar);
-			if (SUCCEEDED (hr)) hr = pPropStore->Commit ();
-			PropVariantClear (&propvar);
+			PROPVARIANT propvar;
+			hr = InitPropVariantFromString (pszAppId, &propvar);
+			if (SUCCEEDED (hr))
+			{
+				hr = pPropStore->SetValue (PKEY_AppUserModel_ID, propvar);
+				if (SUCCEEDED (hr)) hr = pPropStore->Commit ();
+				PropVariantClear (&propvar);
+			}
 		}
+		else pPropStore = nullptr;
+		IPersistFile *pPersistFile = nullptr;
+		raii reltask3 ([&] () {
+			if (pPersistFile) pPersistFile->Release ();
+			pPersistFile = nullptr;
+		});
+		hr = pShellLinkW->QueryInterface (IID_IPersistFile, (void **)&pPersistFile);
+		if (SUCCEEDED (hr)) hr = pPersistFile->Save (pszShortcutPath, TRUE);
+		else pPersistFile = nullptr;
+		return hr;
 	}
-	else pPropStore = nullptr;
-	IPersistFile *pPersistFile = nullptr;
-	raii reltask3 ([&] () {
-		if (pPersistFile) pPersistFile->Release ();
-		pPersistFile = nullptr;
-	});
-	hr = pShellLinkW->QueryInterface (IID_IPersistFile, (void **)&pPersistFile);
-	if (SUCCEEDED (hr)) hr = pPersistFile->Save (pszShortcutPath, TRUE);
-	else pPersistFile = nullptr;
+	catch_lasterr (&hr, lpException);
 	return hr;
 }
 
@@ -646,4 +665,51 @@ HRESULT CreateToastNotice2WithImgBase64 (LPCWSTR lpIdName, LPCWSTR lpTitle, LPCW
 	if (bytes.size ())
 	{ if (FAILED (BytesToIStream (bytes, &ist))) ist = nullptr; }
 	return CreateToastNoticeWithIStream2 (lpIdName, lpTitle, lpText, ist, pfCallback, pCustom, lpExceptMsg);
+}
+
+HRESULT CreateMessageDialog (const std::wstring &content, const std::wstring &title, LPWSTR *lpException)
+{
+	auto &hr = g_lasthr;
+	try
+	{
+		auto refcon = ref new Platform::String (content.c_str ());
+		auto reftit = ref new Platform::String (title.c_str ());
+		Windows::UI::Popups::MessageDialog ^msgdlg = nullptr;
+		if (IsNormalizeStringEmpty (title)) msgdlg = ref new Windows::UI::Popups::MessageDialog (refcon);
+		else msgdlg = ref new Windows::UI::Popups::MessageDialog (refcon, reftit);
+		msgdlg->ShowAsync ();
+		return S_OK;
+	}
+	catch_lasterr (&hr, lpException);
+	return hr;
+}
+HRESULT SimpleMessageDialog (LPCWSTR lpContent, LPCWSTR lpTitle, LPWSTR *lpException)
+{
+	auto &hr = g_lasthr;
+	try
+	{
+		return CreateMessageDialog (
+			lpContent ? lpContent : L"",
+			lpTitle ? lpTitle : L"",
+			lpException
+		);
+	}
+	catch_lasterr (&hr, lpException);
+	return hr;
+}
+HRESULT CreateTileNoticifation (LPCWSTR lpAppId, LPCWSTR lpXmlDoc, LPWSTR *lpExMsg)
+{
+	auto &hr = g_lasthr;
+	try
+	{
+		auto refcon = ref new Platform::String (lpXmlDoc ? lpXmlDoc : L"");
+		auto xmldoc = ref new Windows::Data::Xml::Dom::XmlDocument ();
+		xmldoc->LoadXml (ref new Platform::String (lpXmlDoc ? lpXmlDoc : L""));
+		auto tile = ref new Windows::UI::Notifications::TileNotification (xmldoc);
+		auto tilemgr = Windows::UI::Notifications::TileUpdateManager::CreateTileUpdaterForApplication (ref new Platform::String (lpAppId ? lpAppId : L""));
+		tilemgr->Update (tile);
+		return S_OK;
+	}
+	catch_lasterr (&hr, lpExMsg);
+	return hr;
 }
