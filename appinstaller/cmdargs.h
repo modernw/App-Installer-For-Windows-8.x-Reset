@@ -32,7 +32,8 @@ std::vector <cmdarg> g_argslist = {
 	CMDARG_HELP,
 	{CMDARG_PREFIXS_DEFAULT, {L"silent", L"quiet", L"passive"}, CMDARG_POSTFIXS_DEFAULT, L"silent", GetRCStringSW (IDS_CMDPARAM_SILENT), CMDARG_IGNOREPREFIXS},
 	{CMDARG_PREFIXS_DEFAULT, {L"verysilent", L"veryquiet"}, CMDARG_POSTFIXS_DEFAULT, L"verysilent", GetRCStringSW (IDS_CMDPARAM_VERYSILENT), CMDARG_IGNOREPREFIXS},
-	{CMDARG_PREFIXS_DEFAULT, {L"multiple", L"filelist"}, {L"="}, L"multiple", GetRCStringSW (IDS_CMDPARAM_MULTIPLE), CMDARG_IGNOREPREFIXS | CMDARG_ENABLEPARAMS}
+	{CMDARG_PREFIXS_DEFAULT, {L"multiple", L"filelist"}, {L"="}, L"multiple", GetRCStringSW (IDS_CMDPARAM_MULTIPLE), CMDARG_IGNOREPREFIXS | CMDARG_ENABLEPARAMS},
+	{CMDARG_PREFIXS_DEFAULT, {L"language", L"lang"}, {L"="}, L"language", L"", CMDARG_IGNOREPREFIXS | CMDARG_ENABLEPARAMS}
 };
 bool IsFile (const std::wstring &path)
 {

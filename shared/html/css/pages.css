@@ -201,7 +201,7 @@ progress.win-ring:indeterminate::-ms-fill {
     width: 90px;
     height: 90px;
     position: relative;
-    background-color: #464646;
+    /*background-color: #464646;*/
     float: right;
     display: flex;
     flex-direction: row;
@@ -218,6 +218,11 @@ progress.win-ring:indeterminate::-ms-fill {
     min-height: 90px;
     max-width: 90px;
     max-height: 90px;
+    transition: all 0.5s cubic-bezier(0.1, 0.9, 0.2, 1);
+}
+
+.storelogo {
+    transition: all 0.5s cubic-bezier(0.1, 0.9, 0.2, 1);
 }
 
 .storelogo .filter img {
@@ -232,7 +237,7 @@ progress.win-ring:indeterminate::-ms-fill {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(254, 0.1);
+    /*background-color: rgba(254,254,254, 0.1);*/
     display: flex;
     flex-direction: row;
     -ms-flex-direction: row;
@@ -270,9 +275,6 @@ progress.win-ring:indeterminate::-ms-fill {
     transition: width 0.5s cubic-bezier(0.1, 0.9, 0.2, 1), height 0.5s cubic-bezier(0.1, 0.9, 0.2, 1), top 0.5s cubic-bezier(0.1, 0.9, 0.2, 1), left 0.5s cubic-bezier(0.1, 0.9, 0.2, 1), right 0.5s cubic-bezier(0.1, 0.9, 0.2, 1), bottom 0.5s cubic-bezier(0.1, 0.9, 0.2, 1), margin 0.5s cubic-bezier(0.1, 0.9, 0.2, 1), padding 0.5s cubic-bezier(0.1, 0.9, 0.2, 1);
     list-style-position: outside;
     color: rgb(113, 113, 113);
-    /*test*/
-    /*border: 1px solid black;
-    padding: 5px;*/
 }
 
 .page .content p,

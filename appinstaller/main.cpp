@@ -192,7 +192,6 @@ public ref class SplashForm: public System::Windows::Forms::Form
 			this->BackColor = backcolor;
 		}
 		else
-
 		{
 			picbox->BackColor = background;
 			this->BackColor = background;
@@ -1228,17 +1227,6 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 				return "{}";
 			}
 		};
-		ref class _I_Storage
-		{
-			private:
-			MainHtmlWnd ^wndinst = nullptr;
-			public:
-			_I_Storage (MainHtmlWnd ^wnd): wndinst (wnd) {}
-			ref class Path
-			{
-
-			};
-		};
 		ref class _I_String
 		{
 			public:
@@ -1344,14 +1332,12 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 		private:
 		_I_System ^system = gcnew _I_System (wndinst);
 		_I_IEFrame ^ieframe = gcnew _I_IEFrame (wndinst);
-		_I_Storage ^storage = gcnew _I_Storage (wndinst);
 		_I_String ^str = gcnew _I_String ();
 		_I_Package ^pkg = gcnew _I_Package ();
 		_I_Window ^wnd = gcnew _I_Window (wndinst);
 		public:
 		property _I_System ^System { _I_System ^get () { return system; }}
 		property _I_IEFrame ^IEFrame { _I_IEFrame ^get () { return ieframe; }}
-		property _I_Storage ^Storage { _I_Storage ^get () { return storage; }}
 		property _I_String ^String { _I_String ^get () { return str; }}
 		property _I_Package ^Package { _I_Package ^get () { return pkg; }}
 		property _I_Window ^Window { _I_Window ^get () { return wnd; }}
@@ -1378,18 +1364,20 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 		if (savepos.read_bool ())
 		{
 			ww = lastw.read_uint (defw.read_uint (rcInt (IDS_DEFAULTWIDTH)));
-			wh = lastw.read_uint (defh.read_uint (rcInt (IDS_DEFAULTHEIGHT)));
+			wh = lasth.read_uint (defh.read_uint (rcInt (IDS_DEFAULTHEIGHT)));
 		}
 		else
 		{
 			ww = defw.read_uint (rcInt (IDS_DEFAULTWIDTH));
-			wh = defw.read_uint (rcInt (IDS_DEFAULTHEIGHT));
+			wh = defh.read_uint (rcInt (IDS_DEFAULTHEIGHT));
 		}
-		this->MinimumSize = System::Drawing::Size (
-			minw.read_uint (rcInt (IDS_MINWIDTH)) * DPI,
-			minh.read_uint (rcInt (IDS_MINHIEHGT)) * DPI
-		);
 		this->ClientSize = System::Drawing::Size (ww * DPI, wh * DPI);
+		int hborder = this->Size.Width - this->ClientSize.Width,
+			vborder = this->Size.Height - this->ClientSize.Height;
+		this->MinimumSize = System::Drawing::Size (
+			minw.read_uint (rcInt (IDS_MINWIDTH)) * DPI + hborder,
+			minh.read_uint (rcInt (IDS_MINHIEHGT)) * DPI + vborder
+		);
 		this->WindowState = (System::Windows::Forms::FormWindowState)lasts.read_int ((int)System::Windows::Forms::FormWindowState::Normal);
 	}
 	void Init ()
@@ -1452,11 +1440,11 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 	}
 	void OnResizeEnd (Object ^sender, EventArgs ^e)
 	{
-
+		ResizeEvent ();
 	}
 	std::wstring GetSuitSplashImage ()
 	{
-		std::wstring path = g_scaleres [this->Width >= 1024 && this->Height >= 768 ? L"splashlarge" : L"splash"];
+		std::wstring path = g_scaleres [this->Width >= 800 * DPI && this->Height >= 600 * DPI ? L"splashlarge" : L"splash"];
 		if (IsNormalizeStringEmpty (path)) path = g_vemani.splash_screen_image (L"App");
 		return path;
 	}
@@ -1665,15 +1653,13 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 				if (FAILED (pir.result))
 					pir.result = AddAppxPackageFromPath (pi.filepath, blankdeplist, DEPOLYOPTION_NONE, gcnew InstallProgressCallbackDelegate (this, &MainHtmlWnd::InstallProgressCallback), pir.error, pir.reason);
 			}
-			else
-			{
-				pir.result = AddAppxPackageFromPath (pi.filepath, blankdeplist, DEPOLYOPTION_NONE, gcnew InstallProgressCallbackDelegate (this, &MainHtmlWnd::InstallProgressCallback), pir.error, pir.reason);
-			}
+			else pir.result = AddAppxPackageFromPath (pi.filepath, blankdeplist, DEPOLYOPTION_NONE, gcnew InstallProgressCallbackDelegate (this, &MainHtmlWnd::InstallProgressCallback), pir.error, pir.reason);
 			g_pkgresult [pi.filepath] = pir;
 			if (pir.succeeded ())
 			{
 				InvokeCallScriptFunction ("noticeLoadInstallSuccessPage", false);
 				pagetag = "installsuccess";
+				InvokeLaunchAppForLaunchWhenReady ();
 				CreateToastNoticeWithImgBase64 (
 					g_identity,
 					MPStringToStdW (
@@ -1701,6 +1687,7 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 					pir.reason,
 					pi.properties.logo_base64
 				);
+				if (g_wcmdflags & (DWORD)CMDPARAM::SILENT) ThreadPackageSuccessInstallCountTask ();
 			}
 		}
 		else
@@ -1746,6 +1733,7 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 			if (allsuccess)
 			{
 				InvokeCallScriptFunction ("noticeLoadInstallSuccessPage", true);
+				InvokeLaunchAppForLaunchWhenReady ();
 				pagetag = "installsuccess";
 				CreateToastNotice (g_identity, GetRCStringSW (IDS_SUCCESS_MTITLE), L"");
 				ThreadPackageSuccessInstallCountTask ();
@@ -1755,6 +1743,7 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 				InvokeCallScriptFunction ("noticeLoadInstallFailedPage", true);
 				CreateToastNotice (g_identity, GetRCStringSW (IDS_FAILED_MTITLE), L"");
 				pagetag = "installfailed";
+				if (g_wcmdflags & (DWORD)CMDPARAM::SILENT) ThreadPackageSuccessInstallCountTask ();
 			}
 		}
 	}
@@ -1767,8 +1756,14 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 	}
 	void PackageSuccessInstallCountTask ()
 	{
-		return;
-		System::Threading::Thread::Sleep (System::TimeSpan (0, 0, 5));
+		size_t cnt = 0;
+		for (auto &it : g_pkginfo)
+			for (auto &it_s : it.applications)
+				if (!it_s [L"Id"].empty ()) cnt ++;
+		if (cnt <= 0) cnt = 1;
+		if (cnt > 3) cnt = 3;
+		if (g_wcmdflags & (DWORD)CMDPARAM::SILENT && cnt > 1) cnt = 2;
+		System::Threading::Thread::Sleep (System::TimeSpan (0, 0, 5 * cnt));
 		this->InvokeClose ();
 	}
 	void InvokeClose ()
@@ -1837,14 +1832,9 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 				for (auto &it_s : it.applications)
 					if (!it_s [L"Id"].empty ()) 
 						appids.emplace_back (it.identity.package_family_name + L'!' + it_s [L"Id"]);
-			if (appids.size () == 1)
-			{
-				ActivateAppxApplication (appids.at (0));
-			}
-			else if (appids.size () > 1)
-			{
-				AppListWnd::DisplayWindow ();
-			}
+			if (appids.size () == 1) ActivateAppxApplication (appids.at (0));
+			else if (appids.size () > 1) AppListWnd::DisplayWindow ();
+			else this->Close ();
 		}
 		else if (nequals (current, L"installfailed")) this->Close ();
 		return;
@@ -1882,6 +1872,24 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form
 		else if (nequals (current, L"installfailed")) this->Close ();
 		return;
 		System::Windows::Forms::MessageBox::Show ("Button2 按下事件");
+	}
+	void LaunchAppForLaunchWhenReady ()
+	{
+		if (!(g_wcmdflags & (DWORD)CMDPARAM::SILENT))
+		{
+			std::vector <std::wnstring> appids;
+			for (auto &it : g_pkginfo)
+				for (auto &it_s : it.applications)
+					if (!it_s [L"Id"].empty ())
+						appids.emplace_back (it.identity.package_family_name + L'!' + it_s [L"Id"]);
+			if (appids.size () == 1) ActivateAppxApplication (appids.at (0));
+			else if (appids.size () > 1) AppListWnd::DisplayWindow ();
+		}
+	}
+	void InvokeLaunchAppForLaunchWhenReady ()
+	{
+		if (this->InvokeRequired) this->Invoke (gcnew Action (this, &MainHtmlWnd::LaunchAppForLaunchWhenReady));
+		else LaunchAppForLaunchWhenReady ();
 	}
 #ifdef nequals
 #undef nequals
@@ -1999,6 +2007,7 @@ std::wstring GenerateCmdHelper ()
 	std::wstring ret = GetRCStringSW (IDS_CMDTIP_PRETEXT) + L"\r\n";
 	for (auto &it : g_argslist)
 	{
+		if (it.description.empty ()) continue;
 		ret += L"\r\n";
 		ret += L"\t" + (it.prefixs.size () ? it.prefixs.at (0) : L"") + it.commands.at (0) + L"\r\n";
 		ret += L"\t" + it.description + L"\r\n";
@@ -2041,6 +2050,10 @@ DWORD CmdMapsToFlags (std::map <cmdkey, cmdvalue> cmdpairs, std::vector <std::wn
 							else push_unique (files, filepath);
 						}
 					}
+				}
+				else if (key.key.equals (L"language"))
+				{
+					SetThreadUILanguage (LocaleCodeToLcid (value.value));
 				}
 			} break;
 		}

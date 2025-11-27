@@ -701,7 +701,7 @@ HRESULT FindAppxPackage (LPCWSTR lpPackageFullName, PKGMGR_FINDENUMCALLBACK pfCa
 LPCWSTR GetPackageManagerLastErrorCode () { return g_swExceptionCode.c_str (); }
 [STAThread]
 LPCWSTR GetPackageManagerLastErrorDetailMessage () { return g_swExceptionDetail.c_str (); }
-
+[STAThread]
 HRESULT ActivateAppxApplication (LPCWSTR lpAppUserId, PDWORD pdwProcessId)
 {
 	if (FAILED (CoInitializeEx (NULL, COINIT_APARTMENTTHREADED))) return E_INVALIDARG;
@@ -830,4 +830,7 @@ HRESULT FindAppxPackagesByFamilyName (LPCWSTR lpPkgFamilyName, PKGMGR_FINDENUMCA
 		if (pfCallback) pfCallback ((FIND_PACKAGE_INFO *)bytes.data (), pCustom);
 	}, pErrorCode, pDetailMsg);
 }
-void PackageManagerFreeString (LPWSTR lpString) { if (lpString) free (lpString); }
+void PackageManagerFreeString (LPWSTR lpString) 
+{ 
+	if (lpString) free (lpString); 
+}

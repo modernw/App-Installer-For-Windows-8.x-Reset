@@ -21,7 +21,7 @@
             roundToNearestInt(calcColorComponent(basecolor.red)),
             roundToNearestInt(calcColorComponent(basecolor.green)),
             roundToNearestInt(calcColorComponent(basecolor.blue)),
-            0.25
+            63.75 // 0.25
         );
         return "linear-gradient(to right, rgba(0,0,0,0), " + rightcolor.RGBA.stringify() + ")";
     }
