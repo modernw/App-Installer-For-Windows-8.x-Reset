@@ -7,6 +7,6 @@
       Lnk32x32Logo="Icons\Main.ico"
       BackgroundColor='#0078D7'>
     <DefaultTile ShowName='allLogos'/>
-    <SplashScreen Image="VisualElements\SplashLarge.png" BackgroundColor="#0078d7" />
+    <SplashScreen Image="VisualElements\SplashLarge.png" BackgroundColor="#0078d7" DarkModeBackgroundColor='#001629' />
   </VisualElements>
 </Application>

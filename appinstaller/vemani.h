@@ -147,6 +147,15 @@ class vemanifest
 		return !bg.empty () ? bg : visual.attribute ("BackgroundColor").as_string ();
 	}
 	std::wstring splash_screen_backgroundcolor (const std::wstring &id = L"App") const { return pugi::as_wide (this->splash_screen_backgroundcolor (pugi::as_utf8 (id))); }
+	std::string splash_screen_backgroundcolor_darkmode (const std::string &id = "App") const
+	{
+		pugi::xml_node visual = visual_element_node (id);
+		if (!visual) return "";
+		pugi::xml_node splash = visual.child ("SplashScreen");
+		std::string bg = splash ? splash.attribute ("DarkModeBackgroundColor").as_string () : "";
+		return !bg.empty () ? bg : visual.attribute ("DarkModeBackgroundColor").as_string ();
+	}
+	std::wstring splash_screen_backgroundcolor_darkmode (const std::wstring &id = L"App") const { return pugi::as_wide (this->splash_screen_backgroundcolor_darkmode (pugi::as_utf8 (id))); }
 	bool is_appid_exists (const std::string &id) const
 	{
 		pugi::xml_node root = doc.document_element ();

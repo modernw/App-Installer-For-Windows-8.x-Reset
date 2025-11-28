@@ -1,0 +1,19 @@
+.page {
+    background-color: #F3F3F3;
+}
+
+.page.splash {
+    background-color: #0078d7;
+}
+
+.page .content.loading,
+.page .content.main,
+.page .progress,
+.page .reason p,
+.page .controls .checkbox {
+    color: black;
+}
+
+.page .content.main .pkgapplabel {
+    color: #0078d7;
+}

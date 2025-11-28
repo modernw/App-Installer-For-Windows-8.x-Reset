@@ -164,6 +164,7 @@
     <ClInclude Include="..\pkgread\pkgread.h" />
     <ClInclude Include="..\priformatcli\priformatcli.h" />
     <ClInclude Include="appxinfo.h" />
+    <ClInclude Include="bridge.h" />
     <ClInclude Include="cmdargs.h" />
     <ClInclude Include="dynarr.h" />
     <ClInclude Include="filepath.h" />

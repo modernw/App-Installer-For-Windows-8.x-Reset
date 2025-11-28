@@ -11,6 +11,44 @@ body * {
     -ms-overflow-style: -ms-autohiding-scrollbar;
 }
 
+*,
+button,
+input,
+select,
+textarea,
+a,
+label,
+p,
+span,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+ul,
+ol,
+li,
+dl,
+dt,
+dd,
+table,
+th,
+td,
+tr,
+img,
+iframe,
+object,
+embed,
+audio,
+video,
+canvas,
+form,
+fieldset,
+legend {
+    font-family: "Microsoft YaHei", "Segoe UI", "Ebrima", "Nirmala", "Gadugi", "Segoe UI Emoji", "Segoe UI Symbol", "Meiryo", "Leelawadee", "Microsoft JhengHei", "Malgun Gothic", "Estrangelo Edessa", "Microsoft Himalaya", "Microsoft New Tai Lue", "Microsoft PhagsPa", "Microsoft Tai Le", "Microsoft Yi Baiti", "Mongolian Baiti", "MV Boli", "Myanmar Text", "Javanese Text", "Cambria Math";
+}
+
 .pagecontainer {
     padding: 0px;
     position: absolute;
@@ -54,7 +92,8 @@ body * {
 
 .page.splash {
     padding: 0px;
-    background-color: #333;
+    /* background-color: #333; */
+    background-color: #0078d7;
 }
 
 .page.splash>img {
@@ -331,12 +370,26 @@ progress.win-ring:indeterminate::-ms-fill {
     box-sizing: border-box;
 }
 
-.content #moreinfo-flyout-content p>span:nth-child(1) {
+#moreinfo-flyout-content p>span:nth-child(1) {
     -ms-user-select: none;
 }
 
-.content #moreinfo-flyout-content>span:nth-child(2) {
+#moreinfo-flyout-content>span:nth-child(2) {
     color: darkgray;
+}
+
+#moreinfo-flyout p {
+    margin: 0;
+    font-weight: normal;
+}
+
+#moreinfo-flyout ul {
+    margin: 0;
+    padding-left: 16px;
+}
+
+#moreinfo-flyout ul li {
+    margin: 0;
 }
 
 .progress * {
@@ -380,6 +433,15 @@ progress.win-ring:indeterminate::-ms-fill {
     display: none;
 }
 
+.page>.controls {
+    display: flex;
+}
+
+.page.splash>.controls,
+.page.loading>.controls {
+    display: none;
+}
+
 .page.splash>.splash {
     display: block;
 }
@@ -413,23 +475,28 @@ progress.win-ring:indeterminate::-ms-fill {
     display: block;
 }
 
-.page.select>.controls.select,
-.page.installsuccess>.controls.installsuccess,
-.page.installfailed>.controls.installfailed {
+.page.select .controls,
+.page.preinstall .controls,
+.page.installing .controls,
+.page.installsuccess .controls,
+.page.installfailed .controls {
     display: flex;
+    display: -ms-flexbox;
 }
 
-.page.preinstall>.controls.preinstall,
-.page.installing>.controls.installing {
+.page.preinstall .controls,
+.page.installing .controls {
     display: flex;
+    display: -ms-flexbox;
     flex-direction: row;
+    -ms-flex-direction: row;
 }
 
-.page.select>.controls.select>.checkbox {
+.page.select>.controls>.checkbox {
     display: none;
 }
 
-.page.select>.controls.select>.command button:nth-of-type(2) {
+.page.select>.controls>.command button:nth-of-type(2) {
     /*display: none;*/
 }
 
@@ -488,7 +555,7 @@ progress.win-ring:indeterminate::-ms-fill {
     display: none;
 }
 
-.page.installing>.controls.installing .command {
+.page.installing>.controls .command {
     display: none;
 }
 
@@ -496,8 +563,8 @@ progress.win-ring:indeterminate::-ms-fill {
     display: block;
 }
 
-.page.installsuccess>.controls.installsuccess .checkbox,
-.page.installfailed>.controls.installfailed .checkbox {
+.page.installsuccess>.controls .checkbox,
+.page.installfailed>.controls .checkbox {
     display: none;
 }
 
@@ -541,7 +608,7 @@ progress.win-ring:indeterminate::-ms-fill {
     display: block;
 }
 
-.page.installsuccess>.controls.installsuccess>.command button:nth-of-type(2),
-.page.installfailed>.controls.installsuccess>.command button:nth-of-type(2) {
+.page.installsuccess>.controls>.command button:nth-of-type(2),
+.page.installfailed>.controls>.command button:nth-of-type(2) {
     display: none;
 }

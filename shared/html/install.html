@@ -8,9 +8,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script type="text/javascript" src="js/module.js"></script>
     <script type="text/javascript" src="js/polyfill-ie.js"></script>
-    <link rel="stylesheet" href="libs/winjs/2.0/css/ui-light.css">
-    <script type="text/javascript" src="libs/winjs/2.0/js/base.js"></script>
-    <script type="text/javascript" src="libs/winjs/2.0/js/ui.js"></script>
+    <link rel="stylesheet" href="libs/winjs/2.0/css/ui-light.css" id="winjs-style">
+    <script type="text/javascript" src="libs/winjs/1.0/js/base.js"></script>
+    <script type="text/javascript" src="libs/winjs/1.0/js/ui.js"></script>
     <script type="text/javascript" src="js/color.js"></script>
     <script type="text/javascript" src="js/promise.js"></script>
     <script type="text/javascript" src="js/bridge.js"></script>
@@ -22,8 +22,12 @@
     <script type="text/javascript" src="js/event.js"></script>
     <script type="text/javascript" src="js/tileback.js"></script>
     <script type="text/javascript" src="js/pages.js"></script>
+    <script type="text/javascript" src="js/theme.js"></script>
     <script type="text/javascript" src="js/load.js"></script>
     <script type="text/javascript" src="js/init.js"></script>
+    <link rel="stylesheet" type="text/css" href="libs/msgbox/msgbox.css">
+    <script type="text/javascript" src="libs/msgbox/msgbox.js"></script>
+    <link rel="stylesheet" type="text/css" href="theme/light/default.css" id="theme-style">
 </head>
 
 <body>
@@ -176,30 +180,7 @@
                     </ul>
                 </div>
                 <a class="moreinfo" data-res-byname="IDS_MOREINFO" tabindex="0"></a>
-                <div data-win-control="WinJS.UI.Flyout" id="moreinfo-flyout" style="max-width: 80%; max-height: 80%;">
-                    <div id="moreinfo-flyout-content" style="-ms-user-select: element; user-select: text; padding: 0 0 25px 0; box-sizing: border-box;;">
-                        <div style="width: 100%;">
-                            <p><span colspan="2" style="font-weight: bold;" data-res-byname="IDS_MOREINFO_ID"></span></p>
-                            <p><span data-res-byname="IDS_MOREINFO_IDNAME"></span>: <span class="id name"></span></p>
-                            <p><span data-res-byname="IDS_MOREINFO_IDPUBLISHER"></span>: <span class="id publisher"></span></p>
-                            <p><span data-res-byname="IDS_MOREINFO_IDVERSION"></span>: <span class="id version"></span></p>
-                            <p><span data-res-byname="IDS_MOREINFO_IDARCH"></span>: <span class="id arch"></span></p>
-                            <p><span data-res-byname="IDS_MOREINFO_IDFAMILY"></span>: <span class="id family"></span></p>
-                            <p><span data-res-byname="IDS_MOREINFO_IDFULL"></span>: <span class="id full"></span></p>
-                        </div>
-                        <div style="width: 100%; display: none;">
-                            <p><span colspan="2" style="font-weight:bold;" data-res-byname="IDS_MOREINFO_PROP"></span></p>
-                            <p><span data-res-byname="IDS_MOREINFO_PROPFREAMWORK"></span>: <span class="prop framework"></span></p>
-                            <p><span data-res-byname="IDS_MOREINFO_PROPRESPKG"></span>: <span class="prop respkg"></span></p>
-                        </div>
-                        <div style="width: 100%;">
-                            <p><span colspan="2" style="font-weight:bold;" data-res-byname="IDS_MOREINFO_INFO"></span></p>
-                            <p><span data-res-byname="IDS_MOREINFO_INFOSYS"></span>: <span class="info sys"></span></p>
-                            <p><span data-res-byname="IDS_MOREINFO_INFOLANG"></span>: </p>
-                            <ul class="info langs"></ul>
-                        </div>
-                    </div>
-                </div>
+
                 <script>
                     (function() {
                         "use strict";
@@ -298,18 +279,6 @@
                         });
                     })();
                 </script>
-                <script>
-                    (function() {
-                        "Use strict";
-                        var page = document.querySelector(".page");
-                        var content = page.querySelector(".content.preinstall");
-                        var moreinfo = page.querySelector(".moreinfo");
-                        Windows.UI.Event.Util.addEvent(moreinfo, "click", function() {
-                            var flyout = document.getElementById("moreinfo-flyout").winControl;
-                            flyout.show(this);
-                        });
-                    })();
-                </script>
             </div>
             <div class="progress installing">
                 <div>
@@ -321,7 +290,7 @@
                 <p data-res-byname="IDS_FAILED_REASONNAME"></p>
                 <textarea class="win-textarea" readonly></textarea>
             </div>
-            <div class="controls select preinstall installing installsuccess installfailed">
+            <div class="controls">
                 <div class="checkbox">
                     <input type="checkbox" id="preinst-enablelaunch" class="win-checkbox">
                     <label for="preinst-enablelaunch" data-res-byname="IDS_LAUNCHWHENREADY"></label>
@@ -333,6 +302,42 @@
             </div>
         </div>
     </div>
+    <div data-win-control="WinJS.UI.Flyout" id="moreinfo-flyout" style="max-width: 80%; max-height: 80%; position: absolute;">
+        <div id="moreinfo-flyout-content" style="-ms-user-select: element; user-select: text; padding: 0 0 25px 0; box-sizing: border-box;;">
+            <div style="width: 100%;">
+                <p><span colspan="2" style="font-weight: bold;" data-res-byname="IDS_MOREINFO_ID"></span></p>
+                <p><span data-res-byname="IDS_MOREINFO_IDNAME"></span>: <span class="id name"></span></p>
+                <p><span data-res-byname="IDS_MOREINFO_IDPUBLISHER"></span>: <span class="id publisher"></span></p>
+                <p><span data-res-byname="IDS_MOREINFO_IDVERSION"></span>: <span class="id version"></span></p>
+                <p><span data-res-byname="IDS_MOREINFO_IDARCH"></span>: <span class="id arch"></span></p>
+                <p><span data-res-byname="IDS_MOREINFO_IDFAMILY"></span>: <span class="id family"></span></p>
+                <p><span data-res-byname="IDS_MOREINFO_IDFULL"></span>: <span class="id full"></span></p>
+            </div>
+            <div style="width: 100%; display: none;">
+                <p><span colspan="2" style="font-weight:bold;" data-res-byname="IDS_MOREINFO_PROP"></span></p>
+                <p><span data-res-byname="IDS_MOREINFO_PROPFREAMWORK"></span>: <span class="prop framework"></span></p>
+                <p><span data-res-byname="IDS_MOREINFO_PROPRESPKG"></span>: <span class="prop respkg"></span></p>
+            </div>
+            <div style="width: 100%;">
+                <p><span colspan="2" style="font-weight:bold;" data-res-byname="IDS_MOREINFO_INFO"></span></p>
+                <p><span data-res-byname="IDS_MOREINFO_INFOSYS"></span>: <span class="info sys"></span></p>
+                <p><span data-res-byname="IDS_MOREINFO_INFOLANG"></span>: </p>
+                <ul class="info langs"></ul>
+            </div>
+        </div>
+    </div>
+    <script>
+        (function() {
+            "Use strict";
+            var page = document.querySelector(".page");
+            var content = page.querySelector(".content.preinstall");
+            var moreinfo = page.querySelector(".moreinfo");
+            Windows.UI.Event.Util.addEvent(moreinfo, "click", function() {
+                var flyout = document.getElementById("moreinfo-flyout").winControl;
+                flyout.show(this);
+            });
+        })();
+    </script>
 </body>
 
 </html>

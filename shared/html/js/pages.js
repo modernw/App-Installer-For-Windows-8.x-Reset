@@ -57,6 +57,16 @@
                 break;
             }
         }
+        var strutils = Bridge.NString;
+        if (swPageLabel == "splash" || swPageLabel == "loading") {
+            var controls = page.querySelector(".controls");
+            if (controls) controls.style.display = "none";
+        } else {
+            var controls = page.querySelector(".controls");
+            if (controls) controls.style.display = "flex";
+            if (controls.style.display == 'none') controls.style.display = "-ms-flex";
+            if (controls.style.display == 'none') controls.style.display = "-ms-flexbox";
+        }
         (function() {
             if (Bridge.NString.equals(swPageLabel, "loading")) {
                 var content = page.querySelector(".content.loading");
@@ -90,7 +100,7 @@
                 }
             }
             var content = page.querySelector(".content." + Bridge.String.trim(swPageLabel));
-            var controls = page.querySelector(".controls." + Bridge.String.trim(swPageLabel));
+            var controls = page.querySelector(".controls");
             var progress = page.querySelector(".progress");
             var reason = page.querySelector(".reason");
             var titlepart = [];

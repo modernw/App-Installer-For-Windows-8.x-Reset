@@ -65,7 +65,12 @@ static std::wstring StringToWString (const std::string &str, UINT codePage = CP_
 using onprogress = AsyncOperationProgressHandler <DeploymentResult ^, DeploymentProgress>;
 using onprogresscomp = AsyncOperationWithProgressCompletedHandler <DeploymentResult ^, DeploymentProgress>;
 using progressopt = IAsyncOperationWithProgress <DeploymentResult ^, DeploymentProgress> ^;
-template <typename TAsyncOpCreator> HRESULT RunPackageManagerOperation (TAsyncOpCreator asyncCreator, PKGMRR_PROGRESSCALLBACK pfCallback, void *pCustom, LPWSTR *pErrorCode, LPWSTR *pDetailMsg)
+typedef struct PROGRESSCALLBACK_DATA__
+{
+	PKGMRR_PROGRESSCALLBACK pfCallback;
+	void *pCustom;
+} PROGRESSCALLBACK_DATA, PPROGRESSCALLBACK_DATA;
+template <typename TAsyncOpCreator> HRESULT RunPackageManagerOperation (TAsyncOpCreator asyncCreator, PROGRESSCALLBACK_DATA pCallbackData, LPWSTR *pErrorCode, LPWSTR *pDetailMsg)
 {
 	g_swExceptionCode = L"";
 	g_swExceptionDetail = L"";
@@ -80,8 +85,8 @@ template <typename TAsyncOpCreator> HRESULT RunPackageManagerOperation (TAsyncOp
 		hCompEvt = CreateEventExW (nullptr, nullptr, CREATE_EVENT_MANUAL_RESET, EVENT_ALL_ACCESS);
 		if (!hCompEvt) return E_FAIL;
 		auto depopt = asyncCreator ();
-		depopt->Progress = ref new onprogress ([pfCallback, pCustom] (progressopt operation, DeploymentProgress progress) {
-			if (pfCallback) pfCallback ((DWORD)progress.percentage, pCustom);
+		depopt->Progress = ref new onprogress ([pCallbackData] (progressopt operation, DeploymentProgress progress) {
+			if (pCallbackData.pfCallback) pCallbackData.pfCallback ((DWORD)progress.percentage, pCallbackData.pCustom);
 		});
 		depopt->Completed = ref new onprogresscomp ([&hCompEvt] (progressopt, Windows::Foundation::AsyncStatus) {
 			SetEvent (hCompEvt);
@@ -136,11 +141,13 @@ template <typename TAsyncOpCreator> HRESULT RunPackageManagerOperation (TAsyncOp
 [MTAThread]
 HRESULT AddAppxPackageFromURI (LPCWSTR lpPkgFileUri, PCREGISTER_PACKAGE_DEFENDENCIES alpDepUrlList, DWORD dwDeployOption, PKGMRR_PROGRESSCALLBACK pfCallback, void *pCustom, LPWSTR *pErrorCode, LPWSTR *pDetailMsg)
 {
+	PROGRESSCALLBACK_DATA pdata = {pfCallback, pCustom};
 	return RunPackageManagerOperation ([=] () {
 		auto pkgmgr = ref new PackageManager ();
-		auto depuris = ref new Platform::Collections::Vector <Uri ^> ();
+		Platform::Collections::Vector <Uri ^> ^depuris = nullptr;
 		if (alpDepUrlList)
 		{
+			depuris = ref new Platform::Collections::Vector <Uri ^> ();
 			for (size_t i = 0; i < alpDepUrlList->dwSize; i ++)
 			{
 				auto &pstr = alpDepUrlList->alpDepUris [i];
@@ -166,13 +173,13 @@ HRESULT AddAppxPackageFromURI (LPCWSTR lpPkgFileUri, PCREGISTER_PACKAGE_DEFENDEN
 				}
 				catch (Exception ^e) { continue; }
 			}
+			if (depuris->Size == 0) depuris = nullptr;
 		}
-		if (depuris->Size > 0) depuris = nullptr;
+		else depuris = nullptr;
 		auto pkguri = ref new Uri (ref new String (lpPkgFileUri));
-		auto pkguristr = pkguri->ToString ();
-		auto ope = pkgmgr->AddPackageAsync (pkguri, depuris, (DeploymentOptions)dwDeployOption);
-		return ope;
-	}, pfCallback, pCustom, pErrorCode, pDetailMsg);
+		auto depopt = pkgmgr->AddPackageAsync (pkguri, depuris, (DeploymentOptions)dwDeployOption);
+		return depopt;
+	}, pdata, pErrorCode, pDetailMsg);
 }
 [MTAThread]
 HRESULT AddAppxPackageFromPath (LPCWSTR lpPkgPath, PCREGISTER_PACKAGE_DEFENDENCIES alpDepUrlList, DWORD dwDeployOption, PKGMRR_PROGRESSCALLBACK pfCallback, void *pCustom, LPWSTR *pErrorCode, LPWSTR *pDetailMsg)
@@ -444,22 +451,25 @@ HRESULT GetAppxPackages (PKGMGR_FINDENUMCALLBACK pfCallback, void *pCustom, LPWS
 [MTAThread]
 HRESULT RemoveAppxPackage (LPCWSTR lpPkgFullName, PKGMRR_PROGRESSCALLBACK pfCallback, void *pCustom, LPWSTR *pErrorCode, LPWSTR *pDetailMsg)
 {
+	PROGRESSCALLBACK_DATA pdata = {pfCallback, pCustom};
 	return RunPackageManagerOperation ([=] () {
 		auto pkgmgr = ref new PackageManager ();
 		return pkgmgr->RemovePackageAsync (ref new String (lpPkgFullName));
-	}, pfCallback, pCustom, pErrorCode, pDetailMsg);
+	}, pdata, pErrorCode, pDetailMsg);
 }
 [MTAThread]
 HRESULT CleanupAppxPackage (LPCWSTR lpPkgName, LPCWSTR lpUserSID, PKGMRR_PROGRESSCALLBACK pfCallback, void *pCustom, LPWSTR *pErrorCode, LPWSTR *pDetailMsg)
 {
+	PROGRESSCALLBACK_DATA pdata = {pfCallback, pCustom};
 	return RunPackageManagerOperation ([=] () {
 		auto pkgmgr = ref new PackageManager ();
 		return pkgmgr->CleanupPackageForUserAsync (ref new String (lpPkgName), ref new String (lpUserSID));
-	}, pfCallback, pCustom, pErrorCode, pDetailMsg);
+	}, pdata, pErrorCode, pDetailMsg);
 }
 [MTAThread]
 HRESULT RegisterAppxPackageByUri (LPCWSTR lpManifestUri, PCREGISTER_PACKAGE_DEFENDENCIES alpDependencyUriList, DWORD dwDeployOption, PKGMRR_PROGRESSCALLBACK pfCallback, void *pCustom, LPWSTR *pErrorCode, LPWSTR *pDetailMsg)
 {
+	PROGRESSCALLBACK_DATA pdata = {pfCallback, pCustom};
 	return RunPackageManagerOperation ([=] () {
 		auto pkgmgr = ref new PackageManager ();
 		auto depuris = ref new Platform::Collections::Vector <Uri ^> ();
@@ -491,9 +501,9 @@ HRESULT RegisterAppxPackageByUri (LPCWSTR lpManifestUri, PCREGISTER_PACKAGE_DEFE
 				catch (Exception ^e) { continue; }
 			}
 		}
-		if (depuris->Size > 0) depuris = nullptr;
+		if (depuris->Size == 0) depuris = nullptr;
 		return pkgmgr->RegisterPackageAsync (ref new Uri (ref new String (lpManifestUri)), depuris, (DeploymentOptions)dwDeployOption);
-	}, pfCallback, pCustom, pErrorCode, pDetailMsg);
+	}, pdata, pErrorCode, pDetailMsg);
 }
 [MTAThread]
 HRESULT RegisterAppxPackageByPath (LPCWSTR lpManifestPath, PCREGISTER_PACKAGE_DEFENDENCIES alpDependencyUriList, DWORD dwDeployOption, PKGMRR_PROGRESSCALLBACK pfCallback, void *pCustom, LPWSTR *pErrorCode, LPWSTR *pDetailMsg)
@@ -505,6 +515,7 @@ HRESULT RegisterAppxPackageByPath (LPCWSTR lpManifestPath, PCREGISTER_PACKAGE_DE
 [MTAThread]
 HRESULT RegisterAppxPackageByFullName (LPCWSTR lpPackageFullName, PCREGISTER_PACKAGE_DEFENDENCIES alpDepFullNameList, DWORD dwDeployOption, PKGMRR_PROGRESSCALLBACK pfCallback, void *pCustom, LPWSTR *pErrorCode, LPWSTR *pDetailMsg)
 {
+	PROGRESSCALLBACK_DATA pdata = {pfCallback, pCustom};
 	return RunPackageManagerOperation ([=] () {
 		auto pkgmgr = ref new PackageManager ();
 		auto depuris = ref new Platform::Collections::Vector <String ^> ();
@@ -517,9 +528,9 @@ HRESULT RegisterAppxPackageByFullName (LPCWSTR lpPackageFullName, PCREGISTER_PAC
 				catch (Exception ^e) { continue; }
 			}
 		}
-		if (depuris->Size > 0) depuris = nullptr;
+		if (depuris->Size == 0) depuris = nullptr;
 		return pkgmgr->RegisterPackageByFullNameAsync (ref new String (lpPackageFullName), depuris, (DeploymentOptions)dwDeployOption);
-	}, pfCallback, pCustom, pErrorCode, pDetailMsg);
+	}, pdata, pErrorCode, pDetailMsg);
 }
 template <typename TFunction> HRESULT ExecPackageManagerFunctionNoReturn (TFunction func, LPWSTR *pErrorCode, LPWSTR *pDetailMsg)
 {
@@ -561,6 +572,7 @@ HRESULT SetAppxPackageStatus (LPCWSTR lpPackageFullName, DWORD dwStatus, LPWSTR 
 [MTAThread]
 HRESULT StageAppxPackageFromURI (LPCWSTR lpFileUri, PCREGISTER_PACKAGE_DEFENDENCIES alpDepUriList, DWORD dwDeployOption, PKGMRR_PROGRESSCALLBACK pfCallback, void *pCustom, LPWSTR *pErrorCode, LPWSTR *pDetailMsg)
 {
+	PROGRESSCALLBACK_DATA pdata = {pfCallback, pCustom};
 	return RunPackageManagerOperation ([=] () {
 		auto pkgmgr = ref new PackageManager ();
 		auto depuris = ref new Platform::Collections::Vector <Uri ^> ();
@@ -592,9 +604,9 @@ HRESULT StageAppxPackageFromURI (LPCWSTR lpFileUri, PCREGISTER_PACKAGE_DEFENDENC
 				catch (Exception ^e) { continue; }
 			}
 		}
-		if (depuris->Size > 0) depuris = nullptr;
+		if (depuris->Size == 0) depuris = nullptr;
 		return pkgmgr->StagePackageAsync (ref new Uri (ref new String (lpFileUri)), depuris, (DeploymentOptions)dwDeployOption);
-	}, pfCallback, pCustom, pErrorCode, pDetailMsg);
+	}, pdata, pErrorCode, pDetailMsg);
 }
 [MTAThread]
 HRESULT StageAppxPackageFromPath (LPCWSTR lpPkgPath, PCREGISTER_PACKAGE_DEFENDENCIES alpDepUriList, DWORD dwDeployOption, PKGMRR_PROGRESSCALLBACK pfCallback, void *pCustom, LPWSTR *pErrorCode, LPWSTR *pDetailMsg)
@@ -606,14 +618,16 @@ HRESULT StageAppxPackageFromPath (LPCWSTR lpPkgPath, PCREGISTER_PACKAGE_DEFENDEN
 [MTAThread]
 HRESULT StageAppxUserData (LPCWSTR lpPackageFullName, PKGMRR_PROGRESSCALLBACK pfCallback, void *pCustom, LPWSTR *pErrorCode, LPWSTR *pDetailMsg)
 {
+	PROGRESSCALLBACK_DATA pdata = {pfCallback, pCustom};
 	return RunPackageManagerOperation ([=] () {
 		auto pkgmgr = ref new PackageManager ();
 		return pkgmgr->StageUserDataAsync (ref new String (lpPackageFullName));
-	}, pfCallback, pCustom, pErrorCode, pDetailMsg);
+	}, pdata, pErrorCode, pDetailMsg);
 }
 [MTAThread]
 HRESULT UpdateAppxPackageFromURI (LPCWSTR lpPkgFileUri, PCREGISTER_PACKAGE_DEFENDENCIES alpDepUrlList, DWORD dwDeployOption, PKGMRR_PROGRESSCALLBACK pfCallback, void *pCustom, LPWSTR *pErrorCode, LPWSTR *pDetailMsg)
 {
+	PROGRESSCALLBACK_DATA pdata = {pfCallback, pCustom};
 	return RunPackageManagerOperation ([=] () {
 		auto pkgmgr = ref new PackageManager ();
 		auto depuris = ref new Platform::Collections::Vector <Uri ^> ();
@@ -645,9 +659,9 @@ HRESULT UpdateAppxPackageFromURI (LPCWSTR lpPkgFileUri, PCREGISTER_PACKAGE_DEFEN
 				catch (Exception ^e) { continue; }
 			}
 		}
-		if (depuris->Size > 0) depuris = nullptr;
+		if (depuris->Size == 0) depuris = nullptr;
 		return pkgmgr->UpdatePackageAsync (ref new Uri (ref new String (lpPkgFileUri)), depuris, (DeploymentOptions)dwDeployOption);
-	}, pfCallback, pCustom, pErrorCode, pDetailMsg);
+	}, pdata, pErrorCode, pDetailMsg);
 }
 [MTAThread]
 HRESULT UpdateAppxPackageFromPath (LPCWSTR lpPkgPath, PCREGISTER_PACKAGE_DEFENDENCIES alpDepUrlList, DWORD dwDeployOption, PKGMRR_PROGRESSCALLBACK pfCallback, void *pCustom, LPWSTR *pErrorCode, LPWSTR *pDetailMsg)

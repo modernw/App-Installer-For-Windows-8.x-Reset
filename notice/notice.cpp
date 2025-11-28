@@ -242,7 +242,7 @@ Windows::Data::Xml::Dom::XmlDocument ^SimpleToastNoticeXml (const std::wstring &
 		auto node = dynamic_cast <Windows::Data::Xml::Dom::XmlElement ^> (imageNodes->Item (0));
 		if (node)
 		{
-			node->SetAttribute (L"src", ref new Platform::String (imguri && imguri->ToString ()->Data () ? imguri->ToString ()->Data () : img.c_str ()));
+			node->SetAttribute (L"src", ref new Platform::String (imguri && imguri->DisplayUri ? imguri->DisplayUri->Data () : img.c_str ()));
 			node->SetAttribute (L"alt", ref new Platform::String (L"image"));
 		}
 	}
@@ -313,7 +313,7 @@ Windows::Data::Xml::Dom::XmlDocument ^SimpleToastNoticeXml2 (const std::wstring 
 		auto node = dynamic_cast <Windows::Data::Xml::Dom::XmlElement ^> (imageNodes->Item (0));
 		if (node)
 		{
-			node->SetAttribute (L"src", ref new Platform::String (imguri && imguri->ToString ()->Data () ? imguri->ToString ()->Data () : img.c_str ()));
+			node->SetAttribute (L"src", ref new Platform::String (imguri && imguri->DisplayUri ? imguri->DisplayUri->Data () : img.c_str ()));
 			node->SetAttribute (L"alt", ref new Platform::String (L"image"));
 		}
 	}

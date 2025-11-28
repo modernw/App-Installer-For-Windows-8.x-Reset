@@ -122,3 +122,72 @@ typedef struct version
 		return result;
 	}
 } Version;
+
+#ifdef __cplusplus_cli
+using namespace System;
+using namespace System::Runtime::InteropServices;
+[ComVisible (true)]
+public ref class _I_Version
+{
+	private:
+	UINT16 major = 0, minor = 0, build = 0, revision = 0;
+	public:
+	property UINT16 Major { UINT16 get () { return major; } void set (UINT16 value) { major = value; } }
+	property UINT16 Minor { UINT16 get () { return minor; } void set (UINT16 value) { minor = value; } }
+	property UINT16 Build { UINT16 get () { return build; } void set (UINT16 value) { build = value; } }
+	property UINT16 Revision { UINT16 get () { return revision; } void set (UINT16 value) { revision = value; } }
+	property array <UINT16> ^Data
+	{
+		array <UINT16> ^get ()
+		{
+			return gcnew array <UINT16> {
+				major, minor, build, revision
+			};
+		}
+		void set (array <UINT16> ^arr)
+		{
+			major = minor = build = revision = 0;
+			for (size_t i = 0; i < arr->Length; i ++)
+			{
+				switch (i)
+				{
+					case 0: major = arr [i]; break;
+					case 1: minor = arr [i]; break;
+					case 2: build = arr [i]; break;
+					case 3: revision = arr [i]; break;
+					default: break;
+				}
+			}
+		}
+	}
+	property String ^DataStr
+	{
+		String ^get () { return Stringify (); }
+		void set (String ^str) { Parse (str); }
+	}
+	_I_Version (UINT16 p_ma, UINT16 p_mi, UINT16 p_b, UINT16 p_r):
+		major (p_ma), minor (p_mi), build (p_b), revision (p_r) {}
+	_I_Version (UINT16 p_ma, UINT16 p_mi, UINT16 p_b):
+		major (p_ma), minor (p_mi), build (p_b), revision (0) {}
+	_I_Version (UINT16 p_ma, UINT16 p_mi):
+		major (p_ma), minor (p_mi), build (0), revision (0) {}
+	_I_Version (UINT16 p_ma):
+		major (p_ma), minor (0), build (0), revision (0) {}
+	_I_Version () {}
+	_I_Version %Parse (String ^ver)
+	{
+		auto strarr = ver->Split ('.');
+		auto arr = gcnew array <UINT16> (4);
+		for (size_t i = 0; i < strarr->Length; i ++)
+		{
+			try { arr [i] = Convert::ToUInt16 (strarr [i]); }
+			catch (...) {}
+		}
+		Data = arr;
+		return *this;
+	}
+	String ^Stringify () { return major + "." + minor + "." + build + "." + revision; }
+	String ^ToString () override { return Stringify (); }
+	bool Valid () { return Major != 0 && Minor != 0 && Build != 0 && Revision != 0; }
+};
+#endif

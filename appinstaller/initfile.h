@@ -44,7 +44,7 @@ BOOL WritePrivateProfileStringA (const std::string &filePath, const std::string 
 }
 BOOL WritePrivateProfileStringW (const std::wstring &filePath, const std::wstring &section, const std::wstring &key, const std::wstring &value)
 {
-	return WritePrivateProfileStringW ( section.c_str (), key.c_str (), value.c_str (), filePath.c_str ());
+	return WritePrivateProfileStringW (section.c_str (), key.c_str (), value.c_str (), filePath.c_str ());
 }
 size_t GetPrivateProfileSectionA (const std::string &filePath, const std::string &section, std::vector <std::string> &output)
 {
@@ -106,7 +106,7 @@ bool WritePrivateProfileSectionA (const std::string &filePath, const std::string
 {
 	std::string buf;
 	for (const auto &line : lines) buf.append (line).push_back ('\0');
-	buf.push_back ('\0'); 
+	buf.push_back ('\0');
 	return WritePrivateProfileSectionA (section.c_str (), buf.c_str (), filePath.c_str ()) != 0;
 }
 bool WritePrivateProfileSectionW (const std::wstring &filePath, const std::wstring &section, const std::vector <std::wstring> &lines)
@@ -167,7 +167,7 @@ size_t GetPrivateProfileKeysA (const std::string &filePath, const std::string &s
 }
 bool DeletePrivateProfileKeyA (const std::string &filePath, const std::string &section, const std::string &key)
 {
-	return WritePrivateProfileStringA (section.c_str (), key.c_str (), NULL,  filePath.c_str ()) != FALSE;
+	return WritePrivateProfileStringA (section.c_str (), key.c_str (), NULL, filePath.c_str ()) != FALSE;
 }
 bool DeletePrivateProfileKeyW (const std::wstring &filePath, const std::wstring &section, const std::wstring &key)
 {
@@ -260,19 +260,19 @@ class initkey
 #define OPERATOR_TYPE_READ(_type_, _method_) \
 operator _type_ () { return _method_ (); }
 	OPERATOR_TYPE_READ (int, read_int)
-	OPERATOR_TYPE_READ (unsigned int, read_uint)
-	OPERATOR_TYPE_READ (long, read_long)
-	OPERATOR_TYPE_READ (unsigned long, read_ulong)
-	OPERATOR_TYPE_READ (long long, read_llong)
-	OPERATOR_TYPE_READ (unsigned long long, read_ullong)
-	OPERATOR_TYPE_READ (short, read_short)
-	OPERATOR_TYPE_READ (unsigned short, read_ushort)
-	OPERATOR_TYPE_READ (float, read_float)
-	OPERATOR_TYPE_READ (double, read_double)
-	OPERATOR_TYPE_READ (bool, read_bool)
-#ifdef OPERATOR_TYPE_READ
-#undef OPERATOR_TYPE_READ
-#endif
+		OPERATOR_TYPE_READ (unsigned int, read_uint)
+		OPERATOR_TYPE_READ (long, read_long)
+		OPERATOR_TYPE_READ (unsigned long, read_ulong)
+		OPERATOR_TYPE_READ (long long, read_llong)
+		OPERATOR_TYPE_READ (unsigned long long, read_ullong)
+		OPERATOR_TYPE_READ (short, read_short)
+		OPERATOR_TYPE_READ (unsigned short, read_ushort)
+		OPERATOR_TYPE_READ (float, read_float)
+		OPERATOR_TYPE_READ (double, read_double)
+		OPERATOR_TYPE_READ (bool, read_bool)
+	#ifdef OPERATOR_TYPE_READ
+	#undef OPERATOR_TYPE_READ
+	#endif
 };
 class initsection
 {
@@ -285,8 +285,8 @@ class initsection
 		if (IsNormalizeStringEmpty (res)) return defaultvalue;
 		return (T)process (res.c_str ());
 	}
-	template <typename T, typename CT> bool write_t (const std::basic_string <CT> &key, T value) 
-	{ 
+	template <typename T, typename CT> bool write_t (const std::basic_string <CT> &key, T value)
+	{
 		std::basic_string <CT> temp;
 		return write_string (key, TypeToString (value, temp));
 	}
@@ -424,22 +424,22 @@ class initfile
 #define METHOD_INIT_READ(_type_, _typename_, _dfltvalue_, _process_) \
 _type_ read_##_typename_ (INIT_READ_WARGS (_type_, _dfltvalue_)) const { return read_t (section, key, dflt, _process_); }
 	METHOD_INIT_READ (int, int, 0, _wtoi)
-	METHOD_INIT_READ (unsigned int, uint, 0, _wtou)
-	METHOD_INIT_READ (long, long, 0, _wtol)
-	METHOD_INIT_READ (unsigned long, ulong, 0, _wtoul)
-	METHOD_INIT_READ (long long, llong, 0, _wtoll)
-	METHOD_INIT_READ (unsigned long, ullong, 0, _wtou64)
-	METHOD_INIT_READ (short, short, 0, _wtoi16)
-	METHOD_INIT_READ (unsigned short, ushort, 0, _wtoui16)
-	METHOD_INIT_READ (int16_t, i16, 0, _wtoi16)
-	METHOD_INIT_READ (uint16_t, u16, 0, _wtoui16)
-	METHOD_INIT_READ (int32_t, i32, 0, _wtoi32)
-	METHOD_INIT_READ (uint32_t, u32, 0, _wtoui32)
-	METHOD_INIT_READ (int64_t, i64, 0, _wtoi64)
-	METHOD_INIT_READ (uint64_t, u64, 0, _wtou64)
-	METHOD_INIT_READ (float, float , 0, _wtof)
-	METHOD_INIT_READ (double, double, 0, _wtod)
-	int8_t read_i8 (INIT_READ_WARGS (int8_t, 0)) const { return read_t <int8_t, int16_t> (section, key, dflt, _wtoi8); }
+		METHOD_INIT_READ (unsigned int, uint, 0, _wtou)
+		METHOD_INIT_READ (long, long, 0, _wtol)
+		METHOD_INIT_READ (unsigned long, ulong, 0, _wtoul)
+		METHOD_INIT_READ (long long, llong, 0, _wtoll)
+		METHOD_INIT_READ (unsigned long, ullong, 0, _wtou64)
+		METHOD_INIT_READ (short, short, 0, _wtoi16)
+		METHOD_INIT_READ (unsigned short, ushort, 0, _wtoui16)
+		METHOD_INIT_READ (int16_t, i16, 0, _wtoi16)
+		METHOD_INIT_READ (uint16_t, u16, 0, _wtoui16)
+		METHOD_INIT_READ (int32_t, i32, 0, _wtoi32)
+		METHOD_INIT_READ (uint32_t, u32, 0, _wtoui32)
+		METHOD_INIT_READ (int64_t, i64, 0, _wtoi64)
+		METHOD_INIT_READ (uint64_t, u64, 0, _wtou64)
+		METHOD_INIT_READ (float, float, 0, _wtof)
+		METHOD_INIT_READ (double, double, 0, _wtod)
+		int8_t read_i8 (INIT_READ_WARGS (int8_t, 0)) const { return read_t <int8_t, int16_t> (section, key, dflt, _wtoi8); }
 	uint8_t read_u8 (INIT_READ_WARGS (uint8_t, 0)) const { return read_t <uint8_t, uint16_t> (section, key, dflt, _wtoui8); }
 	bool read_bool (INIT_READ_WARGS (bool, false)) const
 	{
@@ -462,16 +462,16 @@ _type_ read_##_typename_ (INIT_READ_WARGS (_type_, _dfltvalue_)) const { return 
 #define METHOD_INIT_WRITE(_type_) \
 bool write (INIT_WRITE_WARGS (_type_)) { return write_t (section, key, value); }
 	METHOD_INIT_WRITE (short)
-	METHOD_INIT_WRITE (unsigned short)
-	METHOD_INIT_WRITE (int)
-	METHOD_INIT_WRITE (unsigned int)
-	METHOD_INIT_WRITE (long)
-	METHOD_INIT_WRITE (unsigned long)
-	METHOD_INIT_WRITE (long long)
-	METHOD_INIT_WRITE (unsigned long long)
-	METHOD_INIT_WRITE (float)
-	METHOD_INIT_WRITE (double)
-	bool write (INIT_WRITE_WARGS (bool)) { return write (section, key, value ? L"true" : L"false"); }
+		METHOD_INIT_WRITE (unsigned short)
+		METHOD_INIT_WRITE (int)
+		METHOD_INIT_WRITE (unsigned int)
+		METHOD_INIT_WRITE (long)
+		METHOD_INIT_WRITE (unsigned long)
+		METHOD_INIT_WRITE (long long)
+		METHOD_INIT_WRITE (unsigned long long)
+		METHOD_INIT_WRITE (float)
+		METHOD_INIT_WRITE (double)
+		bool write (INIT_WRITE_WARGS (bool)) { return write (section, key, value ? L"true" : L"false"); }
 	bool write (INIT_WRITE_WARGS (int8_t)) { return write_t (section, key, (int16_t)value); }
 	bool write (INIT_WRITE_WARGS (uint8_t)) { return write_t (section, key, (uint16_t)value); }
 	bool write (pcwstring section, pcwstring key, void *buf, size_t bufsize) { return WritePrivateProfileStructW (filepath, section, key, buf, bufsize); }
@@ -486,3 +486,113 @@ bool write (INIT_WRITE_WARGS (_type_)) { return write_t (section, key, value); }
 #undef INIT_WRITE_WARGS
 #endif
 };
+
+#ifdef __cplusplus_cli
+namespace Win32
+{
+	using namespace System;
+	using namespace System::Runtime::InteropServices;
+	[ComVisible (true)]
+	public ref class Key
+	{
+		private:
+		String ^filepath = "";
+		String ^section = "";
+		String ^key = "";
+		public:
+		property String ^FilePath { String ^get () { return filepath; }}
+		property String ^Section { String ^get () { return section; }}
+		property String ^KeyName { String ^get () { return key; }}
+		Key (String ^file, String ^sect, String ^k): filepath (file), section (sect), key (k) {}
+		Object ^Get (Object ^dflt)
+		{
+			auto res = GetPrivateProfileStringW (
+				MPStringToStdW (filepath),
+				MPStringToStdW (section),
+				MPStringToStdW (key),
+				dflt ? MPStringToStdW (dflt->ToString ()).c_str () : L""
+			);
+			return CStringToMPString (res);
+		}
+		Object ^Get ()
+		{
+			auto res = GetPrivateProfileStringW (
+				MPStringToStdW (filepath),
+				MPStringToStdW (section),
+				MPStringToStdW (key)
+			);
+			return CStringToMPString (res);
+		}
+		bool Set (Object ^value)
+		{
+			return WritePrivateProfileStringW (
+				MPStringToStdW (filepath),
+				MPStringToStdW (section),
+				MPStringToStdW (key),
+				MPStringToStdW (value ? value->ToString () : L"")
+			);
+		}
+		property Object ^Value { Object ^get () { return Get (); } void set (Object ^value) { Set (value); } }
+		Key %operator = (Object ^value) { Value = value; return *this; }
+		operator String ^ () { return Value->ToString (); }
+		explicit operator bool ()
+		{
+			auto boolstr = Value->ToString ()->Trim ()->ToLower ();
+			if (boolstr == "true" || boolstr == "zhen" || boolstr == "yes" || boolstr == "Õæ") return true;
+			else if (boolstr == "false" || boolstr == "jia" || boolstr == "no" || boolstr == "¼Ù") return false;
+			else return false;
+		}
+	#define OPERATOR_TRANSITION_DEFINE(type, transfunc, defaultret) \
+operator type () { try { transfunc (Value->ToString ()); } catch (...) { return defaultret; }}
+		OPERATOR_TRANSITION_DEFINE (int8_t, Convert::ToSByte, 0)
+		OPERATOR_TRANSITION_DEFINE (uint8_t, Convert::ToByte, 0)
+		OPERATOR_TRANSITION_DEFINE (int16_t, Convert::ToInt16, 0)
+		OPERATOR_TRANSITION_DEFINE (uint16_t, Convert::ToUInt16, 0)
+		OPERATOR_TRANSITION_DEFINE (int32_t, Convert::ToInt32, 0)
+		OPERATOR_TRANSITION_DEFINE (uint32_t, Convert::ToUInt32, 0)
+		OPERATOR_TRANSITION_DEFINE (int64_t, Convert::ToInt64, 0)
+		OPERATOR_TRANSITION_DEFINE (uint64_t, Convert::ToUInt64, 0)
+		OPERATOR_TRANSITION_DEFINE (float, Convert::ToSingle, 0)
+		OPERATOR_TRANSITION_DEFINE (double, Convert::ToDouble, 0)
+		OPERATOR_TRANSITION_DEFINE (System::Decimal, Convert::ToDecimal, 0)
+		OPERATOR_TRANSITION_DEFINE (System::DateTime, Convert::ToDateTime, Convert::ToDateTime (0))
+	#ifdef OPERATOR_TRANSITION_DEFINE
+	#undef OPERATOR_TRANSITION_DEFINE
+	#endif
+	};
+	[ComVisible (true)]
+	public ref class Section
+	{
+		private:
+		String ^filepath = "";
+		String ^section = "";
+		public:
+		property String ^FilePath { String ^get () { return filepath; } }
+		property String ^SectionName { String ^get () { return section; } }
+		Section (String ^file, String ^sect): filepath (file), section (sect) {}
+		Key ^GetKey (String ^key) { return gcnew Key (filepath, section, key); }
+		Object ^Get (String ^key, Object ^dflt) { return GetKey (key)->Get (dflt); }
+		Object ^Get (String ^key) { return GetKey (key)->Get (); }
+		bool Set (String ^key, Object ^value) { return GetKey (key)->Set (value); }
+		Key ^operator [] (String ^key) { return GetKey (key); }
+	};
+	[ComVisible (true)]
+	public ref class InitConfig
+	{
+		private:
+		String ^filepath = "";
+		public:
+		property String ^FilePath { String ^get () { return filepath; } void set (String ^path) { filepath = path; } }
+		InitConfig (String ^path): filepath (path) {}
+		InitConfig () {}
+		Section ^GetSection (String ^section) { return gcnew Section (filepath, section); }
+		Key ^GetKey (String ^section, String ^key) { return gcnew Key (filepath, section, key); }
+		Object ^Get (String ^section, String ^key, String ^dflt) { return GetKey (section, key)->Get (dflt); }
+		Object ^Get (String ^section, String ^key) { return GetKey (section, key)->Get (); }
+		Section ^Get (String ^section) { return GetSection (section); }
+		bool Set (String ^section, String ^key, String ^value) { return GetKey (section, key)->Set (value); }
+		Section ^operator [] (String ^section) { return GetSection (section); }
+	};
+}
+
+#endif
