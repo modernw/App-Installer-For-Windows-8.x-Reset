@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Application xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <VisualElements DisplayName="设置" BackgroundColor="#5133AB" ShowNameOnSquare150x150Logo="on" ForegroundText="light" Square150x150Logo="Settings.Assets\150x150Logo.png" Square70x70Logo="Settings.Assets\70x70Logo.png" />
+</Application>

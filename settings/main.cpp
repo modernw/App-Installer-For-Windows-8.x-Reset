@@ -1,0 +1,923 @@
+#include <Windows.h>
+#include <set>
+#include <msclr/marshal_cppstd.h>
+#include <ShObjIdl.h>
+#include <MsHTML.h>
+#include <ExDisp.h>
+#include <atlbase.h>
+#include <fstream>
+#include <comdef.h>
+#include <vcclr.h>
+#include <map>
+#include <rapidjson\document.h>
+#include <rapidjson\writer.h>
+#include <rapidjson\stringbuffer.h>
+#include "module.h"
+#include "themeinfo.h"
+#include "mpstr.h"
+#include "initfile.h"
+#include "vemani.h"
+#include "ieshell.h"
+#include "localeex.h"
+#include "bridge.h"
+#include "rctools.h"
+#include "nstring.h"
+#include "resmap.h"
+#include "nstring.h"
+#include "raii.h"
+
+using namespace System;
+using namespace System::Runtime::InteropServices;
+
+#ifdef _DEBUG
+#define DEBUGMODE true
+#else
+#define DEBUGMODE false
+#endif
+#define JS_SAFE [MarshalAs (UnmanagedType::SafeArray, SafeArraySubType = VarEnum::VT_VARIANT)]
+struct iconhandle
+{
+	HICON hIcon = nullptr;
+	iconhandle (HICON hIcon = nullptr): hIcon (hIcon) {}
+	~iconhandle () { try { if (hIcon) DestroyIcon (hIcon); hIcon = nullptr; } catch (...) {} }
+};
+
+LPCWSTR g_lpAppId = L"WindowsModern.PracticalToolsProject!Settings";
+LPCWSTR g_idInVe = L"Settings";
+iconhandle g_hIconMain (LoadRCIcon (IDI_ICON_MAIN));
+initfile g_initfile (CombinePath (GetProgramRootDirectoryW (), L"config.ini"));
+vemanifest g_vemani (
+	IsFileExists (CombinePath (GetProgramRootDirectoryW (), L"VisualElementsManifest.xml")) ?
+	CombinePath (GetProgramRootDirectoryW (), L"VisualElementsManifest.xml") :
+	CombinePath (GetProgramRootDirectoryW (), L"Settings.VisualElementsManifest.xml")
+);
+resxmldoc g_scaleres (
+	IsFileExists (CombinePath (GetProgramRootDirectoryW (), L"VisualElements\\scale.xml")) ?
+	CombinePath (GetProgramRootDirectoryW (), L"VisualElements\\scale.xml") :
+	CombinePath (GetProgramRootDirectoryW (), L"VisualElementsManifest.xml")
+);
+ref class MainHtmlWnd;
+msclr::gcroot <MainHtmlWnd ^> g_mainwnd;
+std::wstring g_lastfile;
+inline std::wstring ToStdWString (const std::wstring &str) { return str; }
+
+size_t ExploreFile (HWND hParent, std::vector <std::wstring> &results, LPWSTR lpFilter = L"Windows Store App Package (*.appx; *.appxbundle)\0*.appx;*.appxbundle", DWORD dwFlags = OFN_EXPLORER | OFN_ALLOWMULTISELECT | OFN_PATHMUSTEXIST, const std::wstring &swWndTitle = std::wstring (L"Please select the file(-s): "), const std::wstring &swInitDir = GetFileDirectoryW (g_lastfile))
+{
+	results.clear ();
+	const DWORD BUFFER_SIZE = 65536; // 64KB
+	std::vector <WCHAR> buffer (BUFFER_SIZE, 0);
+	OPENFILENAME ofn;
+	ZeroMemory (&ofn, sizeof (ofn));
+	ofn.hwndOwner = hParent;
+	ofn.lpstrFile = (LPWSTR)buffer.data ();
+	ofn.nMaxFile = BUFFER_SIZE;
+	ofn.lpstrFilter = lpFilter;
+	ofn.nFilterIndex = 1;
+	ofn.lpstrTitle = swWndTitle.c_str ();
+	ofn.Flags = dwFlags;
+	ofn.lpstrInitialDir = swInitDir.c_str ();
+	ofn.lStructSize = sizeof (ofn);
+	if (GetOpenFileNameW (&ofn))
+	{
+		LPCWSTR p = buffer.data ();
+		std::wstring dir = p;
+		p += dir.length () + 1;
+		if (*p == 0) results.push_back (dir);
+		else
+		{
+			while (*p)
+			{
+				std::wstring fullPath = dir + L"\\" + p;
+				results.push_back (fullPath);
+				p += wcslen (p) + 1;
+			}
+		}
+		if (!results.empty ()) g_lastfile = results.back ();
+	}
+	return results.size ();
+}
+HRESULT GetWebBrowser2Interface (System::Windows::Forms::WebBrowser ^fwb, IWebBrowser2 **output)
+{
+	if (fwb == nullptr || output == nullptr) return E_INVALIDARG;
+	*output = nullptr;
+	Object ^activeX = fwb->ActiveXInstance;
+	if (activeX == nullptr) return E_FAIL;
+	IntPtr pUnk = Marshal::GetIUnknownForObject (activeX);
+	if (pUnk == IntPtr::Zero) return E_FAIL;
+	HRESULT hr = ((IUnknown *)pUnk.ToPointer ())->QueryInterface (IID_IWebBrowser2, (void **)output);
+	Marshal::Release (pUnk);
+	return hr;
+}
+bool IsWindows10 ()
+{
+#pragma warning(push)
+#pragma warning(disable:4996)
+	OSVERSIONINFOEX osvi = {0};
+	osvi.dwOSVersionInfoSize = sizeof (OSVERSIONINFOEX);
+	osvi.dwMajorVersion = 10;
+	DWORDLONG conditionMask = 0;
+	VER_SET_CONDITION (conditionMask, VER_MAJORVERSION, VER_GREATER_EQUAL);
+	if (VerifyVersionInfoW (&osvi, VER_MAJORVERSION, conditionMask)) return TRUE;
+	DWORD error = GetLastError ();
+	return (error == ERROR_OLD_WIN_VERSION) ? FALSE : FALSE;
+#pragma warning(pop)
+}
+[ComVisible (true)]
+public ref class _I_InitConfig
+{
+	public:
+	Win32::InitConfig ^Create (String ^filepath) { return gcnew Win32::InitConfig (filepath); }
+	Win32::InitConfig ^GetConfig () { return Create (CStringToMPString (g_initfile.filepath)); }
+};
+[ComVisible (true)]
+public ref class _I_Bridge_Base
+{
+	protected:
+	_I_String ^str = gcnew _I_String ();
+	_I_InitConfig ^initconfig = gcnew _I_InitConfig ();
+	public:
+	property _I_String ^String { _I_String ^get () { return str; }}
+	property _I_InitConfig ^Config { _I_InitConfig ^get () { return initconfig; }}
+};
+[ComVisible (true)]
+public interface class IScriptBridge
+{
+	public:
+	virtual Object ^CallEvent (String ^funcName, Object ^e) = 0;
+};
+[ComVisible (true)]
+public ref class _I_Window
+{
+	private:
+	IScriptBridge ^wndinst = nullptr;
+	public:
+	_I_Window (IScriptBridge ^wnd): wndinst (wnd) {}
+	Object ^CallEvent (String ^name, ... array <Object ^> ^args) { return wndinst->CallEvent (name, args [0]); }
+};
+[ComVisible (true)]
+public ref class _I_UI
+{
+	private:
+	System::Windows::Forms::Form ^wndinst = nullptr;
+	public:
+	ref struct _I_UI_Size
+	{
+		private:
+		int m_width = 0;
+		int m_height = 0;
+		public:
+		property int width { int get () { return m_width; } }
+		property int height { int get () { return m_height; }}
+		property int Width { int get () { return m_width; } }
+		property int Height { int get () { return m_height; }}
+		int getWidth () { return m_width; }
+		int getHeight () { return m_height; }
+		_I_UI_Size (int w, int h): m_width (w), m_height (h) {}
+	};
+	_I_UI (System::Windows::Forms::Form ^wnd): wndinst (wnd) {}
+	property int DPIPercent { int get () { return GetDPI (); }}
+	property double DPI { double get () { return DPIPercent * 0.01; }}
+	property _I_UI_Size ^WndSize { _I_UI_Size ^get () { return gcnew _I_UI_Size (wndinst->Width, wndinst->Height); } }
+	property _I_UI_Size ^ClientSize { _I_UI_Size ^get () { auto cs = wndinst->ClientSize; return gcnew _I_UI_Size (cs.Width, cs.Height); } }
+	property String ^ThemeColor { String ^get () { return ColorToHtml (GetDwmThemeColor ()); } }
+	property bool DarkMode { bool get () { return IsAppInDarkMode (); }}
+	property String ^HighContrast
+	{
+		String ^get ()
+		{
+			auto highc = GetHighContrastTheme ();
+			switch (highc)
+			{
+				case HighContrastTheme::None: return "none";
+					break;
+				case HighContrastTheme::Black: return "black";
+					break;
+				case HighContrastTheme::White: return "white";
+					break;
+				case HighContrastTheme::Other: return "high";
+					break;
+				default: return "none";
+					break;
+			}
+			return "none";
+		}
+	}
+};
+[ComVisible (true)]
+public ref class _I_Locale
+{
+	public:
+	property String ^CurrentLocale { String ^get () { return CStringToMPString (GetComputerLocaleCodeW ()); } }
+	property LCID CurrentLCID { LCID get () { return LocaleCodeToLcid (GetComputerLocaleCodeW ()); } }
+	String ^ToLocaleName (LCID lcid) { return CStringToMPString (LcidToLocaleCodeW (lcid)); }
+	LCID ToLCID (String ^localename) { return LocaleCodeToLcidW (MPStringToStdW (localename)); }
+	Object ^LocaleInfo (LCID lcid, LCTYPE lctype) { return CStringToMPString (GetLocaleInfoW (lcid, lctype)); }
+	Object ^LocaleInfoEx (String ^localeName, LCTYPE lctype)
+	{
+		std::wstring output = L"";
+		int ret = GetLocaleInfoEx (MPStringToStdW (localeName), lctype, output);
+		if (output.empty ()) return ret;
+		else return CStringToMPString (output);
+	}
+};
+[ComVisible (true)]
+public ref class _I_System
+{
+	private:
+	_I_Resources ^ires = gcnew _I_Resources ();
+	_I_Locale ^ilocale = gcnew _I_Locale ();
+	public:
+	property _I_Resources ^Resources { _I_Resources ^get () { return ires; } }
+	property _I_Locale ^Locale { _I_Locale ^get () { return ilocale; } }
+	property bool IsWindows10
+	{
+		bool get ()
+		{
+			OSVERSIONINFOEX osvi = {0};
+			osvi.dwOSVersionInfoSize = sizeof (OSVERSIONINFOEX);
+			osvi.dwMajorVersion = 10;
+			DWORDLONG conditionMask = 0;
+			VER_SET_CONDITION (conditionMask, VER_MAJORVERSION, VER_GREATER_EQUAL);
+			if (VerifyVersionInfoW (&osvi, VER_MAJORVERSION, conditionMask)) return TRUE;
+			DWORD error = GetLastError ();
+			return (error == ERROR_OLD_WIN_VERSION) ? FALSE : FALSE;
+		}
+	}
+};
+public ref class _I_System2: public _I_System
+{
+	protected:
+	_I_UI ^ui;
+	public:
+	_I_System2 (System::Windows::Forms::Form ^wnd)
+	{
+		ui = gcnew _I_UI (wnd);
+	}
+	property _I_UI ^UI { _I_UI ^get () { return ui; } }
+};
+[ComVisible (true)]
+public ref class _I_Bridge_Base2: public _I_Bridge_Base
+{
+	protected:
+	_I_Window ^window;
+	public:
+	_I_Bridge_Base2 (IScriptBridge ^iscr)
+	{
+		window = gcnew _I_Window (iscr);
+	}
+	property _I_Window ^Window { _I_Window ^get () { return window; }}
+};
+[ComVisible (true)]
+public ref class _I_Bridge_Base3: public _I_Bridge_Base2
+{
+	protected:
+	_I_System2 ^system;
+	public:
+	_I_Bridge_Base3 (IScriptBridge ^iscr, System::Windows::Forms::Form ^form): _I_Bridge_Base2 (iscr)
+	{
+		system = gcnew _I_System2 (form);
+	}
+	property _I_System2 ^System { _I_System2 ^get () { return system; }}
+};
+[ComVisible (true)]
+public ref class _I_IEFrame_Base
+{
+	public:
+	property int Version { int get () { return GetInternetExplorerVersionMajor (); }}
+	String ^ParseHtmlColor (String ^color)
+	{
+		auto dcolor = Drawing::ColorTranslator::FromHtml (color);
+		{
+			rapidjson::Document doc;
+			doc.SetObject ();
+			auto &alloc = doc.GetAllocator ();
+			doc.AddMember ("r", (uint16_t)dcolor.R, alloc);
+			doc.AddMember ("g", (uint16_t)dcolor.G, alloc);
+			doc.AddMember ("b", (uint16_t)dcolor.B, alloc);
+			doc.AddMember ("a", (uint16_t)dcolor.A, alloc);
+			rapidjson::StringBuffer buffer;
+			rapidjson::Writer <rapidjson::StringBuffer> writer (buffer);
+			doc.Accept (writer);
+			std::string utf8 = buffer.GetString ();
+			std::wstring_convert <std::codecvt_utf8 <wchar_t>> conv;
+			return CStringToMPString (conv.from_bytes (utf8));
+		}
+		return "{}";
+	}
+};
+
+[ComVisible (true)]
+public ref class SplashForm: public System::Windows::Forms::Form
+{
+	public:
+	using PictureBox = System::Windows::Forms::PictureBox;
+	using Timer = System::Windows::Forms::Timer;
+	private:
+	PictureBox ^picbox;
+	Timer ^timer;
+	System::Drawing::Image ^splashimg = nullptr;
+	System::Drawing::Color background = System::Drawing::Color::Transparent;
+	// System::Windows::Forms ^parent = nullptr;
+	double opastep = 0.05;
+	void InitForm ()
+	{
+		this->DoubleBuffered = true;
+		InitializeComponent ();
+		this->FormBorderStyle = System::Windows::Forms::FormBorderStyle::None;
+		this->StartPosition = System::Windows::Forms::FormStartPosition::Manual;
+		this->ShowInTaskbar = false;
+		this->AllowTransparency = true;
+		this->Opacity = 1.0;
+	}
+	void InitializeComponent ()
+	{
+		double dDpi = GetDPI () * 0.01;
+		this->picbox = gcnew System::Windows::Forms::PictureBox ();
+		this->picbox->Size = System::Drawing::Size (620 * dDpi, 300 * dDpi);
+		this->picbox->BackColor = System::Drawing::Color::Transparent;
+		picbox->Anchor = System::Windows::Forms::AnchorStyles::None;
+		picbox->SizeMode = System::Windows::Forms::PictureBoxSizeMode::Zoom;
+	}
+	void OnFadeTimer (Object ^sender, EventArgs ^e)
+	{
+		auto fadeTimer = timer;
+		auto opacityStep = opastep;
+		if (this->Opacity > 0)
+		{
+			this->Opacity -= opacityStep;
+		}
+		else
+		{
+			fadeTimer->Stop ();
+			this->Close ();
+		}
+	}
+	void OnLoad (Object ^sender, EventArgs ^e)
+	{
+		this->ChangePosAndSize ();
+		this->Visible = true;
+	}
+	void OnResize (Object ^sender, EventArgs ^e)
+	{
+		if (IsHandleCreated && picbox->IsHandleCreated)
+		{
+			Drawing::Size sz = this->ClientSize;
+			this->picbox->Location = Drawing::Point (
+				(sz.Width - picbox->Width) * 0.5,
+				(sz.Height - picbox->Height) * 0.5
+			);
+		}
+	}
+	void OnResizeOwner (Object ^sender, EventArgs ^e) { this->ChangePosAndSize (); }
+	void OnLocationChangedOwner (Object ^sender, EventArgs ^e) { this->ChangePosAndSize (); }
+	protected:
+	virtual void OnHandleCreated (EventArgs^ e) override
+	{
+		Form::OnHandleCreated (e);
+		if (Environment::OSVersion->Version->Major >= 6)
+		{
+			INT mr = 0;
+			MARGINS margins = {mr, mr, mr, mr};
+			HRESULT hr = DwmExtendFrameIntoClientArea ((HWND)this->Handle.ToPointer (), &margins);
+		}
+	}
+	public:
+	SplashForm (System::String ^imgpath, System::Drawing::Color backcolor, System::Windows::Forms::Form ^owner)
+	{
+		if (owner != nullptr) this->Owner = owner;
+		InitForm ();
+		std::wstring filefullpath = MPStringToStdW (imgpath);
+		if (filefullpath.find (L'%') != filefullpath.npos) filefullpath = ProcessEnvVars (filefullpath);
+		filefullpath = GetFullPathName (imgpath ? MPStringToStdW (imgpath) : L"");
+		try
+		{
+			auto img = System::Drawing::Image::FromFile (gcnew System::String (filefullpath.c_str ()));
+			if (img != nullptr)
+			{
+				splashimg = img;
+				picbox->Image = img;
+			}
+		}
+		catch (...) {}
+		if (splashimg) picbox->Image = splashimg;
+		try
+		{
+			if (backcolor != Drawing::Color::Transparent)
+			{
+				background = backcolor;
+				picbox->BackColor = backcolor;
+				this->BackColor = backcolor;
+			}
+			else
+			{
+				picbox->BackColor = background;
+				this->BackColor = background;
+			}
+		}
+		catch (...) {}
+		if (this->Owner != nullptr)
+		{
+			this->Owner->Resize += gcnew System::EventHandler (this, &SplashForm::OnResizeOwner);
+			this->Owner->LocationChanged += gcnew System::EventHandler (this, &SplashForm::OnLocationChangedOwner);
+		}
+		this->Controls->Add (picbox);
+		this->Resize += gcnew EventHandler (this, &SplashForm::OnResize);
+		timer = gcnew System::Windows::Forms::Timer ();
+		timer->Interval = 15;
+		timer->Tick += gcnew System::EventHandler (this, &SplashForm::OnFadeTimer);
+		this->Load += gcnew EventHandler (this, &SplashForm::OnLoad);
+	}
+	void ReInit ()
+	{
+		InitForm ();
+		picbox = gcnew System::Windows::Forms::PictureBox ();
+		picbox->BackColor = background;
+		if (splashimg) picbox->Image = splashimg;
+		picbox->SizeMode = System::Windows::Forms::PictureBoxSizeMode::Zoom;
+		picbox->Anchor = System::Windows::Forms::AnchorStyles::None;
+		double dDpi = GetDPI () * 0.01;
+		picbox->Size = Drawing::Size (620 * dDpi, 300 * dDpi);
+		this->BackColor = background;
+		this->Controls->Clear ();
+		this->Controls->Add (picbox);
+		timer = gcnew System::Windows::Forms::Timer ();
+		timer->Interval = 15;
+		timer->Tick += gcnew EventHandler (this, &SplashForm::OnFadeTimer);
+		this->Resize += gcnew EventHandler (this, &SplashForm::OnResize);
+		this->Load += gcnew EventHandler (this, &SplashForm::OnLoad);
+		ChangePosAndSize ();
+		this->Opacity = 1.0;
+	}
+	void ChangePosAndSize ()
+	{
+		if (this->Owner && this->Owner->IsHandleCreated)
+		{
+			this->Owner->Update ();
+			System::Drawing::Point pt = this->Owner->PointToScreen (this->Owner->ClientRectangle.Location);
+			this->Location = pt;
+			this->Size = this->Owner->ClientSize;
+		}
+		else if (this->Parent && this->Parent->IsHandleCreated)
+		{
+			this->Parent->Update ();
+			System::Drawing::Point pt = this->Parent->PointToScreen (this->Parent->ClientRectangle.Location);
+			this->Location = pt;
+			this->Size = this->Parent->ClientSize;
+		}
+		if (IsHandleCreated && picbox->IsHandleCreated)
+		{
+			Drawing::Size sz = this->ClientSize;
+			this->picbox->Location = Drawing::Point (
+				(sz.Width - picbox->Width) * 0.5,
+				(sz.Height - picbox->Height) * 0.5
+			);
+		}
+	}
+	void SetSplashImage (System::Drawing::Image ^img) { if (picbox && picbox->IsHandleCreated) { splashimg = img; picbox->Image = splashimg; } else splashimg = img; }
+	void SetSplashImage (System::String ^imgpath) { try { SetSplashImage (System::Drawing::Image::FromFile (imgpath)); } catch (...) {} }
+	void SetSplashImage (const std::wstring &imgpath) { SetSplashImage (CStringToMPString (imgpath)); }
+	void SetSplashBackgroundColor (System::Drawing::Color color) { background = color;  picbox->BackColor = color; this->BackColor = color; }
+	// 渐变消失
+	void FadeOut () { timer->Start (); }
+	// 立即消失
+	void FadeAway () { timer->Start (); }
+	~SplashForm ()
+	{
+		if (this->Owner != nullptr)
+		{
+			this->Owner->Resize -= gcnew System::EventHandler (this, &SplashForm::OnResizeOwner);
+			this->Owner->LocationChanged -= gcnew System::EventHandler (this, &SplashForm::OnLocationChangedOwner);
+		}
+	}
+};
+
+[ComVisible (true)]
+public ref class MainHtmlWnd: public System::Windows::Forms::Form, public IScriptBridge
+{
+	public:
+	using WebBrowser = System::Windows::Forms::WebBrowser;
+	private:
+	WebBrowser ^webui;
+	SplashForm ^splash;
+	ITaskbarList3 *taskbar = nullptr;
+	public:
+	[ComVisible (true)]
+	ref class _I_UI2: public _I_UI
+	{
+		private:
+		MainHtmlWnd ^wndinst = nullptr;
+		public:
+		_I_UI2 (MainHtmlWnd ^wnd): wndinst (wnd), _I_UI (wnd) {}
+		property String ^SplashImage
+		{
+			String ^get ()
+			{
+				auto uri = gcnew Uri (CStringToMPString (wndinst->GetSuitSplashImage ()));
+				return uri->AbsoluteUri;
+			}
+		}
+		property String ^SplashBackgroundColor
+		{
+			String ^get ()
+			{
+				std::wnstring ret = L"";
+				auto personal = g_initfile [L"Personalization"];
+				auto thememode = personal [L"AppInstaller:ThemeMode"];
+				auto custommode = personal [L"AppInstaller:CustomThemeMode"];
+				bool nowdark =
+					IsNormalizeStringEquals (thememode.read_wstring ().c_str (), L"dark") ||
+					IsNormalizeStringEquals (thememode.read_wstring ().c_str (), L"auto") && IsAppInDarkMode () ||
+					IsNormalizeStringEquals (thememode.read_wstring ().c_str (), L"custom") && IsNormalizeStringEquals (custommode.read_wstring ().c_str (), L"dark") ||
+					IsNormalizeStringEquals (thememode.read_wstring ().c_str (), L"custom") && IsNormalizeStringEquals (custommode.read_wstring ().c_str (), L"auto") && IsAppInDarkMode ();
+				if (nowdark) ret = g_vemani.splash_screen_backgroundcolor_darkmode (g_idInVe);
+				else ret = g_vemani.splash_screen_backgroundcolor (g_idInVe);
+				if (ret.empty ()) ret = g_vemani.splash_screen_backgroundcolor (g_idInVe);
+				if (ret.empty ()) ret = g_vemani.background_color (g_idInVe);
+				return CStringToMPString (ret);
+			}
+		}
+		void ShowSplash () { if (wndinst->SplashScreen->IsHandleCreated) wndinst->SplashScreen->Show (); else wndinst->SplashScreen->ReInit (); }
+		void FadeAwaySplash () { wndinst->SplashScreen->FadeAway (); }
+		void FadeOutSplash () { wndinst->SplashScreen->FadeOut (); }
+	};
+	[ComVisible (true)]
+	ref class IBridge: public _I_Bridge_Base2
+	{
+		private:
+		MainHtmlWnd ^wndinst = nullptr;
+		public:
+		[ComVisible (true)]
+		ref class _I_IEFrame: public _I_IEFrame_Base
+		{
+			private:
+			MainHtmlWnd ^wndinst = nullptr;
+			public:
+			_I_IEFrame (MainHtmlWnd ^wnd): wndinst (wnd) {}
+			property int Scale
+			{
+				int get () { return wndinst->PageScale; }
+				void set (int value) { return wndinst->PageScale = value; }
+			}
+		};
+		[ComVisible (true)]
+		ref class _I_System3: public _I_System
+		{
+			protected:
+			_I_UI2 ^ui2;
+			public:
+			_I_System3 (MainHtmlWnd ^wnd)
+			{
+				ui2 = gcnew _I_UI2 (wnd);
+			}
+			property _I_UI2 ^UI { _I_UI2 ^get () { return ui2; } }
+		};
+		private:
+		_I_IEFrame ^ieframe;
+		_I_System3 ^sys;
+		_I_Storage ^storage;
+		public:
+		IBridge (MainHtmlWnd ^wnd): wndinst (wnd), _I_Bridge_Base2 (wnd)
+		{
+			ieframe = gcnew _I_IEFrame (wnd);
+			sys = gcnew _I_System3 (wnd);
+			storage = gcnew _I_Storage ();
+		}
+		property _I_IEFrame ^IEFrame { _I_IEFrame ^get () { return ieframe; }}
+		property _I_System3 ^System { _I_System3 ^get () { return sys; }}
+		property _I_Storage ^Storage { _I_Storage ^get () { return storage; }}
+	};
+	protected:
+	property WebBrowser ^WebUI { WebBrowser ^get () { return this->webui; } }
+	property SplashForm ^SplashScreen { SplashForm ^get () { return this->splash; } }
+	property int DPIPercent { int get () { return GetDPI (); }}
+	property double DPI { double get () { return DPIPercent * 0.01; }}
+	void InitSize ()
+	{
+		unsigned ww = 0, wh = 0;
+		auto &ini = g_initfile;
+		auto setsect = ini ["Settings"];
+		auto savepos = setsect [L"Settings:SavePosAndSizeBeforeCancel"];
+		auto lastw = setsect [L"Settings:LastWidth"];
+		auto lasth = setsect [L"Settings:LastHeight"];
+		auto defw = setsect [L"Settings:DefaultWidth"];
+		auto defh = setsect [L"Settings:DefaultHeight"];
+		auto minw = setsect [L"Settings:MinimumWidth"];
+		auto minh = setsect [L"Settings:MinimumHeight"];
+		auto lasts = setsect [L"Settings:LastWndState"];
+		if (savepos.read_bool ())
+		{
+			ww = lastw.read_uint (defw.read_uint (rcInt (IDS_DEFAULTWIDTH)));
+			wh = lasth.read_uint (defh.read_uint (rcInt (IDS_DEFAULTHEIGHT)));
+		}
+		else
+		{
+			ww = defw.read_uint (rcInt (IDS_DEFAULTWIDTH));
+			wh = defh.read_uint (rcInt (IDS_DEFAULTHEIGHT));
+		}
+		this->ClientSize = System::Drawing::Size (ww * DPI, wh * DPI);
+		int hborder = this->Size.Width - this->ClientSize.Width,
+			vborder = this->Size.Height - this->ClientSize.Height;
+		this->MinimumSize = System::Drawing::Size (
+			minw.read_uint (rcInt (IDS_MINWIDTH)) * DPI + hborder,
+			minh.read_uint (rcInt (IDS_MINHIEHGT)) * DPI + vborder
+		);
+		this->WindowState = (System::Windows::Forms::FormWindowState)lasts.read_int ((int)System::Windows::Forms::FormWindowState::Normal);
+	}
+	void Init ()
+	{
+		this->Visible = false;
+		this->webui = gcnew System::Windows::Forms::WebBrowser ();
+		this->SuspendLayout ();
+		this->webui->Dock = System::Windows::Forms::DockStyle::Fill;
+		this->webui->IsWebBrowserContextMenuEnabled = DEBUGMODE;
+		this->webui->AllowWebBrowserDrop = false;
+		this->Controls->Add (this->webui);
+		if (g_hIconMain.hIcon)
+		{
+			try { this->Icon = System::Drawing::Icon::FromHandle (IntPtr (g_hIconMain.hIcon)); }
+			catch (...) {}
+		}
+		this->Text = GetRCStringCli (IDS_WINTITLE);
+		this->ResumeLayout (false);
+		webui->ObjectForScripting = gcnew IBridge (this);
+		this->webui->DocumentCompleted += gcnew System::Windows::Forms::WebBrowserDocumentCompletedEventHandler (this, &MainHtmlWnd::OnDocumentCompleted);
+		this->webui->PreviewKeyDown += gcnew System::Windows::Forms::PreviewKeyDownEventHandler (this, &MainHtmlWnd::OnPreviewKeyDown_WebBrowser);
+		this->Resize += gcnew System::EventHandler (this, &MainHtmlWnd::OnResize);
+		this->Load += gcnew EventHandler (this, &MainHtmlWnd::OnCreate);
+		this->ResizeEnd += gcnew EventHandler (this, &MainHtmlWnd::OnResizeEnd);
+	}
+	void OnDocumentCompleted (Object ^sender, System::Windows::Forms::WebBrowserDocumentCompletedEventArgs ^e)
+	{
+		static bool issetdpi = false;
+		if (!issetdpi)
+		{
+			issetdpi = true;
+			ExecScript ("Bridge.Frame.scale = Bridge.Frame.scale * Bridge.UI.dpi");
+		}
+		ExecScript ("Windows.UI.DPI.mode = 1");
+		if (e->Url->ToString () == webui->Url->ToString ())
+		{
+			auto &ini = g_initfile;
+			splash->FadeAway ();
+		}
+	}
+	void OnCreate (System::Object ^sender, System::EventArgs ^e)
+	{
+		splash->Owner = this;
+		splash->ChangePosAndSize ();
+		splash->Show ();
+		splash->Update ();
+		splash->SetSplashImage (GetSuitSplashImage ());
+		System::Windows::Forms::Application::DoEvents ();
+		auto htmlpath = CombinePath (GetProgramRootDirectoryW (), L"html\\settings.html");
+		webui->Navigate (CStringToMPString (htmlpath));
+		if (!IsFileExists (htmlpath))
+		{
+			std::wstring msg = L"Error: cannot find file \"" + htmlpath + L"\".";
+			MessageBoxW (InvokeGetHWND (), msg.c_str (), GetRCStringSW (IDS_WINTITLE).c_str (), MB_ICONERROR);
+			this->Close ();
+			return;
+		}
+	}
+	void OnPreviewKeyDown_WebBrowser (System::Object ^sender, System::Windows::Forms::PreviewKeyDownEventArgs ^e)
+	{
+		if (e->KeyCode == System::Windows::Forms::Keys::F5 || (e->KeyCode == System::Windows::Forms::Keys::R && e->Control))
+			e->IsInputKey = true;
+	}
+	void ResponseSplashChange ()
+	{
+		splash->SetSplashImage (GetSuitSplashImage ());
+		//ExecScript (
+		//	"(function () {"
+		//	"var splash = Page.splash;"
+		//	"if (!splash) return null;"
+		//	"splash.imagesrc = Bridge.UI.Splash.imageurl;"
+		//	"splash.background = Bridge.UI.Splash.backcolor;"
+		//	"var progress = splash.content.querySelector (\"progress\");"
+		//	"if (Bridge.Frame.WindowSize.height / Bridge.UI.dpi < 500) {"
+		//	"if (progress.classList.contains(\"win-ring\")) progress.classList.remove(\"win-ring\");}"
+		//	"else { if (!progress.classList.contains(\"win-ring\")) progress.classList.add(\"win-ring\"); }"
+		//	"}) ();"
+		//);
+	}
+	void OnResize (Object ^sender, EventArgs ^e) { ResizeEvent (); }
+	void OnResizeEnd (Object ^sender, EventArgs ^e) {}
+	std::wstring GetSuitSplashImage ()
+	{
+		int limitw = 800 * DPI;
+		int limith = 600 * DPI;
+		std::wstring tag = L"settings-splash";
+		int noww = this->Width;
+		int nowh = this->Height;
+		if (noww >= limitw && nowh >= limith)
+			tag = L"settings-splashlarge";
+		std::wstring path = g_scaleres [tag];
+		if (IsNormalizeStringEmpty (path))
+			path = g_scaleres [L"settings-splash"];
+		if (IsNormalizeStringEmpty (path))
+			path = g_vemani.splash_screen_image (g_idInVe);
+		return path;
+	}
+	void ResizeEvent ()
+	{
+		auto &ini = g_initfile;
+		auto setsect = ini ["Settings"];
+		auto lasts = setsect [L"AppInstaller:LastWndState"];
+		auto savepos = setsect [L"AppInstaller:SavePosAndSizeBeforeCancel"];
+		auto lastw = setsect [L"AppInstaller:LastWidth"];
+		auto lasth = setsect [L"AppInstaller:LastHeight"];
+		switch (this->WindowState)
+		{
+			case System::Windows::Forms::FormWindowState::Normal:
+			case System::Windows::Forms::FormWindowState::Maximized:
+				lasts = (int)this->WindowState;
+		}
+		if (this->WindowState == System::Windows::Forms::FormWindowState::Normal && savepos)
+		{
+			lastw = (int)(this->ClientSize.Width / DPI);
+			lasth = (int)(this->ClientSize.Height / DPI);
+		}
+		ResponseSplashChange ();
+	}
+	void InvokeClose ()
+	{
+		if (this->InvokeRequired) this->Invoke (gcnew Action (this, &MainHtmlWnd::Close));
+		else this->Close ();
+	}
+	IntPtr GetHWnd () { return this->Handle; }
+	delegate IntPtr GetHwndDelegate ();
+	HWND InvokeGetHWND ()
+	{
+		if (this->InvokeRequired)
+		{
+			GetHwndDelegate ^del = gcnew GetHwndDelegate (this, &MainHtmlWnd::GetHWnd);
+			IntPtr result = safe_cast <IntPtr> (this->Invoke (del));
+			return static_cast <HWND> (result.ToPointer ());
+		}
+		else return static_cast <HWND> (this->Handle.ToPointer ());
+	}
+	bool BackPage () { return this->webui->GoBack (); }
+	bool InvokeBackPage ()
+	{
+		if (this->InvokeRequired) return (bool)this->Invoke (gcnew Func <bool> (this, &MainHtmlWnd::BackPage));
+		else return BackPage ();   // 当前线程就是 UI 线程
+	}
+	public:
+	MainHtmlWnd ()
+	{
+		InitSize ();
+		System::Windows::Forms::Application::DoEvents ();
+		splash = gcnew SplashForm (
+			CStringToMPString (GetSuitSplashImage ()),
+			StringToColor (CStringToMPString (g_vemani.splash_screen_backgroundcolor (g_idInVe))),
+			this
+		);
+		System::Windows::Forms::Application::DoEvents ();
+		Init ();
+		ITaskbarList3 *ptr = nullptr;
+		HRESULT hr = CoCreateInstance (CLSID_TaskbarList, nullptr, CLSCTX_INPROC_SERVER, IID_ITaskbarList3, (void **)&ptr);
+		if (SUCCEEDED (hr))
+		{
+			taskbar = ptr;
+			taskbar->HrInit ();
+		}
+		else
+		{
+			taskbar = nullptr;
+			if (ptr) ptr->Release ();
+		}
+	}
+	Object ^CallScriptFunction (String ^lpFuncName, ... array <Object ^> ^alpParams)
+	{
+		try { return this->webui->Document->InvokeScript (lpFuncName, alpParams); }
+		catch (Exception ^e)
+		{
+			try
+			{
+				this->webui->Document->InvokeScript ("messageBoxAsync", gcnew array <Object ^> {
+					e->Message,
+						e->Source,
+						0,
+						CStringToMPString (g_vemani.background_color (g_idInVe))
+				});
+			}
+			catch (Exception ^ex)
+			{
+				MessageBoxW (InvokeGetHWND (), MPStringToStdW (e->Message).c_str (), MPStringToStdW (e->Source).c_str (), 0);
+			}
+		}
+		return nullptr;
+	}
+	Object ^CallScriptFunction (String ^lpScriptName)
+	{
+		try { return this->webui->Document->InvokeScript (lpScriptName); }
+		catch (Exception ^ex) { System::Windows::Forms::MessageBox::Show ("Error calling JavaScript function: " + ex->Message); }
+		return nullptr;
+	}
+	Object ^InvokeCallScriptFunction (String ^lpFuncName, ... array <Object ^> ^alpParams)
+	{
+		try
+		{
+			if (this->InvokeRequired) return (Object ^)this->Invoke (gcnew Func <String ^, array <Object ^> ^, Object ^> (this, &MainHtmlWnd::CallScriptFunction), lpFuncName, alpParams);
+			else return CallScriptFunction (lpFuncName, alpParams);
+		}
+		catch (Exception ^e) {}
+		return nullptr;
+	}
+	Object ^InvokeCallScriptFunction (String ^lpScriptName)
+	{
+		try
+		{
+			if (this->InvokeRequired) return (Object ^)this->Invoke (gcnew Func <String ^, Object ^> (this, &MainHtmlWnd::CallScriptFunction), lpScriptName);
+			else return CallScriptFunction (lpScriptName);
+		}
+		catch (Exception ^e) {}
+		return nullptr;
+	}
+	Object ^ExecScript (... array <Object ^> ^alpScript) { return InvokeCallScriptFunction ("eval", alpScript); }
+	Object ^CallEvent (String ^funcName, Object ^e) override
+	{
+		std::wstring fname = MPStringToStdW (funcName);
+		if (fname == L"InvokeBackPage") InvokeBackPage ();
+		return nullptr;
+	}
+	property int PageScale
+	{
+		int get ()
+		{
+			CComPtr <IWebBrowser2> web2;
+			HRESULT hr = GetWebBrowser2Interface (webui, &web2);
+			if (FAILED (hr)) return 0;
+			VARIANT v;
+			VariantInit (&v);
+			hr = web2->ExecWB (OLECMDID_OPTICAL_ZOOM, OLECMDEXECOPT_DODEFAULT, nullptr, &v);
+			if (FAILED (hr) || v.vt != VT_I4) return 0;
+			int val = v.lVal;
+			VariantClear (&v);
+			return val;
+		}
+		void set (int value)
+		{
+			CComPtr <IWebBrowser2> web2;
+			HRESULT hr = GetWebBrowser2Interface (webui, &web2);
+			if (FAILED (hr)) return;
+			VARIANT v;
+			VariantInit (&v);
+			v.vt = VT_I4;
+			v.lVal = value;
+			web2->ExecWB (OLECMDID_OPTICAL_ZOOM, OLECMDEXECOPT_DONTPROMPTUSER, &v, nullptr);
+		}
+	}
+	~MainHtmlWnd ()
+	{
+		if (taskbar) taskbar->Release ();
+		taskbar = nullptr;
+	}
+};
+using MainWnd = MainHtmlWnd;
+
+HRESULT SetCurrentAppUserModelID (PCWSTR appID)
+{
+	typedef HRESULT (WINAPI *SetAppUserModelIDFunc)(PCWSTR);
+	HMODULE shell32 = LoadLibraryW (L"shell32.dll");
+	destruct freelib ([&] () {
+		if (shell32) FreeLibrary (shell32);
+	});
+	try
+	{
+		if (!shell32) return E_FAIL;
+		auto SetAppUserModelID = (SetAppUserModelIDFunc)GetProcAddress (shell32, "SetCurrentProcessExplicitAppUserModelID");
+		if (!SetAppUserModelID)
+		{
+			FreeLibrary (shell32);
+			return E_FAIL;
+		}
+		return SetAppUserModelID (appID);
+	}
+	catch (...) { return E_FAIL; }
+	return E_FAIL;
+}
+[STAThread]
+int APIENTRY wWinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
+{
+	SetCurrentProcessExplicitAppUserModelID (g_lpAppId);
+	SetProcessDPIAware ();
+	{
+		// 设置当前目录为程序所在目录
+		std::wnstring currdir = GetCurrentDirectoryW ();
+		std::wnstring rootdir = GetProgramRootDirectoryW ();
+		if (!PathEquals (currdir, rootdir)) SetCurrentDirectoryW (rootdir.c_str ());
+	}
+	CoInitializeEx (NULL, COINIT_MULTITHREADED | COINIT_APARTMENTTHREADED);
+	SetupInstanceEnvironment ();
+	destruct relco ([] () {
+		CoUninitialize ();
+	});
+	SetWebBrowserEmulation ();
+	System::Windows::Forms::Application::EnableVisualStyles ();
+	System::Windows::Forms::Application::SetCompatibleTextRenderingDefault (false);
+	auto mwnd = gcnew MainHtmlWnd ();
+	g_mainwnd = mwnd;
+	System::Windows::Forms::Application::Run (mwnd);
+	return 0;
+}

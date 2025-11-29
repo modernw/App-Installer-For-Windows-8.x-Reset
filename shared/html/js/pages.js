@@ -426,6 +426,9 @@
             if (pkginfo.applications.length > 0) {
                 var appinfo = pkginfo.applications[0];
                 backcolor = appinfo.BackgroundColor || Bridge.UI.themeColor;
+                if (strutils.tolower(backcolor) == "transparent") {
+                    backcolor = Bridge.UI.themeColor;
+                }
             } else { backcolor = Bridge.UI.themeColor; }
             storelogo.style.backgroundColor = backcolor;
             storelogofilter.style.background = Color.genTileBackFilter(backcolor);
@@ -523,9 +526,13 @@
         storelogoimg.src = pkginfo.properties.logo_base64;
         storelogo.setAttribute("data-logoimg", pkginfo.properties.logo);
         var backcolor = "";
+        var strutils = Bridge.External.String;
         if (pkginfo.applications.length > 0) {
             var appinfo = pkginfo.applications[0];
             backcolor = appinfo.BackgroundColor || Bridge.UI.themeColor;
+            if (strutils.tolower(backcolor) == "transparent") {
+                backcolor = Bridge.UI.themeColor;
+            }
         } else { backcolor = Bridge.UI.themeColor; }
         storelogo.style.backgroundColor = backcolor;
         storelogofilter.style.background = Color.genTileBackFilter(backcolor);

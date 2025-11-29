@@ -184,6 +184,12 @@ progress.win-ring:indeterminate::-ms-fill {
     align-content: center;
     justify-content: space-between;
     align-items: center;
+    -ms-flex-direction: row-reverse;
+    -ms-flex-wrap: nowrap;
+    -ms-flex-pack: justify;
+    /* 对应 justify-content */
+    -ms-flex-align: center;
+    /* 对应 align-items */
 }
 
 .page>.controls .command {
@@ -194,6 +200,11 @@ progress.win-ring:indeterminate::-ms-fill {
     align-content: center;
     justify-content: flex-end;
     align-items: center;
+    display: -ms-flexbox;
+    -ms-flex-direction: row;
+    -ms-flex-wrap: nowrap;
+    -ms-flex-pack: end;
+    -ms-flex-align: center;
 }
 
 .page>.controls .command button {
@@ -207,6 +218,7 @@ progress.win-ring:indeterminate::-ms-fill {
     align-content: center;
     justify-content: flex-start;
     align-items: center;
+    display: -ms-flexbox;
     -ms-flex-direction: row;
     -ms-flex-wrap: nowrap;
     -ms-flex-line-pack: center;
@@ -243,6 +255,7 @@ progress.win-ring:indeterminate::-ms-fill {
     /*background-color: #464646;*/
     float: right;
     display: flex;
+    display: -ms-flexbox;
     flex-direction: row;
     -ms-flex-direction: row;
     flex-wrap: nowrap;
@@ -278,6 +291,7 @@ progress.win-ring:indeterminate::-ms-fill {
     bottom: 0;
     /*background-color: rgba(254,254,254, 0.1);*/
     display: flex;
+    display: -ms-flexbox;
     flex-direction: row;
     -ms-flex-direction: row;
     flex-wrap: nowrap;
@@ -331,6 +345,9 @@ progress.win-ring:indeterminate::-ms-fill {
     -ms-overflow-x: hidden;
     -ms-overflow-y: hidden;
     -ms-text-overflow: ellipsis;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
     max-height: 1.3em;
     max-width: 100%;
@@ -341,6 +358,9 @@ progress.win-ring:indeterminate::-ms-fill {
     -ms-overflow-x: hidden;
     -ms-overflow-y: hidden;
     -ms-text-overflow: ellipsis;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    text-overflow: ellipsis;
     max-height: 1.3em;
     white-space: nowrap;
     max-width: 100%;
@@ -418,6 +438,7 @@ progress.win-ring:indeterminate::-ms-fill {
     width: 100%;
     height: calc(100% - 1.3em);
     box-sizing: border-box;
+    font-family: "Microsoft YaHei", "Segoe UI", "Ebrima", "Nirmala", "Gadugi", "Segoe UI Emoji", "Segoe UI Symbol", "Meiryo", "Leelawadee", "Microsoft JhengHei", "Malgun Gothic", "Estrangelo Edessa", "Microsoft Himalaya", "Microsoft New Tai Lue", "Microsoft PhagsPa", "Microsoft Tai Le", "Microsoft Yi Baiti", "Mongolian Baiti", "MV Boli", "Myanmar Text", "Javanese Text", "Cambria Math";
 }
 
 .moreinfo-content p {
@@ -435,6 +456,7 @@ progress.win-ring:indeterminate::-ms-fill {
 
 .page>.controls {
     display: flex;
+    display: -ms-flexbox;
 }
 
 .page.splash>.controls,
@@ -463,6 +485,11 @@ progress.win-ring:indeterminate::-ms-fill {
     align-content: center;
     justify-content: center;
     align-items: center;
+    display: -ms-flexbox;
+    -ms-flex-direction: row;
+    -ms-flex-wrap: nowrap;
+    -ms-flex-pack: center;
+    -ms-flex-align: center;
     font-size: 16pt;
     max-height: 100%;
 }

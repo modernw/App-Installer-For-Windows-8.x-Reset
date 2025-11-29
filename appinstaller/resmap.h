@@ -115,5 +115,12 @@ public ref class _I_Resources
 	}
 	String ^GetByName (String ^lpResId) { return GetById (ToId (lpResId)); }
 	String ^operator [] (unsigned int uiResId) { return GetRCStringCli (uiResId); }
+	String ^GetFromOthers (String ^filepath, unsigned int resid)
+	{
+		HMODULE module = nullptr;
+		if (filepath && IsNormalizeStringEmpty (MPStringToStdW (filepath))) module = GetModuleHandleW (MPStringToStdW (filepath).c_str ());
+		else module = GetModuleHandleW (NULL);
+		return GetRCStringCli (resid, module);
+	}
 };
 #endif

@@ -1,0 +1,215 @@
+body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    -ms-overflow-style: -ms-autohiding-scrollbar;
+    user-select: none;
+    -ms-user-select: none;
+}
+
+body * {
+    -ms-overflow-style: -ms-autohiding-scrollbar;
+}
+
+*,
+button,
+input,
+select,
+textarea,
+a,
+label,
+p,
+span,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+ul,
+ol,
+li,
+dl,
+dt,
+dd,
+table,
+th,
+td,
+tr,
+img,
+iframe,
+object,
+embed,
+audio,
+video,
+canvas,
+form,
+fieldset,
+legend {
+    font-family: "Microsoft YaHei", "Segoe UI", "Ebrima", "Nirmala", "Gadugi", "Segoe UI Emoji", "Segoe UI Symbol", "Meiryo", "Leelawadee", "Microsoft JhengHei", "Malgun Gothic", "Estrangelo Edessa", "Microsoft Himalaya", "Microsoft New Tai Lue", "Microsoft PhagsPa", "Microsoft Tai Le", "Microsoft Yi Baiti", "Mongolian Baiti", "MV Boli", "Myanmar Text", "Javanese Text", "Cambria Math";
+}
+
+.pagecontainer {
+    padding: 0px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    box-sizing: border-box;
+    margin: 0px;
+    padding: 0px;
+    border: 0px;
+    background-color: #f3f3f3;
+}
+
+.pagecontainer.full {
+    padding: 0px;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.pagecontainer>.page {
+    position: relative;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    box-sizing: border-box;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+}
+
+.titlebanner {
+    height: 150px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-content: center;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.pagetitle {
+    margin-left: 120px;
+    margin-right: 120px;
+}
+
+.pagetitlewb-backbutton {
+    margin-left: 39px;
+    max-width: 41px;
+    max-height: 41px;
+    min-width: 41px;
+    min-height: 41px;
+}
+
+.pagetitlewb-title {
+    margin-left: 40px;
+    margin-right: 120px;
+}
+
+aside.left {
+    position: absolute;
+    top: 0px;
+    bottom: 0px;
+    left: 0px;
+    width: 300px;
+    box-sizing: border-box;
+    padding: 0;
+    background-color: rgb(20, 0, 68);
+    color: white;
+}
+
+aside .container {
+    width: 100%;
+    height: calc(100% - 120px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    box-sizing: border-box;
+    -ms-overflow-style: -ms-autohiding-scrollbar;
+}
+
+aside .container ul {
+    margin: 0px;
+    padding: 0px;
+    padding-bottom: 50px;
+    box-sizing: border-box;
+}
+
+aside .container ul li {
+    list-style: none;
+    min-height: 40px;
+    text-align: left;
+    /*padding: 5px 60px;*/
+    padding: 5px 50px;
+    height: 40px;
+    margin-top: 5px 0;
+    border: 1px solid rgba(0, 0, 0, 0);
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-content: center;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+aside .container ul li.selected {
+    /* background-color: rgba(101, 38, 254, 0.61); */
+    background-color: rgba(95, 95, 95, 0.45);
+}
+
+aside .container ul li:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+aside .container ul li:active {
+    background-color: white;
+    color: black;
+}
+
+aside .container ul li:focus {
+    border: 1px solid white;
+}
+
+.main.right {
+    position: absolute;
+    top: 0px;
+    bottom: 0px;
+    right: 0px;
+    left: 300px;
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    height: 100%;
+    max-height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    width: calc(100% - 300px);
+}
+
+.main.padding {
+    padding: 44px 60px;
+}
+
+.section {
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -ms-overflow-style: -ms-autohiding-scrollbar;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+}
+
+.section.padding {
+    padding: 44px 60px;
+}

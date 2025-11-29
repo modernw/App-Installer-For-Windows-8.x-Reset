@@ -261,6 +261,9 @@
                                 }
                                 try {
                                     var bc = pi.applications[0].BackgroundColor || Bridge.UI.themeColor;
+                                    if (strutils.tolower(bc) === "transparent") {
+                                        bc = Bridge.UI.themeColor;
+                                    }
                                     storelogo.style.backgroundColor = bc;
                                     slfilter.style.background = Color.genTileBackFilter(bc);
                                 } catch (e) {

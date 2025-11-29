@@ -12,4 +12,19 @@
         <scale dpi="100">SplashLarge.png</scale>
         <scale dpi="default">SplashLarge.png</scale>
     </resource>
+    <resource id="settings-splash">
+        <scale dpi="100">splash\settings\splashscreen.scale-100.png</scale>
+        <scale dpi="125">splash\settings\splashscreen.scale-125.png</scale>
+        <scale dpi="150">splash\settings\splashscreen.scale-150.png</scale>
+        <scale dpi="200">splash\settings\splashscreen.scale-200.png</scale>
+        <scale dpi="400">splash\settings\splashscreen.scale-200.png</scale>
+        <scale dpi="default">splash\settings\splashscreen.png</scale>
+    </resource>
+    <resource id="settings-splashlarge">
+        <scale dpi="80">splash\settings\large\splashscreen.scale-80.png</scale>
+        <scale dpi="100">splash\settings\large\splashscreen.scale-100.png</scale>
+        <scale dpi="140">splash\settings\large\splashscreen.scale-140.png</scale>
+        <scale dpi="180">splash\settings\large\splashscreen.scale-180.png</scale>
+        <scale dpi="default">splash\settings\large\splashscreen.png</scale>
+    </resource>
 </resources>

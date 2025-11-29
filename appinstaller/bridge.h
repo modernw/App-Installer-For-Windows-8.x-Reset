@@ -2,6 +2,7 @@
 #include <Windows.h>
 #include "mpstr.h"
 #include "nstring.h"
+#include <combaseapi.h>
 using namespace System;
 using namespace System::Runtime::InteropServices;
 

@@ -1,12 +1,27 @@
-<Application>
-  <VisualElements
+<Applications>
+  <Application Id='App'>
+    <VisualElements
       DisplayName='App Installer'
       Logo='VisualElements\150x150.png'
       SmallLogo='VisualElements\70x70.png'
       ForegroundText='light'
       Lnk32x32Logo="Icons\Main.ico"
       BackgroundColor='#0078D7'>
-    <DefaultTile ShowName='allLogos'/>
-    <SplashScreen Image="VisualElements\SplashLarge.png" BackgroundColor="#0078d7" DarkModeBackgroundColor='#001629' />
-  </VisualElements>
-</Application>
+      <DefaultTile ShowName='allLogos' />
+      <SplashScreen Image="VisualElements\SplashLarge.png" BackgroundColor="#0078d7"
+        DarkModeBackgroundColor='#001629' />
+    </VisualElements>
+  </Application>
+  <Application Id='Settings'>
+    <VisualElements
+      DisplayName='Settings'
+      Logo='Settings.Assets\Logo.png'
+      SmallLogo='Settings.Assets\SmallLogo.png'
+      ForegroundText='light'
+      BackgroundColor='#5133ab'>
+      <DefaultTile ShowName='allLogos' />
+      <SplashScreen Image="VisualElements\splash\settings\splashscreen.png"
+        BackgroundColor="#5133ab" DarkModeBackgroundColor='#2e1e5c' />
+    </VisualElements>
+  </Application>
+</Applications>

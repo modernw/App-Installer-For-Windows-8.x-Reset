@@ -40,7 +40,7 @@ enum class CMDPARAM: DWORD
 	MULTIPLE = 0b100
 };
 
-LPCWSTR g_lpAppId = L"Microsoft.DesktopAppInstaller";
+LPCWSTR g_lpAppId = L"Microsoft.DesktopAppInstaller!App";
 auto &g_identity = g_lpAppId;
 auto &m_idenName = g_lpAppId;
 struct iconhandle
@@ -192,19 +192,158 @@ public ref class _I_Window
 	Object ^CallEvent (String ^name, ... array <Object ^> ^args) { return wndinst->CallEvent (name, args [0]); }
 };
 [ComVisible (true)]
+public ref class _I_UI
+{
+	private:
+	System::Windows::Forms::Form ^wndinst = nullptr;
+	public:
+	ref struct _I_UI_Size
+	{
+		private:
+		int m_width = 0;
+		int m_height = 0;
+		public:
+		property int width { int get () { return m_width; } }
+		property int height { int get () { return m_height; }}
+		property int Width { int get () { return m_width; } }
+		property int Height { int get () { return m_height; }}
+		int getWidth () { return m_width; }
+		int getHeight () { return m_height; }
+		_I_UI_Size (int w, int h): m_width (w), m_height (h) {}
+	};
+	_I_UI (System::Windows::Forms::Form ^wnd): wndinst (wnd) {}
+	property int DPIPercent { int get () { return GetDPI (); }}
+	property double DPI { double get () { return DPIPercent * 0.01; }}
+	property _I_UI_Size ^WndSize { _I_UI_Size ^get () { return gcnew _I_UI_Size (wndinst->Width, wndinst->Height); } }
+	property _I_UI_Size ^ClientSize { _I_UI_Size ^get () { auto cs = wndinst->ClientSize; return gcnew _I_UI_Size (cs.Width, cs.Height); } }
+	property String ^ThemeColor { String ^get () { return ColorToHtml (GetDwmThemeColor ()); } }
+	property bool DarkMode { bool get () { return IsAppInDarkMode (); }}
+	property String ^HighContrast
+	{
+		String ^get ()
+		{
+			auto highc = GetHighContrastTheme ();
+			switch (highc)
+			{
+				case HighContrastTheme::None: return "none";
+					break;
+				case HighContrastTheme::Black: return "black";
+					break;
+				case HighContrastTheme::White: return "white";
+					break;
+				case HighContrastTheme::Other: return "high";
+					break;
+				default: return "none";
+					break;
+			}
+			return "none";
+		}
+	}
+};
+[ComVisible (true)]
+public ref class _I_Locale
+{
+	public:
+	property String ^CurrentLocale { String ^get () { return CStringToMPString (GetComputerLocaleCodeW ()); } }
+	property LCID CurrentLCID { LCID get () { return LocaleCodeToLcid (GetComputerLocaleCodeW ()); } }
+	String ^ToLocaleName (LCID lcid) { return CStringToMPString (LcidToLocaleCodeW (lcid)); }
+	LCID ToLCID (String ^localename) { return LocaleCodeToLcidW (MPStringToStdW (localename)); }
+	Object ^LocaleInfo (LCID lcid, LCTYPE lctype) { return CStringToMPString (GetLocaleInfoW (lcid, lctype)); }
+	Object ^LocaleInfoEx (String ^localeName, LCTYPE lctype)
+	{
+		std::wstring output = L"";
+		int ret = GetLocaleInfoEx (MPStringToStdW (localeName), lctype, output);
+		if (output.empty ()) return ret;
+		else return CStringToMPString (output);
+	}
+};
+[ComVisible (true)]
+public ref class _I_System
+{
+	private:
+	_I_Resources ^ires = gcnew _I_Resources ();
+	_I_Locale ^ilocale = gcnew _I_Locale ();
+	public:
+	property _I_Resources ^Resources { _I_Resources ^get () { return ires; } }
+	property _I_Locale ^Locale { _I_Locale ^get () { return ilocale; } }
+	property bool IsWindows10
+	{
+		bool get ()
+		{
+			OSVERSIONINFOEX osvi = {0};
+			osvi.dwOSVersionInfoSize = sizeof (OSVERSIONINFOEX);
+			osvi.dwMajorVersion = 10;
+			DWORDLONG conditionMask = 0;
+			VER_SET_CONDITION (conditionMask, VER_MAJORVERSION, VER_GREATER_EQUAL);
+			if (VerifyVersionInfoW (&osvi, VER_MAJORVERSION, conditionMask)) return TRUE;
+			DWORD error = GetLastError ();
+			return (error == ERROR_OLD_WIN_VERSION) ? FALSE : FALSE;
+		}
+	}
+};
+public ref class _I_System2: public _I_System
+{
+	protected:
+	_I_UI ^ui;
+	public:
+	_I_System2 (System::Windows::Forms::Form ^wnd)
+	{
+		ui = gcnew _I_UI (wnd);
+	}
+	property _I_UI ^UI { _I_UI ^get () { return ui; } }
+};
+[ComVisible (true)]
 public ref class _I_Bridge_Base2: public _I_Bridge_Base
 {
 	protected:
 	_I_Window ^window;
 	public:
-	_I_Bridge_Base2 (IScriptBridge ^wnd)
+	_I_Bridge_Base2 (IScriptBridge ^iscr)
 	{
-		window = gcnew _I_Window (wnd);
+		window = gcnew _I_Window (iscr);
 	}
 	property _I_Window ^Window { _I_Window ^get () { return window; }}
 };
+[ComVisible (true)]
+public ref class _I_Bridge_Base3: public _I_Bridge_Base2
+{
+	protected:
+	_I_System2 ^system;
+	public:
+	_I_Bridge_Base3 (IScriptBridge ^iscr, System::Windows::Forms::Form ^form): _I_Bridge_Base2 (iscr)
+	{
+		system = gcnew _I_System2 (form);
+	}
+	property _I_System2 ^System { _I_System2 ^get () { return system; }}
+};
+[ComVisible (true)]
+public ref class _I_IEFrame_Base
+{
+	public:
+	property int Version { int get () { return GetInternetExplorerVersionMajor (); }}
+	String ^ParseHtmlColor (String ^color)
+	{
+		auto dcolor = Drawing::ColorTranslator::FromHtml (color);
+		{
+			rapidjson::Document doc;
+			doc.SetObject ();
+			auto &alloc = doc.GetAllocator ();
+			doc.AddMember ("r", (uint16_t)dcolor.R, alloc);
+			doc.AddMember ("g", (uint16_t)dcolor.G, alloc);
+			doc.AddMember ("b", (uint16_t)dcolor.B, alloc);
+			doc.AddMember ("a", (uint16_t)dcolor.A, alloc);
+			rapidjson::StringBuffer buffer;
+			rapidjson::Writer <rapidjson::StringBuffer> writer (buffer);
+			doc.Accept (writer);
+			std::string utf8 = buffer.GetString ();
+			std::wstring_convert <std::codecvt_utf8 <wchar_t>> conv;
+			return CStringToMPString (conv.from_bytes (utf8));
+		}
+		return "{}";
+	}
+};
 
-
+[ComVisible (true)]
 public ref class SplashForm: public System::Windows::Forms::Form
 {
 	public:
@@ -559,89 +698,13 @@ public ref class AppListWnd: public System::Windows::Forms::Form, public IScript
 	using WebBrowser = System::Windows::Forms::WebBrowser;
 	using Timer = System::Windows::Forms::Timer;
 	[ComVisible (true)]
-	ref class IBridge: public _I_Bridge_Base2
+	ref class IBridge: public _I_Bridge_Base3
 	{
 		private:
 		AppListWnd ^wndinst = nullptr;
 		public:
-		using String = System::String;
-		IBridge (AppListWnd ^wnd): wndinst (wnd), _I_Bridge_Base2 (wnd) {}
-		ref class _I_System
-		{
-			private:
-			AppListWnd ^wndinst = nullptr;
-			public:
-			ref class _I_UI
-			{
-				private:
-				AppListWnd ^wndinst = nullptr;
-				public:
-				ref struct _I_UI_Size
-				{
-					private:
-					int m_width = 0;
-					int m_height = 0;
-					public:
-					property int width { int get () { return m_width; } }
-					property int height { int get () { return m_height; }}
-					property int Width { int get () { return m_width; } }
-					property int Height { int get () { return m_height; }}
-					int getWidth () { return m_width; }
-					int getHeight () { return m_height; }
-					_I_UI_Size (int w, int h): m_width (w), m_height (h) {}
-				};
-				_I_UI (AppListWnd ^wnd): wndinst (wnd) {}
-				property int DPIPercent { int get () { return GetDPI (); }}
-				property double DPI { double get () { return DPIPercent * 0.01; }}
-				property _I_UI_Size ^WndSize { _I_UI_Size ^get () { return gcnew _I_UI_Size (wndinst->Width, wndinst->Height); } }
-				property _I_UI_Size ^ClientSize { _I_UI_Size ^get () { auto cs = wndinst->ClientSize; return gcnew _I_UI_Size (cs.Width, cs.Height); } }
-				property String ^ThemeColor { String ^get () { return ColorToHtml (GetDwmThemeColor ()); } }
-				property bool DarkMode { bool get () { return IsAppInDarkMode (); }}
-				property String ^HighContrast
-				{
-					String ^get ()
-					{
-						auto highc = GetHighContrastTheme ();
-						switch (highc)
-						{
-							case HighContrastTheme::None: return "none";
-								break;
-							case HighContrastTheme::Black: return "black";
-								break;
-							case HighContrastTheme::White: return "white";
-								break;
-							case HighContrastTheme::Other: return "high";
-								break;
-							default: return "none";
-								break;
-						}
-						return "none";
-					}
-				}
-			};
-			private:
-			_I_UI ^ui = gcnew _I_UI (wndinst);
-			_I_Resources ^ires = gcnew _I_Resources ();
-			public:
-			_I_System (AppListWnd ^wnd): wndinst (wnd) {}
-			property _I_UI ^UI { _I_UI ^get () { return ui; } }
-			property _I_Resources ^Resources { _I_Resources ^get () { return ires; } }
-			property bool IsWindows10
-			{
-				bool get ()
-				{
-					OSVERSIONINFOEX osvi = {0};
-					osvi.dwOSVersionInfoSize = sizeof (OSVERSIONINFOEX);
-					osvi.dwMajorVersion = 10;
-					DWORDLONG conditionMask = 0;
-					VER_SET_CONDITION (conditionMask, VER_MAJORVERSION, VER_GREATER_EQUAL);
-					if (VerifyVersionInfoW (&osvi, VER_MAJORVERSION, conditionMask)) return TRUE;
-					DWORD error = GetLastError ();
-					return (error == ERROR_OLD_WIN_VERSION) ? FALSE : FALSE;
-				}
-			}
-		};
-		ref class _I_IEFrame
+		IBridge (AppListWnd ^wnd): wndinst (wnd), _I_Bridge_Base3 (wnd, wnd) {}
+		ref class _I_IEFrame: public _I_IEFrame_Base
 		{
 			private:
 			AppListWnd ^wndinst = nullptr;
@@ -652,33 +715,10 @@ public ref class AppListWnd: public System::Windows::Forms::Form, public IScript
 				int get () { return wndinst->PageScale; }
 				void set (int value) { return wndinst->PageScale = value; }
 			}
-			property int Version { int get () { return GetInternetExplorerVersionMajor (); }}
-			String ^ParseHtmlColor (String ^color)
-			{
-				auto dcolor = Drawing::ColorTranslator::FromHtml (color);
-				{
-					rapidjson::Document doc;
-					doc.SetObject ();
-					auto &alloc = doc.GetAllocator ();
-					doc.AddMember ("r", (uint16_t)dcolor.R, alloc);
-					doc.AddMember ("g", (uint16_t)dcolor.G, alloc);
-					doc.AddMember ("b", (uint16_t)dcolor.B, alloc);
-					doc.AddMember ("a", (uint16_t)dcolor.A, alloc);
-					rapidjson::StringBuffer buffer;
-					rapidjson::Writer <rapidjson::StringBuffer> writer (buffer);
-					doc.Accept (writer);
-					std::string utf8 = buffer.GetString ();
-					std::wstring_convert <std::codecvt_utf8 <wchar_t>> conv;
-					return CStringToMPString (conv.from_bytes (utf8));
-				}
-				return "{}";
-			}
 		};
 		private:
-		_I_System ^system = gcnew _I_System (wndinst);
 		_I_IEFrame ^ieframe = gcnew _I_IEFrame (wndinst);
 		public:
-		property _I_System ^System { _I_System ^get () { return system; }}
 		property _I_IEFrame ^IEFrame { _I_IEFrame ^get () { return ieframe; }}
 	};
 	private:
@@ -741,7 +781,8 @@ public ref class AppListWnd: public System::Windows::Forms::Form, public IScript
 				for (auto &app : it.applications)
 				{
 					std::wstring launchid = it.identity.package_family_name + L'!' + app [L"Id"];
-					auto &color = app [L"BackgroundColor"];
+					std::wnstring color = app [L"BackgroundColor"];
+					if (color.empty () || color.equals (L"transparent")) color = MPStringToStdW (ColorToHtml (GetDwmThemeColor ()));
 					std::wnstring displayName = app [L"DisplayName"];
 					if (displayName.empty ()) displayName = app [L"ShortName"];
 					auto &logo = app [L"Square44x44Logo"];
@@ -918,163 +959,52 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form, public IScrip
 	ITaskbarList3 *taskbar = nullptr;
 	public:
 	[ComVisible (true)]
+	ref class _I_UI2: public _I_UI
+	{
+		private:
+		MainHtmlWnd ^wndinst = nullptr;
+		public:
+		_I_UI2 (MainHtmlWnd ^wnd): wndinst (wnd), _I_UI (wnd) {}
+		property String ^SplashImage
+		{
+			String ^get ()
+			{
+				auto uri = gcnew Uri (CStringToMPString (wndinst->GetSuitSplashImage ()));
+				return uri->AbsoluteUri;
+			}
+		}
+		property String ^SplashBackgroundColor
+		{
+			String ^get ()
+			{
+				std::wnstring ret = L"";
+				auto personal = g_initfile [L"Personalization"];
+				auto thememode = personal [L"AppInstaller:ThemeMode"];
+				auto custommode = personal [L"AppInstaller:CustomThemeMode"];
+				bool nowdark =
+					IsNormalizeStringEquals (thememode.read_wstring ().c_str (), L"dark") ||
+					IsNormalizeStringEquals (thememode.read_wstring ().c_str (), L"auto") && IsAppInDarkMode () ||
+					IsNormalizeStringEquals (thememode.read_wstring ().c_str (), L"custom") && IsNormalizeStringEquals (custommode.read_wstring ().c_str (), L"dark") ||
+					IsNormalizeStringEquals (thememode.read_wstring ().c_str (), L"custom") && IsNormalizeStringEquals (custommode.read_wstring ().c_str (), L"auto") && IsAppInDarkMode ();
+				if (nowdark) ret = g_vemani.splash_screen_backgroundcolor_darkmode (L"App");
+				else ret = g_vemani.splash_screen_backgroundcolor (L"App");
+				if (ret.empty ()) ret = g_vemani.splash_screen_backgroundcolor (L"App");
+				if (ret.empty ()) ret = g_vemani.background_color (L"App");
+				return CStringToMPString (ret);
+			}
+		}
+		void ShowSplash () { if (wndinst->SplashScreen->IsHandleCreated) wndinst->SplashScreen->Show (); else wndinst->SplashScreen->ReInit (); }
+		void FadeAwaySplash () { wndinst->SplashScreen->FadeAway (); }
+		void FadeOutSplash () { wndinst->SplashScreen->FadeOut (); }
+	};
+	[ComVisible (true)]
 	ref class IBridge: public _I_Bridge_Base2
 	{
 		private:
 		MainHtmlWnd ^wndinst = nullptr;
 		public:
-		using String = System::String;
-		IBridge (MainHtmlWnd ^wnd): wndinst (wnd), _I_Bridge_Base2 (wnd) {}
-		ref class _I_System
-		{
-			private:
-			MainHtmlWnd ^wndinst = nullptr;
-			public:
-			ref class _I_UI
-			{
-				private:
-				MainHtmlWnd ^wndinst = nullptr;
-				public:
-				ref struct _I_UI_Size
-				{
-					private:
-					int m_width = 0;
-					int m_height = 0;
-					public:
-					property int Width { int get () { return m_width; } }
-					property int Height { int get () { return m_height; }}
-					int getWidth () { return m_width; }
-					int getHeight () { return m_height; }
-					_I_UI_Size (int w, int h): m_width (w), m_height (h) {}
-				};
-				_I_UI (MainHtmlWnd ^wnd): wndinst (wnd) {}
-				property int DPIPercent { int get () { return GetDPI (); }}
-				property double DPI { double get () { return DPIPercent * 0.01; }}
-				property _I_UI_Size ^WndSize { _I_UI_Size ^get () { return gcnew _I_UI_Size (wndinst->Width, wndinst->Height); } }
-				property _I_UI_Size ^ClientSize { _I_UI_Size ^get () { auto cs = wndinst->ClientSize; return gcnew _I_UI_Size (cs.Width, cs.Height); } }
-				property String ^SplashImage
-				{
-					String ^get ()
-					{
-						auto uri = gcnew Uri (CStringToMPString (wndinst->GetSuitSplashImage ()));
-						return uri->AbsoluteUri;
-					}
-				}
-				property String ^SplashBackgroundColor 
-				{ 
-					String ^get () 
-					{ 
-						std::wnstring ret = L"";
-						auto personal = g_initfile [L"Personalization"];
-						auto thememode = personal [L"AppInstaller:ThemeMode"];
-						auto custommode = personal [L"AppInstaller:CustomThemeMode"];
-						bool nowdark =
-							IsNormalizeStringEquals (thememode.read_wstring ().c_str (), L"dark") ||
-							IsNormalizeStringEquals (thememode.read_wstring ().c_str (), L"auto") && IsAppInDarkMode () ||
-							IsNormalizeStringEquals (thememode.read_wstring ().c_str (), L"custom") && IsNormalizeStringEquals (custommode.read_wstring ().c_str (), L"dark") ||
-							IsNormalizeStringEquals (thememode.read_wstring ().c_str (), L"custom") && IsNormalizeStringEquals (custommode.read_wstring ().c_str (), L"auto") && IsAppInDarkMode ();
-						if (nowdark) ret = g_vemani.splash_screen_backgroundcolor_darkmode (L"App");
-						else ret = g_vemani.splash_screen_backgroundcolor (L"App");
-						if (ret.empty ()) ret = g_vemani.splash_screen_backgroundcolor (L"App");
-						if (ret.empty ()) ret = g_vemani.background_color (L"App");
-						return CStringToMPString (ret);
-					} 
-				}
-				void ShowSplash () { if (wndinst->SplashScreen->IsHandleCreated) wndinst->SplashScreen->Show (); else wndinst->SplashScreen->ReInit (); }
-				void FadeAwaySplash () { wndinst->SplashScreen->FadeAway (); }
-				void FadeOutSplash () { wndinst->SplashScreen->FadeOut (); }
-				property String ^ThemeColor { String ^get () { return ColorToHtml (GetDwmThemeColor ()); } }
-				property bool DarkMode { bool get () { return IsAppInDarkMode (); }}
-				property String ^HighContrast
-				{
-					String ^get ()
-					{
-						auto highc = GetHighContrastTheme ();
-						switch (highc)
-						{
-							case HighContrastTheme::None: return "none";
-								break;
-							case HighContrastTheme::Black: return "black";
-								break;
-							case HighContrastTheme::White: return "white";
-								break;
-							case HighContrastTheme::Other: return "high";
-								break;
-							default: return "none";
-								break;
-						}
-						return "none";
-					}
-				}
-			};
-			ref class _I_Locale
-			{
-				public:
-				property String ^CurrentLocale { String ^get () { return CStringToMPString (GetComputerLocaleCodeW ()); } }
-				property LCID CurrentLCID { LCID get () { return LocaleCodeToLcid (GetComputerLocaleCodeW ()); } }
-				String ^ToLocaleName (LCID lcid) { return CStringToMPString (LcidToLocaleCodeW (lcid)); }
-				LCID ToLCID (String ^localename) { return LocaleCodeToLcidW (MPStringToStdW (localename)); }
-				Object ^LocaleInfo (LCID lcid, LCTYPE lctype) { return CStringToMPString (GetLocaleInfoW (lcid, lctype)); }
-				Object ^LocaleInfoEx (String ^localeName, LCTYPE lctype)
-				{
-					std::wstring output = L"";
-					int ret = GetLocaleInfoEx (MPStringToStdW (localeName), lctype, output);
-					if (output.empty ()) return ret;
-					else return CStringToMPString (output);
-				}
-			};
-			private:
-			_I_UI ^ui = gcnew _I_UI (wndinst);
-			_I_Resources ^ires = gcnew _I_Resources ();
-			_I_Locale ^locale = gcnew _I_Locale ();
-			public:
-			_I_System (MainHtmlWnd ^wnd): wndinst (wnd) {}
-			property _I_UI ^UI { _I_UI ^get () { return ui; } }
-			property _I_Resources ^Resources { _I_Resources ^get () { return ires; } }
-			property _I_Version ^Version
-			{
-				_I_Version ^get ()
-				{
-				#pragma warning(push)
-				#pragma warning(disable:4996)
-					auto ver = gcnew _I_Version ();
-					OSVERSIONINFOEXW osvi = {0};
-					osvi.dwOSVersionInfoSize = sizeof (osvi);
-					if (!GetVersionExW ((LPOSVERSIONINFOW)&osvi)) return ver;
-					ver->Major = osvi.dwMajorVersion;
-					ver->Minor = osvi.dwMinorVersion;
-					ver->Build = osvi.dwBuildNumber;
-					HKEY hKey;
-					{
-						DWORD ubr = 0, size = sizeof (DWORD);
-						if (RegOpenKeyExW (HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
-						{
-							RegQueryValueExW (hKey, L"UBR", 0, NULL, (LPBYTE)&ubr, &size);
-							RegCloseKey (hKey);
-						}
-						ver->Revision = ubr;
-					}
-					return ver;
-				#pragma warning(pop)
-				}
-			}
-			property _I_Locale ^Locale { _I_Locale ^get () { return locale; }}
-			property bool IsWindows10
-			{
-				bool get ()
-				{
-					OSVERSIONINFOEX osvi = {0};
-					osvi.dwOSVersionInfoSize = sizeof (OSVERSIONINFOEX);
-					osvi.dwMajorVersion = 10;
-					DWORDLONG conditionMask = 0;
-					VER_SET_CONDITION (conditionMask, VER_MAJORVERSION, VER_GREATER_EQUAL);
-					if (VerifyVersionInfoW (&osvi, VER_MAJORVERSION, conditionMask)) return TRUE;
-					DWORD error = GetLastError ();
-					return (error == ERROR_OLD_WIN_VERSION) ? FALSE : FALSE;
-				}
-			}
-		};
-		ref class _I_IEFrame
+		[ComVisible (true)]
+		ref class _I_IEFrame: public _I_IEFrame_Base
 		{
 			private:
 			MainHtmlWnd ^wndinst = nullptr;
@@ -1085,44 +1015,30 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form, public IScrip
 				int get () { return wndinst->PageScale; }
 				void set (int value) { return wndinst->PageScale = value; }
 			}
-			property int Version { int get () { return GetInternetExplorerVersionMajor (); }}
-			String ^ParseHtmlColor (String ^color)
-			{
-				auto dcolor = Drawing::ColorTranslator::FromHtml (color);
-				{
-					rapidjson::Document doc;
-					doc.SetObject ();
-					auto &alloc = doc.GetAllocator ();
-					doc.AddMember ("r", (uint16_t)dcolor.R, alloc);
-					doc.AddMember ("g", (uint16_t)dcolor.G, alloc);
-					doc.AddMember ("b", (uint16_t)dcolor.B, alloc);
-					doc.AddMember ("a", (uint16_t)dcolor.A, alloc);
-					rapidjson::StringBuffer buffer;
-					rapidjson::Writer <rapidjson::StringBuffer> writer (buffer);
-					doc.Accept (writer);
-					std::string utf8 = buffer.GetString ();
-					std::wstring_convert <std::codecvt_utf8 <wchar_t>> conv;
-					return CStringToMPString (conv.from_bytes (utf8));
-				}
-				return "{}";
-			}
 		};
-		ref class _I_Window
+		[ComVisible (true)]
+		ref class _I_System3: public _I_System
 		{
-			private:
-			MainHtmlWnd ^wndinst = nullptr;
+			protected:
+			_I_UI2 ^ui2;
 			public:
-			_I_Window (MainHtmlWnd ^wnd): wndinst (wnd) {}
-			Object ^CallEvent (String ^name, ... array <Object ^> ^args) { return wndinst->CallEvent (name, args [0]); }
+			_I_System3 (MainHtmlWnd ^wnd)
+			{
+				ui2 = gcnew _I_UI2 (wnd);
+			}
+			property _I_UI2 ^UI { _I_UI2 ^get () { return ui2; } }
 		};
 		private:
-		_I_System ^system = gcnew _I_System (wndinst);
-		_I_IEFrame ^ieframe = gcnew _I_IEFrame (wndinst);
-		_I_Window ^wnd = gcnew _I_Window (wndinst);
+		_I_IEFrame ^ieframe;
+		_I_System3 ^sys;
 		public:
-		property _I_System ^System { _I_System ^get () { return system; }}
+		IBridge (MainHtmlWnd ^wnd): wndinst (wnd), _I_Bridge_Base2 (wnd) 
+		{
+			ieframe = gcnew _I_IEFrame (wnd);
+			sys = gcnew _I_System3 (wnd);
+		}
 		property _I_IEFrame ^IEFrame { _I_IEFrame ^get () { return ieframe; }}
-		property _I_Window ^Window { _I_Window ^get () { return wnd; }}
+		property _I_System3 ^System { _I_System3 ^get () { return sys; }}
 	};
 	protected:
 	property WebBrowser ^WebUI { WebBrowser ^get () { return this->webui; } }
@@ -1652,7 +1568,7 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form, public IScrip
 			std::vector <std::wnstring> appids;
 			for (auto &it : g_pkginfo)
 				for (auto &it_s : it.applications)
-					if (!it_s [L"Id"].empty ()) 
+					if (!it_s [L"Id"].empty ())
 						appids.emplace_back (it.identity.package_family_name + L'!' + it_s [L"Id"]);
 			if (appids.size () == 1) ActivateAppxApplication (appids.at (0));
 			else if (appids.size () > 1) AppListWnd::DisplayWindow ();
@@ -1756,15 +1672,15 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form, public IScrip
 	Object ^CallScriptFunction (String ^lpFuncName, ... array <Object ^> ^alpParams)
 	{
 		try { return this->webui->Document->InvokeScript (lpFuncName, alpParams); }
-		catch (Exception ^e) 
+		catch (Exception ^e)
 		{
 			try
 			{
 				this->webui->Document->InvokeScript ("messageBoxAsync", gcnew array <Object ^> {
-					e->Message, 
-					e->Source, 
-					0, 
-					CStringToMPString (g_vemani.background_color (L"App"))
+					e->Message,
+						e->Source,
+						0,
+						CStringToMPString (g_vemani.background_color (L"App"))
 				});
 			}
 			catch (Exception ^ex)
@@ -1954,6 +1870,7 @@ int APIENTRY wWinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCm
 		if (!PathEquals (currdir, rootdir)) SetCurrentDirectoryW (rootdir.c_str ());
 	}
 	CoInitializeEx (NULL, COINIT_MULTITHREADED | COINIT_APARTMENTTHREADED);
+	SetupInstanceEnvironment ();
 	destruct relco ([] () {
 		CoUninitialize ();
 	});
