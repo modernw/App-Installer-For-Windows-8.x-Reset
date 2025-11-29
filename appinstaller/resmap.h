@@ -118,9 +118,21 @@ public ref class _I_Resources
 	String ^GetFromOthers (String ^filepath, unsigned int resid)
 	{
 		HMODULE module = nullptr;
-		if (filepath && IsNormalizeStringEmpty (MPStringToStdW (filepath))) module = GetModuleHandleW (MPStringToStdW (filepath).c_str ());
+		bool needrel = false;
+		if (filepath && !IsNormalizeStringEmpty (MPStringToStdW (filepath)))
+		{
+			HMODULE hRes = LoadLibraryExW (
+				MPStringToStdW (filepath).c_str (),
+				NULL,
+				LOAD_LIBRARY_AS_DATAFILE | LOAD_LIBRARY_AS_IMAGE_RESOURCE
+			);
+			needrel = hRes;
+			module = hRes;
+		}
 		else module = GetModuleHandleW (NULL);
-		return GetRCStringCli (resid, module);
+		auto ret = GetRCStringCli (resid, module);
+		if (needrel && module) FreeLibrary (module);
+		return ret;
 	}
 };
 #endif

@@ -8,7 +8,17 @@
         var content = guide.querySelector(".main");
         var shead = slide.querySelector("header");
         var list = slide.querySelector("ul");
-        try { slide.style.backgroundColor = Bridge.UI.themeColor; } catch (e) {}
+        var apptitle = shead.querySelector("#apptitle");
+        var backbtn = shead.querySelector("#back");
+        if (backbtn && backbtn.disabled) {
+            apptitle.style.marginLeft = backbtn.style.marginLeft;
+        } else {
+            apptitle.style.marginLeft = "";
+        }
+        try {
+            slide.style.backgroundColor = Bridge.UI.themeColor;
+            slide.style.color = Color.getSuitableForegroundTextColor(Color.parse(slide.style.backgroundColor), [Color.Const.white, Color.Const.black]);
+        } catch (e) {}
         setTimeout(function() {
             slide.style.transition = "all 0.5s cubic-bezier(0.1, 0.9, 0.2, 1)";
         }, 0);

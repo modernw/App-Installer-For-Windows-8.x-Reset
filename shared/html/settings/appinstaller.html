@@ -26,6 +26,7 @@
     <script type="text/javascript" src="../js/init.js"></script>
     <script type="text/javascript" src="initsame.js"></script>
     <link rel="stylesheet" type="text/css" href="page.css">
+    <script type="text/javascript" src="appinstaller/preinit.js"></script>
     <script type="text/javascript" src="appinstaller/items.js"></script>
     <script type="text/javascript" src="appinstaller/init.js"></script>
 </head>
@@ -37,14 +38,11 @@
                 <header aria-label="Header content" role="banner" class="titlebanner" id="pagebanner" style="height: 120px;">
                     <button id="back" class="win-backbutton pagetitlewb-backbutton" onclick="Bridge.Frame.callEvent ('InvokeBackPage')" style="margin-left: 20px; transform: scale(0.72);"></button>
                     <h2 class="titlearea win-type-ellipsis" id="apptitle" style="">
-                        <span class="pagetitlewb-title" id="apptitlestr" style="margin-left: 10px; margin-right: 20px;">Settings</span>
+                        <span class="pagetitlewb-title" id="apptitlestr" style="margin-left: 10px; margin-right: 20px;" data-res-fromfile="getFileResPair(exepath, 300)"></span>
                     </h2>
                 </header>
                 <nav class="container">
                     <ul class="list">
-                        <li role="button" tabindex="0">项1</li>
-                        <li role="button" tabindex="0" class="selected">项2</li>
-                        <li role="button" tabindex="0">项3</li>
                     </ul>
                 </nav>
             </aside>

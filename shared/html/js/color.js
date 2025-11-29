@@ -482,5 +482,65 @@
         var json = JSON.parse(window.external.IEFrame.ParseHtmlColor(str));
         return new Color(json.r, json.g, json.b, json.a);
     }
+    Color.getSuitableForegroundTextColor = function(backgroundColor, foregroundColorArray) {
+        // 将 0–255 转为 W3C 的 0–1，并做 gamma 校正
+        function gammaCorrect(c) {
+            c /= 255;
+            if (c <= 0.03928) return c / 12.92;
+            return Math.pow((c + 0.055) / 1.055, 2.4);
+        }
+        // 计算相对亮度 L（0–1）
+        function relativeLuminance(color) {
+            var R = gammaCorrect(color.red);
+            var G = gammaCorrect(color.green);
+            var B = gammaCorrect(color.blue);
+            return 0.2126 * R + 0.7152 * G + 0.0722 * B;
+        }
+        // 计算对比度 (L1+0.05)/(L2+0.05)
+        function contrastRatio(l1, l2) {
+            var light = Math.max(l1, l2);
+            var dark = Math.min(l1, l2);
+            return (light + 0.05) / (dark + 0.05);
+        }
+        // 混合背景透明度：背景 alpha 与白色混合
+        function blendWithWhite(color) {
+            const a = (color.alpha !== undefined ? color.alpha : 255) / 255;
+            return {
+                red: color.red * a + 255 * (1 - a),
+                green: color.green * a + 255 * (1 - a),
+                blue: color.blue * a + 255 * (1 - a),
+                alpha: 255
+            };
+        }
+        // 透明背景视为与白色叠加
+        const bg = blendWithWhite(backgroundColor);
+        const bgL = relativeLuminance(bg);
+        // 找出和背景对比度最高的前景色
+        let bestColor = null;
+        let bestContrast = -1;
+        for (var i = 0; i < foregroundColorArray.length; i++) {
+            var fg = foregroundColorArray[i];
+            var fgBlended = blendWithWhite(fg); // 若前景也有透明度
+            var fgL = relativeLuminance(fgBlended);
+            var cr = contrastRatio(bgL, fgL);
+            if (cr > bestContrast) {
+                bestContrast = cr;
+                bestColor = fg;
+            }
+        }
+        return bestColor;
+    }
+    Color.Const = {
+        white: new Color(255, 255, 255),
+        black: new Color(0, 0, 0),
+        red: new Color(255, 0, 0),
+        green: new Color(0, 255, 0),
+        blue: new Color(0, 0, 255),
+        yellow: new Color(255, 255, 0),
+        cyan: new Color(0, 255, 255),
+        magenta: new Color(255, 0, 255),
+        transparent: new Color(0, 0, 0, 0),
+    };
+
     module.exports = { Color: Color };
 })(this);

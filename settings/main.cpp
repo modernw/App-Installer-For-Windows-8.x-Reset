@@ -130,14 +130,115 @@ public ref class _I_InitConfig
 	Win32::InitConfig ^GetConfig () { return Create (CStringToMPString (g_initfile.filepath)); }
 };
 [ComVisible (true)]
+public ref class _I_VisualElement
+{
+	protected:
+	String ^appid;
+	public:
+	_I_VisualElement (String ^appid): appid (appid) {}
+	_I_VisualElement (): appid (String::Empty) {}
+	property String ^Id { String ^get () { return appid; } void set (String ^value) { appid = value; } }
+#define PROPERTY_VELEMENT(_PropertyName_, _MethodName_) \
+	property String ^_PropertyName_ { \
+		String ^get() { \
+			return CStringToMPString(g_vemani._MethodName_(MPStringToStdW(appid))); \
+		} \
+	}
+	PROPERTY_VELEMENT (DisplayName, display_name)
+		PROPERTY_VELEMENT (Logo, logo)
+		PROPERTY_VELEMENT (SmallLogo, small_logo)
+		property String ^ForegroundText { String ^get () { return g_vemani.foreground_text (MPStringToStdW (appid)) == vemanifest::TextColor::light ? "light" : "dark"; }}
+		PROPERTY_VELEMENT (Lnk32x32Logo, lnk_32x32_logo)
+		PROPERTY_VELEMENT (ItemDisplayLogo, item_display_logo)
+		property bool ShowNameOnTile { bool get () { return g_vemani.show_name_on_tile (MPStringToStdW (appid)); }}
+		PROPERTY_VELEMENT (BackgroundColor, background_color)
+		PROPERTY_VELEMENT (SplashScreenImage, splash_screen_image)
+		PROPERTY_VELEMENT (SplashScreenBackgroundColor, splash_screen_backgroundcolor)
+		PROPERTY_VELEMENT (SplashScreenBackgroundColorDarkMode, splash_screen_backgroundcolor_darkmode)
+		#ifdef PROPERTY_VELEMENT
+		#undef PROPERTY_VELEMENT
+		#endif
+		Object ^Get (String ^propertyName)
+		{
+			String ^str = propertyName->ToLower ()->Trim ();
+			if (str == "displayname") return DisplayName;
+			else if (str == "logo") return Logo;
+			else if (str == "smalllogo") return SmallLogo;
+			else if (str == "foregroundtext") return ForegroundText;
+			else if (str == "lnk32x32logo") return Lnk32x32Logo;
+			else if (str == "shownameontile") return ShowNameOnTile;
+			else if (str == "backgroundcolor") return BackgroundColor;
+			else if (str == "splashscreenimage") return SplashScreenImage;
+			else if (str == "splashscreenbackgroundcolor") return SplashScreenBackgroundColor;
+			else if (str == "splashscreenbackgroundcolordarkmode") return SplashScreenBackgroundColorDarkMode;
+			return String::Empty;
+		}
+		Object ^operator [] (String ^propertyName) { return Get (propertyName); }
+};
+[ComVisible (true)]
+public ref class _I_VisualElements
+{
+	public:
+	array <String ^> ^GetIds ()
+	{
+		std::vector <std::wstring> res;
+		g_vemani.app_ids (res);
+		auto ret = gcnew array <String ^> (res.size ());
+		for (size_t i = 0; i < res.size (); i ++) ret [i] = CStringToMPString (res [i]);
+		return ret;
+	}
+	String ^GetIdsToJson () { return StringArrayToJson (GetIds ()); }
+	_I_VisualElement ^Get (String ^id) { return gcnew _I_VisualElement (id); }
+	_I_VisualElement ^operator [] (String ^id) { return Get (id); }
+#define ATTRIBUTE_METHODS(_FunctionName_, _MethodName_) \
+String^ _FunctionName_(String^ appid) { \
+    return CStringToMPString(g_vemani._MethodName_(MPStringToStdW(appid))); \
+}
+	ATTRIBUTE_METHODS (DisplayName, display_name)
+	ATTRIBUTE_METHODS (Logo, logo)
+	ATTRIBUTE_METHODS (SmallLogo, small_logo)
+		String ^ForegroundText (String ^appid)
+	{
+		return g_vemani.foreground_text (MPStringToStdW (appid)) == vemanifest::TextColor::light ? "light" : "dark";
+	}
+	ATTRIBUTE_METHODS (Lnk32x32Logo, lnk_32x32_logo)
+	ATTRIBUTE_METHODS (ItemDisplayLogo, item_display_logo)
+		bool ShowNameOnTile (String ^appid) { return g_vemani.show_name_on_tile (MPStringToStdW (appid)); }
+	ATTRIBUTE_METHODS (BackgroundColor, background_color)
+	ATTRIBUTE_METHODS (SplashScreenImage, splash_screen_image)
+	ATTRIBUTE_METHODS (SplashScreenBackgroundColor, splash_screen_backgroundcolor)
+	ATTRIBUTE_METHODS (SplashScreenBackgroundColorDarkMode, splash_screen_backgroundcolor_darkmode)
+	#ifdef ATTRIBUTE_METHODS
+	#undef ATTRIBUTE_METHODS
+	#endif
+		Object ^GetValue (String ^appid, String ^attributeName)
+	{
+		auto attr = attributeName->ToLower ()->Trim ();
+		if (attr == "displayname") return DisplayName (appid);
+		else if (attr == "logo") return Logo (appid);
+		else if (attr == "smalllogo") return SmallLogo (appid);
+		else if (attr == "foregroundtext") return ForegroundText (appid);
+		else if (attr == "lnk32x32logo") return Lnk32x32Logo (appid);
+		else if (attr == "itemdisplaylogo") return ItemDisplayLogo (appid);
+		else if (attr == "shownameontile") return ShowNameOnTile (appid);
+		else if (attr == "backgroundcolor") return BackgroundColor (appid);
+		else if (attr == "splashscreenimage") return SplashScreenImage (appid);
+		else if (attr == "splashscreenbackgroundcolor") return SplashScreenBackgroundColor (appid);
+		else if (attr == "splashscreenbackgroundcolordarkmode") return SplashScreenBackgroundColorDarkMode (appid);
+		else return String::Empty;
+	}
+};
+[ComVisible (true)]
 public ref class _I_Bridge_Base
 {
 	protected:
 	_I_String ^str = gcnew _I_String ();
 	_I_InitConfig ^initconfig = gcnew _I_InitConfig ();
+	_I_Storage ^storage;
 	public:
 	property _I_String ^String { _I_String ^get () { return str; }}
 	property _I_InitConfig ^Config { _I_InitConfig ^get () { return initconfig; }}
+	property _I_Storage ^Storage { _I_Storage ^get () { return storage; }}
 };
 [ComVisible (true)]
 public interface class IScriptBridge
@@ -541,6 +642,12 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form, public IScrip
 		void FadeOutSplash () { wndinst->SplashScreen->FadeOut (); }
 	};
 	[ComVisible (true)]
+	ref class _I_VisualElements2: public _I_VisualElements
+	{
+		public:
+		property _I_VisualElement ^Current {_I_VisualElement ^get () { return Get (CStringToMPString (g_idInVe)); }}
+	};
+	[ComVisible (true)]
 	ref class IBridge: public _I_Bridge_Base2
 	{
 		private:
@@ -574,17 +681,18 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form, public IScrip
 		private:
 		_I_IEFrame ^ieframe;
 		_I_System3 ^sys;
-		_I_Storage ^storage;
+		_I_VisualElements2 ^ve;
 		public:
 		IBridge (MainHtmlWnd ^wnd): wndinst (wnd), _I_Bridge_Base2 (wnd)
 		{
 			ieframe = gcnew _I_IEFrame (wnd);
 			sys = gcnew _I_System3 (wnd);
 			storage = gcnew _I_Storage ();
+			ve = gcnew _I_VisualElements2 ();
 		}
 		property _I_IEFrame ^IEFrame { _I_IEFrame ^get () { return ieframe; }}
 		property _I_System3 ^System { _I_System3 ^get () { return sys; }}
-		property _I_Storage ^Storage { _I_Storage ^get () { return storage; }}
+		property _I_VisualElements2 ^VisualElements { _I_VisualElements2 ^get () { return ve; } }
 	};
 	protected:
 	property WebBrowser ^WebUI { WebBrowser ^get () { return this->webui; } }

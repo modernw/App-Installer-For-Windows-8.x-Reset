@@ -26,13 +26,26 @@
     <script type="text/javascript" src="../../js/init.js"></script>
     <link rel="stylesheet" type="text/css" href="../page.css">
     <link rel="stylesheet" type="text/css" href="../subpage.css">
+    <script type="text/javascript" src="preinit.js"></script>
     <script type="text/javascript" src="initsame.js"></script>
 </head>
 
 <body>
     <div class="section padding">
-        <h2>App Installer Settings</h2>
+        <h2 id="guide-title"></h2>
+        <p id="guide-desc" style="white-space: pre-wrap;"></p>
     </div>
+    <script>
+        (function() {
+            "use strict";
+            var res = Bridge.Resources;
+            var stru = Bridge.String;
+            var title = document.getElementById("guide-title");
+            title.textContent = stru.format(res.byname("IDS_TITLEFORMAT"), res.fromfile(exepath, 300));
+            var text = document.getElementById("guide-desc");
+            text.textContent = res.byname("IDS_GUIDETEXT_COMMON");
+        })();
+    </script>
 </body>
 
 </html>

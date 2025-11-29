@@ -8,9 +8,9 @@
         };
     }
     var pages = {
-        general: getPage("appinstaller/general.html", "General"),
-        theme: getPage("appinstaller/theme.html", "Theme"),
-        update: getPage("update.html", "Update")
+        general: getPage("appinstaller/general.html", getPublicRes(101)),
+        theme: getPage("appinstaller/theme.html", getPublicRes(102)),
+        update: getPage("update.html", getPublicRes(103))
     };
     Object.defineProperty(global, "pages", {
         get: function() {

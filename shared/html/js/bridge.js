@@ -39,6 +39,9 @@
             byid: function(resid) { return ext.System.Resources.GetById(resid); },
             nameToId: function(resname) { return ext.System.Resources.ToId(resname); },
             idToName: function(resid) { return ext.System.Resources.ToName(resid); },
+            fromOthers: function(filepath, resid) { return ext.System.Resources.GetFromOthers(filepath, resid); },
+            fromFile: function(filepath, resid) { return ext.System.Resources.GetFromOthers(filepath, resid); },
+            fromfile: function(filepath, resid) { return ext.System.Resources.GetFromOthers(filepath, resid); },
         },
         Package: {
             filepaths: function() {

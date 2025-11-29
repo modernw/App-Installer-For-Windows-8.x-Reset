@@ -169,12 +169,12 @@ public ref class _I_Bridge_Base
 {
 	protected:
 	_I_String ^str = gcnew _I_String ();
-	_I_Package ^pkg = gcnew _I_Package ();
 	_I_InitConfig ^initconfig = gcnew _I_InitConfig ();
+	_I_Storage ^storage;
 	public:
 	property _I_String ^String { _I_String ^get () { return str; }}
-	property _I_Package ^Package { _I_Package ^get () { return pkg; }}
 	property _I_InitConfig ^Config { _I_InitConfig ^get () { return initconfig; }}
+	property _I_Storage ^Storage { _I_Storage ^get () { return storage; }}
 };
 [ComVisible (true)]
 public interface class IScriptBridge

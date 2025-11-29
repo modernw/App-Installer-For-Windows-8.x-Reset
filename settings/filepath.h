@@ -925,6 +925,11 @@ public ref class _I_Path
 		void set (String ^dir) { SetCurrentDirectoryW (MPStringToStdW (dir).c_str ()); }
 	}
 	property String ^Program { String ^get () { return CStringToMPString (GetCurrentProgramPathW ()); } }
+	property String ^Root { String ^get () { 
+		std::wstring program = GetCurrentProgramPathW ();
+		std::wstring path = GetFileDirectoryW (program);
+		return CStringToMPString (GetFileDirectoryW (GetCurrentProgramPathW ())); 
+	}}
 	String ^Combine (String ^l, String ^r) { return CStringToMPString (CombinePath (MPStringToStdW (l), MPStringToStdW (r))); }
 	String ^GetName (String ^path)
 	{
