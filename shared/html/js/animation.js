@@ -218,6 +218,11 @@
                 containerId = container.id;
             }
         } else document.getElementById(containerId);
+        if (shouldAnimate == true) {
+            container.setAttribute("data-start-loading", true);
+        } else {
+            container.removeAttribute("data-start-loading");
+        }
         var textNode = container.firstChild;
         if (!textNode || textNode.nodeType !== 3) {
             textNode = document.createTextNode("");

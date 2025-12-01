@@ -17,8 +17,19 @@
         }
         try {
             slide.style.backgroundColor = Bridge.UI.themeColor;
-            slide.style.color = Color.getSuitableForegroundTextColor(Color.parse(slide.style.backgroundColor), [Color.Const.white, Color.Const.black]);
-        } catch (e) {}
+            slide.style.color = Color.getSuitableForegroundTextColor(Color.parse(Bridge.UI.themeColor), [Color.Const.white, Color.Const.black]).RGBA.stringify();
+            setTimeout(function() {
+                var h2style = document.getElementById("h2-style");
+                if (!h2style) {
+                    h2style = document.createElement("style");
+                    h2style.id = "h2-style";
+                }
+                h2style.innerHTML = ".main h2 { color: " + Color.getSuitableForegroundTextColor(Color.parse("#F3F3F3"), [Color.parse(Bridge.UI.themeColor), Color.Const.black]).RGBA.stringify() + " }";
+                document.head.appendChild(h2style);
+            }, 0);
+        } catch (e) {
+            console.error(e);
+        }
         setTimeout(function() {
             slide.style.transition = "all 0.5s cubic-bezier(0.1, 0.9, 0.2, 1)";
         }, 0);

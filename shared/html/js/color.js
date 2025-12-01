@@ -473,63 +473,6 @@
         this.HWB = new HWB(this);
         this.stringify = function() { return this.hex; };
     }
-    /**
-     * 解析颜色字符串
-     * @param {string} str 颜色字符串 
-     * @returns {Color} 解析得到的颜色对象
-     */
-    Color.parse = function(str) {
-        var json = JSON.parse(window.external.IEFrame.ParseHtmlColor(str));
-        return new Color(json.r, json.g, json.b, json.a);
-    }
-    Color.getSuitableForegroundTextColor = function(backgroundColor, foregroundColorArray) {
-        // 将 0–255 转为 W3C 的 0–1，并做 gamma 校正
-        function gammaCorrect(c) {
-            c /= 255;
-            if (c <= 0.03928) return c / 12.92;
-            return Math.pow((c + 0.055) / 1.055, 2.4);
-        }
-        // 计算相对亮度 L（0–1）
-        function relativeLuminance(color) {
-            var R = gammaCorrect(color.red);
-            var G = gammaCorrect(color.green);
-            var B = gammaCorrect(color.blue);
-            return 0.2126 * R + 0.7152 * G + 0.0722 * B;
-        }
-        // 计算对比度 (L1+0.05)/(L2+0.05)
-        function contrastRatio(l1, l2) {
-            var light = Math.max(l1, l2);
-            var dark = Math.min(l1, l2);
-            return (light + 0.05) / (dark + 0.05);
-        }
-        // 混合背景透明度：背景 alpha 与白色混合
-        function blendWithWhite(color) {
-            const a = (color.alpha !== undefined ? color.alpha : 255) / 255;
-            return {
-                red: color.red * a + 255 * (1 - a),
-                green: color.green * a + 255 * (1 - a),
-                blue: color.blue * a + 255 * (1 - a),
-                alpha: 255
-            };
-        }
-        // 透明背景视为与白色叠加
-        const bg = blendWithWhite(backgroundColor);
-        const bgL = relativeLuminance(bg);
-        // 找出和背景对比度最高的前景色
-        let bestColor = null;
-        let bestContrast = -1;
-        for (var i = 0; i < foregroundColorArray.length; i++) {
-            var fg = foregroundColorArray[i];
-            var fgBlended = blendWithWhite(fg); // 若前景也有透明度
-            var fgL = relativeLuminance(fgBlended);
-            var cr = contrastRatio(bgL, fgL);
-            if (cr > bestContrast) {
-                bestContrast = cr;
-                bestColor = fg;
-            }
-        }
-        return bestColor;
-    }
     Color.Const = {
         white: new Color(255, 255, 255),
         black: new Color(0, 0, 0),
@@ -540,6 +483,83 @@
         cyan: new Color(0, 255, 255),
         magenta: new Color(255, 0, 255),
         transparent: new Color(0, 0, 0, 0),
+    };
+    /**
+     * 解析颜色字符串
+     * @param {string} str 颜色字符串 
+     * @returns {Color} 解析得到的颜色对象
+     */
+    Color.parse = function(str) {
+        var json = JSON.parse(window.external.IEFrame.ParseHtmlColor(str));
+        return new Color(json.r, json.g, json.b, json.a);
+    }
+    Color.getSuitableForegroundTextColor = function(backgroundColor, foregroundColorArray) {
+
+        function gammaCorrect(c) {
+            c /= 255;
+            if (c <= 0.03928) return c / 12.92;
+            return Math.pow((c + 0.055) / 1.055, 2.4);
+        }
+
+        function relativeLuminance(color) {
+            var R = gammaCorrect(color.red);
+            var G = gammaCorrect(color.green);
+            var B = gammaCorrect(color.blue);
+            return 0.2126 * R + 0.7152 * G + 0.0722 * B;
+        }
+
+        function blendWithWhite(color) {
+            var a = (color.alpha !== undefined ? color.alpha : 255) / 255;
+            return {
+                red: color.red * a + 255 * (1 - a),
+                green: color.green * a + 255 * (1 - a),
+                blue: color.blue * a + 255 * (1 - a),
+                alpha: 255
+            };
+        }
+
+        // 计算 RGB 欧氏距离，衡量色差
+        function colorDistance(c1, c2) {
+            var dr = c1.red - c2.red;
+            var dg = c1.green - c2.green;
+            var db = c1.blue - c2.blue;
+            return Math.sqrt(dr * dr + dg * dg + db * db);
+        }
+
+        var bg = blendWithWhite(backgroundColor);
+        var bgL = relativeLuminance(bg);
+
+        var bestScore = -Infinity;
+        var bestColor = null;
+
+        for (var i = 0; i < foregroundColorArray.length; i++) {
+            var fg = foregroundColorArray[i];
+            var fgBlended = blendWithWhite(fg);
+            var fgL = relativeLuminance(fgBlended);
+
+            // 亮度差
+            var lumDiff = Math.abs(fgL - bgL); // 0~1
+
+            // 色彩差（RGB欧氏距离，0~441）
+            var colorDiff = colorDistance(fgBlended, bg) / Math.sqrt(3 * 255 * 255);
+
+            // 综合得分
+            // 高亮度差 + 色彩差更高 → 得分高
+            // 同时适当惩罚过暗颜色
+            var score = lumDiff * 0.6 + colorDiff * 0.4;
+
+            // 轻微惩罚过深颜色（背景浅色时）
+            if (bgL > 0.8 && fgL < 0.3) score -= 0.1;
+            // 轻微惩罚过浅颜色（背景深色时）
+            if (bgL < 0.2 && fgL > 0.9) score -= 0.05;
+
+            if (score > bestScore) {
+                bestScore = score;
+                bestColor = fg;
+            }
+        }
+
+        return bestColor;
     };
 
     module.exports = { Color: Color };

@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>App Installer Settings</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script type="text/javascript" src="../js/module.js"></script>
+    <script type="text/javascript" src="../js/polyfill-ie.js"></script>
+    <link rel="stylesheet" href="../libs/winjs/2.0/css/ui-light.css" id="winjs-style">
+    <script type="text/javascript" src="../libs/winjs/1.0/js/base.js"></script>
+    <script type="text/javascript" src="../libs/winjs/1.0/js/ui.js"></script>
+    <script src="../libs/markdown.js"></script>
+    <script type="text/javascript" src="../js/color.js"></script>
+    <script type="text/javascript" src="../js/promise.js"></script>
+    <script type="text/javascript" src="../js/bridge.js"></script>
+    <script type="text/javascript" src="../js/dpimodes.js"></script>
+    <script type="text/javascript" src="../js/resources.js"></script>
+    <script type="text/javascript" src="../js/animation.js"></script>
+    <link rel="stylesheet" href="../fonts/fonts.css">
+    <script type="text/javascript" src="../js/event.js"></script>
+    <script type="text/javascript" src="../js/tileback.js"></script>
+    <script type="text/javascript" src="../js/load.js"></script>
+    <link rel="stylesheet" type="text/css" href="../libs/msgbox/msgbox.css">
+    <script type="text/javascript" src="../libs/msgbox/msgbox.js"></script>
+    <script type="text/javascript" src="../js/init.js"></script>
+    <link rel="stylesheet" type="text/css" href="page.css">
+    <link rel="stylesheet" type="text/css" href="subpage.css">
+    <script type="text/javascript" src="appinstaller/preinit.js"></script>
+    <script type="text/javascript" src="appinstaller/initsame.js"></script>
+    <style>
+        .section .block {
+            width: 100%;
+            height: auto;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            position: relative;
+            transition: all 0.5s cubic-bezier(0.1, 0.9, 0.2, 1);
+            overflow-x: hidden;
+            overflow-y: hidden;
+            background-color: blanchedalmond;
+        }
+        
+        .pagesection .section {
+            position: relative;
+            height: auto;
+        }
+        
+        .pagesection .section.padding {
+            padding: 0 60px;
+        }
+        
+        .pagesection .section.padding:first-child {
+            padding-top: 44px;
+        }
+        
+        .pagesection .section.padding:last-child {
+            padding-bottom: 44px;
+        }
+        
+        #check-update-block {
+            height: 50px;
+        }
+        
+        #check-update-block progress {
+            min-width: 180px;
+            width: 100%;
+            max-width: 60%;
+            transition: all 0.5s cubic-bezier(0.1, 0.9, 0.2, 1);
+        }
+        
+        #check-update-block progress[value] {
+            width: 280px;
+        }
+        
+        #newversion-details {
+            height: auto;
+            overflow-y: auto;
+            -ms-overflow-style: -ms-autohiding-scrollbar;
+            width: 100%;
+        }
+        
+        #newversion-desc {
+            white-space: pre-wrap;
+        }
+        
+        #newversion-desc img {
+            width: 100%;
+        }
+        
+        #check-update:disabled {
+            display: none;
+        }
+        
+        #loading-amine {
+            display: none;
+            opacity: 0;
+            font-family: Setup;
+        }
+        
+        #loading-amine[data-start-loading] {
+            display: inline;
+            opacity: 1;
+            margin-right: 3px;
+        }
+    </style>
+    <script>
+        window.parseVersion = function(version) {
+            var arr = version.split(".");
+            var major = parseInt(arr[0]);
+            var minor = parseInt(arr[1]);
+            var build = parseInt(arr[2]);
+            var revision = parseInt(arr[3]);
+            return {
+                major: major,
+                minor: minor,
+                build: build,
+                revision: revision
+            };
+        };
+        window.compareVersion = function(verl, verr) {
+            if (typeof verl == "string") verl = parseVersion(verl);
+            if (typeof verr == "string") verr = parseVersion(verr);
+            var ret = verl.major - verr.major;
+            if (ret == 0) {
+                ret = verl.minor - verr.minor;
+            }
+            if (ret == 0) {
+                ret = verl.build - verr.build;
+            }
+            if (ret == 0) {
+                ret = verl.revision - verr.revision;
+            }
+            return ret;
+        };
+        window.equalVersion = function(verl, verr) {
+            if (typeof verl == "string") verl = parseVersion(verl);
+            if (typeof verr == "string") verr = parseVersion(verr);
+            return verl.major == verr.major && verl.minor == verr.minor && verl.build == verr.build && verl.revision == verr.revision;
+        };
+        window.stringifyVersion = function(version) {
+            return version.major + "." + version.minor + "." + version.build + "." + version.revision;
+        };
+    </script>
+    <script>
+        (function(global) {
+            "use strict";
+            var jsdownloadAsync = Bridge.External.Download;
+
+            function downloadAsync(url, fileName, completeCallback, errorCallback, progressCallback) {
+                function downloadProgress(p) {
+                    if (progressCallback) progressCallback(JSON.parse(p || "{}"));
+                }
+
+                function downloadComplete(c) {
+                    if (completeCallback) completeCallback(JSON.parse(c || "{}"));
+                }
+
+                function downloadError(e) {
+                    if (errorCallback) errorCallback(JSON.parse(e || "{}"));
+                }
+                jsdownloadAsync.workAsync(url, fileName, downloadComplete, downloadError, downloadProgress);
+            }
+            global.downloadFile = function(url, fileName) {
+                return new WinJS.Promise(function(resolve, reject, progress) {
+                    downloadAsync(
+                        url,
+                        fileName,
+                        resolve,
+                        reject,
+                        progress
+                    );
+                });
+            };
+        })(this);
+    </script>
+</head>
+
+<body>
+    <div class="pagecontainer full pagesection" style="overflow-y: auto;">
+        <div class="section padding">
+            <h2 id="section-title" data-res-fromfile="publicRes (103)"></h2>
+            <p id="section-desc" style="white-space: pre-wrap;">在这里，检查一下应用的更新。</p>
+            <p><span data-res-fromfile="publicRes (104)"></span>&#9;<span id="current-version"></span></p>
+            <script>
+                try {
+                    var storage = Bridge.External.Storage;
+                    var path = storage.path;
+                    var versionFilePath = path.combine(path.root, "version");
+                    var versionFile = storage.getFile(versionFilePath);
+                    window.currver = versionFile.content;
+                } catch (e) {
+                    window.currver = "0.0.0.1";
+                }
+                document.getElementById("current-version").textContent = window.currver;
+            </script>
+        </div>
+        <div class="section padding" style="">
+            <div class="block" id="check-update-block" style="height: 0px;">
+                <span id="loading-amine">123</span><span id="check-update-text">正在检查更新...</span><br>
+                <progress id="progress" min="0" max="100"></progress>
+                <a target="_blank" id="doc-link">查看文档</a>
+            </div>
+        </div>
+        <div class="section padding" style="margin: 10px 0;"><button id="check-update" data-action="check">检查更新</button></div>
+        <div class="section padding" style="display: none; overflow-y: auto; height: 0px; transition: all 0.5s cubic-bezier(0.1, 0.9, 0.2, 1); margin-top: 20px;">
+            <h2>获取到的更新信息</h2>
+            <div class="block" id="newversion-details">
+                <h3 id="newversion-title"><span>最新版本</span>: <span id="newversion-version"></span></h3>
+                <span id="newversion-releasedate"></span><br>
+                <a id="newversion-url" target="_blank">查看链接</a><br>
+                <span>发布说明: </span><a id="newversion-desc-showall-hide">展开</a>
+                <div id="newversion-desc"></div>
+            </div>
+        </div>
+        <script>
+            (function() {
+                "use strict";
+                var eutils = Windows.UI.Event.Util;
+                var monitor = Windows.UI.Event.Monitor;
+                var section = document.querySelector(".pagesection .section").parentNode;
+                var checkUpdateBtn = document.getElementById("check-update");
+                var checkUpdateBlock = document.getElementById("check-update-block");
+                var progress = document.querySelector("#check-update-block progress");
+                var checkUpdateText = document.getElementById("check-update-text");
+                var docLink = document.getElementById("doc-link");
+                var currentVersion = document.getElementById("current-version");
+                var newVersionBlock = document.getElementById("newversion-details");
+                var newVersionTitle = document.getElementById("newversion-title");
+                var newVersionVersion = document.getElementById("newversion-version");
+                var newVersionReleaseDate = document.getElementById("newversion-releasedate");
+                var newVersionUrl = document.getElementById("newversion-url");
+                var newVersionDesc = document.getElementById("newversion-desc");
+                var newVersionDescShowOrHide = document.getElementById("newversion-desc-showall-hide");
+                var checkUpdateLoading = document.getElementById("loading-amine");
+                var stopProcess = false;
+
+                function newVersionBlockSizeChanged() {
+                    if (stopProcess) return;
+                    var parentSection = newVersionBlock.parentNode;
+                    var sectionHeight = parentSection.parentNode.offsetHeight;
+                    var newHeight = sectionHeight - parentSection.getBoundingClientRect().top;
+                    parentSection.setAttribute("data-height", newHeight);
+                    if (parentSection.hasAttribute("data-showall") == true) {
+                        parentSection.style.height = "auto";
+                    } else {
+                        parentSection.style.height = newHeight + "px";
+                    }
+                }
+                stopProcess = true;
+                var debunced_resize = debounce(newVersionBlockSizeChanged, 500);
+                eutils.addEvent(newVersionDescShowOrHide, "click", function() {
+                    var parentSection = newVersionBlock.parentNode;
+                    if (parentSection.hasAttribute("data-showall") == true) {
+                        parentSection.removeAttribute("data-showall");
+                        newVersionDescShowOrHide.textContent = "展开";
+                        parentSection.style.height = parentSection.getAttribute("data-height") + "px";
+                    } else {
+                        parentSection.setAttribute("data-showall", true);
+                        newVersionDescShowOrHide.textContent = "收起";
+                        parentSection.style.height = "auto";
+                    }
+                    debunced_resize();
+                });
+                monitor.observe(newVersionBlock.parentNode, monitor.EventType.resize, debunced_resize);
+                eutils.addEvent(checkUpdateBtn, "click", function() {
+                    checkUpdateBlock.style.height = "0px";
+                    var self = this;
+                    this.disabled = true;
+                    progress.removeAttribute("value");
+                    if (checkUpdateBtn.getAttribute("data-action") == "check") {
+                        checkUpdateText.textContent = "正在检查更新...";
+                        checkUpdateBlock.style.height = checkUpdateBlock.scrollHeight + "px";
+                        progress.style.display = "";
+                        docLink.style.display = "none";
+                        stopProcess = true;
+                        newVersionBlock.parentNode.style.height = "0px";
+                        newVersionBlock.parentNode.style.display = "none";
+                        setTimeout(function() {
+                            checkUpdateBlock.style.height = "auto";
+                        }, 500);
+                        try {
+                            WinJS.xhr({
+                                url: "https://api.github.com/repos/modernw/App-Installer-For-Windows-8.x-Reset/releases/latest"
+                            }).done(function(resp) {
+                                console.log("success", resp);
+                                var json = JSON.parse(resp.responseText);
+                                console.log(json);
+                                self.disabled = false;
+                                newVersionVersion.textContent = json.name;
+                                newVersionVersion.setAttribute("data-version", json.tag_name);
+                                window.newver = json.tag_name;
+                                newVersionReleaseDate.textContent = "发布日期: " + json.published_at;
+                                newVersionUrl.href = json.html_url;
+                                newVersionDesc.innerHTML = markdown.toHTML(json.body);
+                                checkUpdateText.textContent = "检查更新完成";
+                                progress.style.display = "none";
+                                newVersionBlock.parentNode.style.display = "";
+                                stopProcess = false;
+                                debunced_resize();
+                                for (var i = 0; i < json.assets.length; i++) {
+                                    if (json.assets[i].browser_download_url.indexOf("/InstallerSetup.exe") > -1) {
+                                        window.downloadUrl = json.assets[i].browser_download_url;
+                                        break;
+                                    }
+                                }
+                                if (compareVersion(window.currver, window.newver) > 0) {
+                                    checkUpdateText.textContent = "当前已是最新版本";
+                                    checkUpdateBtn.textContent = "检查更新";
+                                    checkUpdateBtn.setAttribute("data-action", "check");
+                                } else {
+                                    checkUpdateText.textContent = "有新版本可用: " + window.newver;
+                                    checkUpdateBtn.textContent = "下载更新";
+                                    checkUpdateBtn.setAttribute("data-action", "download");
+                                }
+                            }, function(error) {
+                                console.log("error", error);
+                                var json = JSON.parse(error.responseText);
+                                checkUpdateText.textContent = json.message;
+                                progress.style.display = "none";
+                                docLink.style.display = "";
+                                docLink.href = json.documentation_url;
+                                self.disabled = false;
+                            });
+                        } catch (error) {
+                            console.log("error", error);
+                            checkUpdateText.textContent = error.message || e || "Unknown Exception"
+                            progress.style.display = "none";
+                            docLink.style.display = "none";
+                            docLink.href = "";
+                            self.disabled = false;
+                        }
+                    } else if (checkUpdateBtn.getAttribute("data-action") == "download") {
+                        stopProcess = true;
+                        newVersionBlock.parentNode.style.height = "0px";
+                        checkUpdateText.textContent = "正在下载更新...";
+                        progress.style.display = "";
+                        checkUpdateBlock.style.height = checkUpdateBlock.scrollHeight + "px";
+                        var anime = Windows.UI.Animation;
+
+                        function setError(error) {
+                            console.error("download error", error);
+                            checkUpdateText.textContent = "下载失败，请重试: " + error.reason;
+                            progress.style.display = "none";
+                            self.disabled = false;
+                            self.textContent = "重试";
+                        }
+
+                        function setException(e) {
+                            console.error("download exception", e);
+                            checkUpdateText.textContent = "下载出现异常，请重试: " + e.message;
+                        }
+
+                        function setComplete(complete) {
+                            console.log("download complete", complete);
+                            checkUpdateText.textContent = "下载完成，即将进行安装...";
+                        }
+                        progress.value = 0;
+                        anime.loading(checkUpdateLoading, true);
+                        downloadFile(downloadUrl, "E:\\Profiles\\Bruce\\Desktop\\InstallerSetup.exe").done(
+                            function(complete) {
+                                anime.loading(checkUpdateLoading, false);
+                                if (complete.status == "ok") setComplete(complete);
+                                else setError(complete);
+                            },
+                            function(error) {
+                                anime.loading(checkUpdateLoading, false);
+                                setError(error);
+                            },
+                            function(prog) {
+                                console.log("download progress", progress);
+                                progress.value = prog.progress;
+                                checkUpdateText.textContent = "正在下载更新... (" + Math.round(prog.progress) + "%)";
+                            }
+                        )
+                    }
+                });
+            })();
+        </script>
+    </div>
+</body>
+
+</html>

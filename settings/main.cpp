@@ -12,6 +12,7 @@
 #include <rapidjson\document.h>
 #include <rapidjson\writer.h>
 #include <rapidjson\stringbuffer.h>
+#include "download.h"
 #include "module.h"
 #include "themeinfo.h"
 #include "mpstr.h"
@@ -234,7 +235,7 @@ public ref class _I_Bridge_Base
 	protected:
 	_I_String ^str = gcnew _I_String ();
 	_I_InitConfig ^initconfig = gcnew _I_InitConfig ();
-	_I_Storage ^storage;
+	_I_Storage ^storage = gcnew _I_Storage ();
 	public:
 	property _I_String ^String { _I_String ^get () { return str; }}
 	property _I_InitConfig ^Config { _I_InitConfig ^get () { return initconfig; }}
@@ -682,6 +683,7 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form, public IScrip
 		_I_IEFrame ^ieframe;
 		_I_System3 ^sys;
 		_I_VisualElements2 ^ve;
+		_I_Download ^download;
 		public:
 		IBridge (MainHtmlWnd ^wnd): wndinst (wnd), _I_Bridge_Base2 (wnd)
 		{
@@ -689,10 +691,12 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form, public IScrip
 			sys = gcnew _I_System3 (wnd);
 			storage = gcnew _I_Storage ();
 			ve = gcnew _I_VisualElements2 ();
+			download = gcnew _I_Download ();
 		}
 		property _I_IEFrame ^IEFrame { _I_IEFrame ^get () { return ieframe; }}
 		property _I_System3 ^System { _I_System3 ^get () { return sys; }}
 		property _I_VisualElements2 ^VisualElements { _I_VisualElements2 ^get () { return ve; } }
+		property _I_Download ^Download { _I_Download ^get () { return download; }}
 	};
 	protected:
 	property WebBrowser ^WebUI { WebBrowser ^get () { return this->webui; } }
