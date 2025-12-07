@@ -46,7 +46,7 @@
         }, 50);
         setTimeout(function() {
             content.style.display = "";
-            Windows.UI.Animation.runAsync(content, Windows.UI.Animation.Keyframes.SlideInFromBottom);
+            Windows.UI.Animation.runAsync(content, [Windows.UI.Animation.Keyframes.Flyout.toLeft, Windows.UI.Animation.Keyframes.Opacity.visible]);
         }, 100);
     }
     OnLoad.add(ready);

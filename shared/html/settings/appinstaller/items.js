@@ -1,16 +1,18 @@
 (function(global) {
     "use strict";
 
-    function getPage(page, display) {
+    function getPage(tag, page, display) {
         return {
+            tag: tag,
             page: page,
             title: display
         };
     }
     var pages = {
-        general: getPage("appinstaller/general.html", getPublicRes(101)),
-        theme: getPage("appinstaller/theme.html", getPublicRes(102)),
-        update: getPage("update.html", getPublicRes(103))
+        general: getPage("general", "appinstaller/general.html", getPublicRes(101)),
+        theme: getPage("theme", "appinstaller/theme.html", getPublicRes(102)),
+        update: getPage("update", "update.html", getPublicRes(103)),
+        about: getPage("about", "appinstaller/about.html", getPublicRes(124))
     };
     Object.defineProperty(global, "pages", {
         get: function() {
@@ -19,7 +21,7 @@
     });
     Object.defineProperty(global, "guidePage", {
         get: function() {
-            return getPage("appinstaller/guide.html", "Guide");
+            return getPage("guide", "appinstaller/guide.html", "Guide");
         }
     });
 })(this);

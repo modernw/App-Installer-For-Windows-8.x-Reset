@@ -20,13 +20,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\appinstaller\bridge.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\appinstaller\dynarr.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\appinstaller\filepath.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\appinstaller\ieshell.h">
@@ -78,6 +72,15 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="download.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="bridge.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="filepath.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="syncutil.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

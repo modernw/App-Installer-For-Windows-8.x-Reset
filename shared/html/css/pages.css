@@ -1,16 +1,3 @@
-body {
-    margin: 0;
-    width: 100%;
-    height: 100%;
-    -ms-overflow-style: -ms-autohiding-scrollbar;
-    user-select: none;
-    -ms-user-select: none;
-}
-
-body * {
-    -ms-overflow-style: -ms-autohiding-scrollbar;
-}
-
 *,
 button,
 input,
@@ -45,8 +32,24 @@ video,
 canvas,
 form,
 fieldset,
-legend {
+legend,
+.win-type-x-large,
+.win-type-xx-large,
+.font-fix {
     font-family: "Microsoft YaHei", "Segoe UI", "Ebrima", "Nirmala", "Gadugi", "Segoe UI Emoji", "Segoe UI Symbol", "Meiryo", "Leelawadee", "Microsoft JhengHei", "Malgun Gothic", "Estrangelo Edessa", "Microsoft Himalaya", "Microsoft New Tai Lue", "Microsoft PhagsPa", "Microsoft Tai Le", "Microsoft Yi Baiti", "Mongolian Baiti", "MV Boli", "Myanmar Text", "Javanese Text", "Cambria Math";
+}
+
+body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    -ms-overflow-style: -ms-autohiding-scrollbar;
+    user-select: none;
+    -ms-user-select: none;
+}
+
+body * {
+    -ms-overflow-style: -ms-autohiding-scrollbar;
 }
 
 .pagecontainer {

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>App Installer Settings</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script type="text/javascript" src="../../js/module.js"></script>
+    <script type="text/javascript" src="../../js/polyfill-ie.js"></script>
+    <link rel="stylesheet" href="../../libs/winjs/2.0/css/ui-light.css" id="winjs-style">
+    <script type="text/javascript" src="../../libs/winjs/1.0/js/base.js"></script>
+    <script type="text/javascript" src="../../libs/winjs/1.0/js/ui.js"></script>
+    <script type="text/javascript" src="../../js/color.js"></script>
+    <script type="text/javascript" src="../../js/promise.js"></script>
+    <script type="text/javascript" src="../../js/bridge.js"></script>
+    <script type="text/javascript" src="../../js/dpimodes.js"></script>
+    <script type="text/javascript" src="../../js/resources.js"></script>
+    <script type="text/javascript" src="../../js/animation.js"></script>
+    <link rel="stylesheet" href="../../fonts/fonts.css">
+    <script type="text/javascript" src="../../js/event.js"></script>
+    <script type="text/javascript" src="../../js/tileback.js"></script>
+    <script type="text/javascript" src="../../js/load.js"></script>
+    <link rel="stylesheet" type="text/css" href="../../libs/msgbox/msgbox.css">
+    <script type="text/javascript" src="../../libs/msgbox/msgbox.js"></script>
+    <script type="text/javascript" src="../../js/init.js"></script>
+    <link rel="stylesheet" type="text/css" href="../page.css">
+    <link rel="stylesheet" type="text/css" href="../subpage.css">
+    <script type="text/javascript" src="preinit.js"></script>
+    <script type="text/javascript" src="initsame.js"></script>
+    <script>
+        try {
+            window.parent.setItemHighlight("about");
+        } catch (e) {}
+    </script>
+</head>
+
+<body>
+    <div class="pagecontainer full pagesection">
+        <div class="section padding">
+            <h2 data-res-fromfile="publicRes(124)"></h2>
+            <p data-res-fromfile="getFileResPair(exepath, 300)"></p>
+            <p style="white-space: pre-wrap;"><span data-res-fromfile="publicRes (130)"></span>&#9;<span id="current-version"></span></p>
+            <script>
+                try {
+                    var storage = Bridge.External.Storage;
+                    var path = storage.path;
+                    var versionFilePath = path.combine(path.root, "version");
+                    var versionFile = storage.getFile(versionFilePath);
+                    window.currver = versionFile.content;
+                } catch (e) {
+                    window.currver = "0.0.0.1";
+                }
+                document.getElementById("current-version").textContent = window.currver;
+            </script>
+        </div>
+    </div>
+</body>
+
+</html>

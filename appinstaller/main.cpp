@@ -2,6 +2,9 @@
 #include <set>
 #include <msclr/marshal_cppstd.h>
 #include <ShObjIdl.h>
+#include <ShlObj.h>       // KNOWNFOLDERID, SHGetKnownFolderPath
+#include <commdlg.h>      // OPENFILENAME
+#include <comdef.h>       // _com_error
 #include <MsHTML.h>
 #include <ExDisp.h>
 #include <atlbase.h>

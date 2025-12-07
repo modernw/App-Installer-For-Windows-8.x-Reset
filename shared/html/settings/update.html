@@ -33,14 +33,12 @@
         .section .block {
             width: 100%;
             height: auto;
-            margin-top: 10px;
-            margin-bottom: 10px;
             box-sizing: border-box;
             position: relative;
             transition: all 0.5s cubic-bezier(0.1, 0.9, 0.2, 1);
             overflow-x: hidden;
             overflow-y: hidden;
-            background-color: blanchedalmond;
+            /* background-color: blanchedalmond; */
         }
         
         .pagesection .section {
@@ -174,7 +172,77 @@
                     );
                 });
             };
+            var process = Bridge.External.Process;
+            global.createProcessAsync = function(cmdline, filepath, wndshow, runpath) {
+                return new WinJS.Promise(function(resolve, reject) {
+                    var callback = resolve || reject;
+                    process.runAsync(cmdline, filepath, wndshow, runpath, callback);
+                });
+            };
+            global.createProcess = function(cmdline, filepath, wndshow, wait, runpath) {
+                return process.run(cmdline, filepath, wndshow, wait, runpath);
+            };
+            global.wndDisplayMode = {
+                hide: 0, // SW_HIDE
+                showNormal: 1, // SW_SHOWNORMAL / SW_NORMAL
+                showMinimized: 2, // SW_SHOWMINIMIZED
+                showMaximized: 3, // SW_SHOWMAXIMIZED
+                showNoActivate: 4, // SW_SHOWNOACTIVATE
+                show: 5, // SW_SHOW
+                minimize: 6, // SW_MINIMIZE
+                showMinNoActivate: 7, // SW_SHOWMINNOACTIVE
+                showNA: 8, // SW_SHOWNA
+                restore: 9, // SW_RESTORE
+                showDefault: 10, // SW_SHOWDEFAULT
+                forceMinimize: 11 // SW_FORCEMINIMIZE
+            };
+
         })(this);
+    </script>
+    <script>
+        function formatBytesSize(bytes) {
+            if (isNaN(bytes) || bytes < 0) return "0 B";
+
+            var units = ["B", "KB", "MB", "GB", "TB", "PB"];
+            var i = 0;
+            var num = bytes;
+
+            while (num >= 1024 && i < units.length - 1) {
+                num = num / 1024;
+                i++;
+            }
+
+            // 保留 2 位小数，整数不显示小数
+            if (num >= 100) num = Math.round(num);
+            else if (num >= 10) num = Math.round(num * 10) / 10;
+            else num = Math.round(num * 100) / 100;
+
+            return num + " " + units[i];
+        }
+
+        function formatBytesTransmissionSpeed(bps) {
+            if (isNaN(bps) || bps < 0) return "0 B/s";
+
+            var units = ["B/s", "KB/s", "MB/s", "GB/s", "TB/s"];
+            var i = 0;
+            var num = bps;
+
+            while (num >= 1024 && i < units.length - 1) {
+                num = num / 1024;
+                i++;
+            }
+
+            if (num >= 100) num = Math.round(num);
+            else if (num >= 10) num = Math.round(num * 10) / 10;
+            else num = Math.round(num * 100) / 100;
+
+            return num + " " + units[i];
+        }
+    </script>
+    <script>
+        try {
+            window.parent.setItemHighlight("update");
+        } catch (e) {}
     </script>
 </head>
 
@@ -182,8 +250,8 @@
     <div class="pagecontainer full pagesection" style="overflow-y: auto;">
         <div class="section padding">
             <h2 id="section-title" data-res-fromfile="publicRes (103)"></h2>
-            <p id="section-desc" style="white-space: pre-wrap;">在这里，检查一下应用的更新。</p>
-            <p><span data-res-fromfile="publicRes (104)"></span>&#9;<span id="current-version"></span></p>
+            <p id="section-desc" style="white-space: pre-wrap;" data-res-fromfile="publicRes (105)"></p>
+            <p style="white-space: pre-wrap;"><span data-res-fromfile="publicRes (104)"></span>&#9;<span id="current-version"></span></p>
             <script>
                 try {
                     var storage = Bridge.External.Storage;
@@ -199,19 +267,20 @@
         </div>
         <div class="section padding" style="">
             <div class="block" id="check-update-block" style="height: 0px;">
-                <span id="loading-amine">123</span><span id="check-update-text">正在检查更新...</span><br>
+                <span id="loading-amine">123</span><span id="check-update-text" data-res-fromfile="publicRes (106)"></span><br>
                 <progress id="progress" min="0" max="100"></progress>
-                <a target="_blank" id="doc-link">查看文档</a>
+                <a target="_blank" id="doc-link" data-res-fromfile="publicRes (107)"></a>
             </div>
         </div>
-        <div class="section padding" style="margin: 10px 0;"><button id="check-update" data-action="check">检查更新</button></div>
+        <div class="section padding" style="margin: 10px 0;"><button id="check-update" data-action="check" data-res-fromfile="publicRes (115)"></button></div>
         <div class="section padding" style="display: none; overflow-y: auto; height: 0px; transition: all 0.5s cubic-bezier(0.1, 0.9, 0.2, 1); margin-top: 20px;">
-            <h2>获取到的更新信息</h2>
+            <h2 data-res-fromfile="publicRes (108)"></h2>
             <div class="block" id="newversion-details">
-                <h3 id="newversion-title"><span>最新版本</span>: <span id="newversion-version"></span></h3>
+                <h3 id="newversion-title"><span data-res-fromfile="publicRes (109)"></span>: <span id="newversion-version"></span></h3>
                 <span id="newversion-releasedate"></span><br>
-                <a id="newversion-url" target="_blank">查看链接</a><br>
-                <span>发布说明: </span><a id="newversion-desc-showall-hide">展开</a>
+                <a id="newversion-url" target="_blank" data-res-fromfile="publicRes (110)"></a><br>
+                <span data-res-fromfile="publicRes (111)"></span>:
+                <a id="newversion-desc-showall-hide" data-res-fromfile="publicRes (122)"></a>
                 <div id="newversion-desc"></div>
             </div>
         </div>
@@ -255,11 +324,11 @@
                     var parentSection = newVersionBlock.parentNode;
                     if (parentSection.hasAttribute("data-showall") == true) {
                         parentSection.removeAttribute("data-showall");
-                        newVersionDescShowOrHide.textContent = "展开";
+                        newVersionDescShowOrHide.textContent = getPublicRes(122);
                         parentSection.style.height = parentSection.getAttribute("data-height") + "px";
                     } else {
                         parentSection.setAttribute("data-showall", true);
-                        newVersionDescShowOrHide.textContent = "收起";
+                        newVersionDescShowOrHide.textContent = getPublicRes(123);
                         parentSection.style.height = "auto";
                     }
                     debunced_resize();
@@ -270,8 +339,9 @@
                     var self = this;
                     this.disabled = true;
                     progress.removeAttribute("value");
+                    window.parent.setDisabledForOperation(true);
                     if (checkUpdateBtn.getAttribute("data-action") == "check") {
-                        checkUpdateText.textContent = "正在检查更新...";
+                        checkUpdateText.textContent = getPublicRes(106);
                         checkUpdateBlock.style.height = checkUpdateBlock.scrollHeight + "px";
                         progress.style.display = "";
                         docLink.style.display = "none";
@@ -285,17 +355,17 @@
                             WinJS.xhr({
                                 url: "https://api.github.com/repos/modernw/App-Installer-For-Windows-8.x-Reset/releases/latest"
                             }).done(function(resp) {
-                                console.log("success", resp);
+                                // console.log("success", resp);
                                 var json = JSON.parse(resp.responseText);
-                                console.log(json);
+                                // console.log(json);
                                 self.disabled = false;
                                 newVersionVersion.textContent = json.name;
                                 newVersionVersion.setAttribute("data-version", json.tag_name);
                                 window.newver = json.tag_name;
-                                newVersionReleaseDate.textContent = "发布日期: " + json.published_at;
+                                newVersionReleaseDate.textContent = getPublicRes(112) + ": " + json.published_at;
                                 newVersionUrl.href = json.html_url;
                                 newVersionDesc.innerHTML = markdown.toHTML(json.body);
-                                checkUpdateText.textContent = "检查更新完成";
+                                checkUpdateText.textContent = getPublicRes(113);
                                 progress.style.display = "none";
                                 newVersionBlock.parentNode.style.display = "";
                                 stopProcess = false;
@@ -303,63 +373,86 @@
                                 for (var i = 0; i < json.assets.length; i++) {
                                     if (json.assets[i].browser_download_url.indexOf("/InstallerSetup.exe") > -1) {
                                         window.downloadUrl = json.assets[i].browser_download_url;
+                                        window.fileDigest = json.assets[i].digest;
                                         break;
                                     }
                                 }
-                                if (compareVersion(window.currver, window.newver) > 0) {
-                                    checkUpdateText.textContent = "当前已是最新版本";
-                                    checkUpdateBtn.textContent = "检查更新";
+                                if (compareVersion(window.currver, window.newver) >= 0) {
+                                    checkUpdateText.textContent = getPublicRes(114);
+                                    checkUpdateBtn.textContent = getPublicRes(115);
                                     checkUpdateBtn.setAttribute("data-action", "check");
                                 } else {
-                                    checkUpdateText.textContent = "有新版本可用: " + window.newver;
-                                    checkUpdateBtn.textContent = "下载更新";
+                                    checkUpdateText.textContent = Bridge.String.format(getPublicRes(116), window.newver);
+                                    checkUpdateBtn.textContent = getPublicRes(118);
                                     checkUpdateBtn.setAttribute("data-action", "download");
                                 }
+                                window.parent.setDisabledForOperation(false);
                             }, function(error) {
-                                console.log("error", error);
+                                // console.log("error", error);
                                 var json = JSON.parse(error.responseText);
                                 checkUpdateText.textContent = json.message;
                                 progress.style.display = "none";
                                 docLink.style.display = "";
                                 docLink.href = json.documentation_url;
                                 self.disabled = false;
+                                window.parent.setDisabledForOperation(false);
                             });
                         } catch (error) {
-                            console.log("error", error);
+                            //  console.log("error", error);
                             checkUpdateText.textContent = error.message || e || "Unknown Exception"
                             progress.style.display = "none";
                             docLink.style.display = "none";
                             docLink.href = "";
                             self.disabled = false;
+                            window.parent.setDisabledForOperation(false);
                         }
                     } else if (checkUpdateBtn.getAttribute("data-action") == "download") {
+                        var storage = Bridge.External.Storage;
+                        var path = storage.path;
                         stopProcess = true;
                         newVersionBlock.parentNode.style.height = "0px";
-                        checkUpdateText.textContent = "正在下载更新...";
+                        checkUpdateText.textContent = getPublicRes(117);
                         progress.style.display = "";
                         checkUpdateBlock.style.height = checkUpdateBlock.scrollHeight + "px";
                         var anime = Windows.UI.Animation;
+                        var strutil = Bridge.External.String;
 
                         function setError(error) {
-                            console.error("download error", error);
-                            checkUpdateText.textContent = "下载失败，请重试: " + error.reason;
+                            //console.error("download error", error);
+                            checkUpdateText.textContent = strutil.format(getPublicRes(119), error.reason);
                             progress.style.display = "none";
                             self.disabled = false;
                             self.textContent = "重试";
+                            window.parent.setDisabledForOperation(false);
+                            checkUpdateBlock.style.height = checkUpdateBlock.scrollHeight + "px";
                         }
 
                         function setException(e) {
-                            console.error("download exception", e);
-                            checkUpdateText.textContent = "下载出现异常，请重试: " + e.message;
+                            //console.error("download exception", e);
+                            checkUpdateText.textContent = strutil.format(getPublicRes(119), e.message);
+                            window.parent.setDisabledForOperation(false);
+                            checkUpdateBlock.style.height = checkUpdateBlock.scrollHeight + "px";
                         }
 
                         function setComplete(complete) {
-                            console.log("download complete", complete);
-                            checkUpdateText.textContent = "下载完成，即将进行安装...";
+                            // console.log("download complete", complete);
+                            checkUpdateText.textContent = getPublicRes(120);
+                            var cmdline = strutil.format("\"{0}\" /passive", tempfile);
+                            var appinstallerpath = path.combine(path.root, "appinstaller.exe");
+                            var settingsapppath = path.combine(path.root, "settings.exe");
+                            window.parent.setDisabledForOperation(false);
+                            var process = Bridge.External.Process;
+                            process.kill(appinstallerpath, true, false);
+                            checkUpdateBlock.style.height = checkUpdateBlock.scrollHeight + "px";
+                            createProcess(cmdline, tempfile, wndDisplayMode.showNormal, false);
+                            process.kill(settingsapppath, true, false);
+                            //Bridge.External.closeWindow();
                         }
                         progress.value = 0;
                         anime.loading(checkUpdateLoading, true);
-                        downloadFile(downloadUrl, "E:\\Profiles\\Bruce\\Desktop\\InstallerSetup.exe").done(
+                        var tempdir = path.expand("%temp%");
+                        var tempfile = path.combine(tempdir, "InstallerSetup.exe");
+                        downloadFile(downloadUrl, tempfile).done(
                             function(complete) {
                                 anime.loading(checkUpdateLoading, false);
                                 if (complete.status == "ok") setComplete(complete);
@@ -370,9 +463,10 @@
                                 setError(error);
                             },
                             function(prog) {
-                                console.log("download progress", progress);
+                                //console.log("download progress", prog);
                                 progress.value = prog.progress;
-                                checkUpdateText.textContent = "正在下载更新... (" + Math.round(prog.progress) + "%)";
+                                checkUpdateText.textContent = strutil.format(getPublicRes(121), Math.floor(prog.progress), formatBytesSize(prog.received), formatBytesSize(prog.total));
+                                checkUpdateBlock.style.height = checkUpdateBlock.scrollHeight + "px";
                             }
                         )
                     }

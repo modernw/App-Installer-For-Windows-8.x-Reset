@@ -12,6 +12,8 @@
         }, 50);
         var content = guide.querySelector(".main");
         var list = slide.querySelector("ul");
+        var backbtn = slide.querySelector("#back");
+        var title = slide.querySelector("#apptitle");
         list.innerHTML = "";
         var items = pages;
         var tags = Object.keys(items);
@@ -21,8 +23,10 @@
             var item = items[tag];
             var li = document.createElement("li");
             li.setAttribute("data-page", item.page);
+            li.setAttribute("data-tag", item.tag);
             li.innerHTML = item.title;
             eventutil.addEvent(li, "click", function() {
+                if (li.hasAttribute("data-require-disabled")) return;
                 content.style.display = "none";
                 for (var j = 0; j < list.children.length; j++) {
                     var child = list.children[j];
@@ -32,13 +36,42 @@
                 content.src = this.getAttribute("data-page");
                 setTimeout(function() {
                     content.style.display = "";
-                    Windows.UI.Animation.runAsync(content, Windows.UI.Animation.Keyframes.SlideInFromBottom);
+                    Windows.UI.Animation.runAsync(content, [Windows.UI.Animation.Keyframes.Flyout.toLeft, Windows.UI.Animation.Keyframes.Opacity.visible]);
                 }, 0);
                 this.classList.add("selected");
             });
             list.appendChild(li);
         }
         content.src = guidePage.page;
+        global.setDisabledForOperation = function(disabled) {
+            var list = document.querySelector("#settingpage .guide aside ul");
+            for (var i = 0; i < list.children.length; i++) {
+                var child = list.children[i];
+                if (disabled) {
+                    child.setAttribute("data-require-disabled", "true");
+                } else {
+                    child.removeAttribute("data-require-disabled");
+                }
+            }
+            if (disabled) {
+                backbtn.disabled = true;
+                title.style.marginLeft = backbtn.style.marginLeft;
+            } else {
+                backbtn.disabled = false;
+                title.style.marginLeft = "";
+            }
+        }
+        global.setItemHighlight = function(tag) {
+            var list = document.querySelector("#settingpage .guide aside ul");
+            for (var i = 0; i < list.children.length; i++) {
+                var child = list.children[i];
+                if (Bridge.NString.equals(child.getAttribute("data-tag"), tag)) {
+                    if (!child.classList.contains("selected")) child.classList.add("selected");
+                } else {
+                    if (child.classList.contains("selected")) child.classList.remove("selected");
+                }
+            }
+        }
     }
     OnLoad.add(ready);
 })(this);

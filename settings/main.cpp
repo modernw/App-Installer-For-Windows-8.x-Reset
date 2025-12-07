@@ -2,6 +2,10 @@
 #include <set>
 #include <msclr/marshal_cppstd.h>
 #include <ShObjIdl.h>
+#include <ShlObj.h>       // KNOWNFOLDERID, SHGetKnownFolderPath
+#include <commdlg.h>      // OPENFILENAME
+#include <comdef.h>       // _com_error
+#include <winhttp.h>      // WinHTTP
 #include <MsHTML.h>
 #include <ExDisp.h>
 #include <atlbase.h>
@@ -9,10 +13,12 @@
 #include <comdef.h>
 #include <vcclr.h>
 #include <map>
+#include <commdlg.h>
 #include <rapidjson\document.h>
 #include <rapidjson\writer.h>
 #include <rapidjson\stringbuffer.h>
-#include "download.h"
+#include <tlhelp32.h>
+#include <Psapi.h>
 #include "module.h"
 #include "themeinfo.h"
 #include "mpstr.h"
@@ -20,6 +26,7 @@
 #include "vemani.h"
 #include "ieshell.h"
 #include "localeex.h"
+#include "download.h"
 #include "bridge.h"
 #include "rctools.h"
 #include "nstring.h"
@@ -45,6 +52,7 @@ struct iconhandle
 
 LPCWSTR g_lpAppId = L"WindowsModern.PracticalToolsProject!Settings";
 LPCWSTR g_idInVe = L"Settings";
+LPCWSTR g_wndclass = L"Win32_WebUI_WindowsModern";
 iconhandle g_hIconMain (LoadRCIcon (IDI_ICON_MAIN));
 initfile g_initfile (CombinePath (GetProgramRootDirectoryW (), L"config.ini"));
 vemanifest g_vemani (
@@ -61,6 +69,73 @@ ref class MainHtmlWnd;
 msclr::gcroot <MainHtmlWnd ^> g_mainwnd;
 std::wstring g_lastfile;
 inline std::wstring ToStdWString (const std::wstring &str) { return str; }
+std::string GetSuitableLanguageValue (const std::map <std::nstring, std::string> &map, const std::nstring &localename)
+{
+	for (auto &it : map) if (it.first == localename) return it.second;
+	for (auto &it : map) if (LocaleNameCompare (pugi::as_wide (it.first), pugi::as_wide (localename))) return it.second;
+	for (auto &it : map) if (IsNormalizeStringEquals (GetLocaleRestrictedCodeA (it.first), GetLocaleRestrictedCodeA (localename))) return it.second;
+	for (auto &it : map) if (LocaleNameCompare (pugi::as_wide (GetLocaleRestrictedCodeA (it.first)), pugi::as_wide (GetLocaleRestrictedCodeA (localename)))) return it.second;
+	return "";
+}
+std::string GetSuitableLanguageValue (const std::map <std::nstring, std::string> &map)
+{
+	if (map.empty ()) return "";
+	std::string ret = GetSuitableLanguageValue (map, pugi::as_utf8 (GetComputerLocaleCodeW ()));
+	if (ret.empty ()) ret = GetSuitableLanguageValue (map, "en-US");
+	if (ret.empty ()) ret = map.begin ()->second;
+	return ret;
+}
+struct xmlstrres
+{
+	pugi::xml_document doc;
+	bool isvalid = false;
+	void destroy ()
+	{
+		if (isvalid) doc.reset ();
+		isvalid = false;
+	}
+	bool create (const std::wstring &filepath)
+	{
+		destroy ();
+		auto res = doc.load_file (filepath.c_str ());
+		return isvalid = res;
+	}
+	xmlstrres (const std::wstring &filepath) { create (filepath); }
+	~xmlstrres () { destroy (); }
+	std::string get (const std::string &id) const
+	{
+		auto root = doc.first_child ();
+		auto nodes = root.children ();
+		for (auto &it : nodes)
+		{
+			if (IsNormalizeStringEquals (std::string (it.attribute ("id").as_string ()), id))
+			{
+				auto strings = it.children ();
+				std::map <std::nstring, std::string> lang_value;
+				for (auto &sub : strings)
+				{
+					std::nstring lang = sub.attribute ("name").as_string ();
+					if (!lang.empty ()) lang_value [lang] = sub.text ().get ();
+				}
+				return GetSuitableLanguageValue (lang_value);
+			}
+		}
+		return "";
+	}
+	std::wstring get (const std::wstring &id) const { return pugi::as_wide (get (pugi::as_utf8 (id))); }
+	std::wstring operator [] (const std::wstring &id) const { return get (id); }
+	std::wstring operator [] (const std::wstring &id) { return get (id); }
+	std::string operator [] (const std::string &id) const { return get (id); }
+	std::string operator [] (const std::string &id) { return get (id); }
+};
+xmlstrres g_winjspri (CombinePath (GetProgramRootDirectoryW (), L"locale\\resources.xml"));
+struct
+{
+	bool jump = false;
+	std::wstring section = L"";
+	std::wstring item = L"";
+	std::wstring arg = L"";
+};
 
 size_t ExploreFile (HWND hParent, std::vector <std::wstring> &results, LPWSTR lpFilter = L"Windows Store App Package (*.appx; *.appxbundle)\0*.appx;*.appxbundle", DWORD dwFlags = OFN_EXPLORER | OFN_ALLOWMULTISELECT | OFN_PATHMUSTEXIST, const std::wstring &swWndTitle = std::wstring (L"Please select the file(-s): "), const std::wstring &swInitDir = GetFileDirectoryW (g_lastfile))
 {
@@ -407,6 +482,104 @@ public ref class _I_IEFrame_Base
 		return "{}";
 	}
 };
+int ExecuteProgram (
+	const std::wstring &cmdline,
+	const std::wstring &file,
+	int wndshowmode,
+	bool wait,
+	const std::wstring &execdir = L"")
+{
+	STARTUPINFOW si;
+	PROCESS_INFORMATION pi;
+	ZeroMemory (&si, sizeof (si));
+	ZeroMemory (&pi, sizeof (pi));
+	si.cb = sizeof (si);
+	si.dwFlags = STARTF_USESHOWWINDOW;
+	si.wShowWindow = static_cast <WORD> (wndshowmode);
+	std::vector <WCHAR> buf (cmdline.capacity () + 1);
+	wcscpy (buf.data (), cmdline.c_str ());
+	LPCWSTR workdir = IsNormalizeStringEmpty (execdir) ? NULL : execdir.c_str ();
+	BOOL ok = CreateProcessW (
+		IsNormalizeStringEmpty (file) ? NULL : file.c_str (),   // 应用程序路径
+		IsNormalizeStringEmpty (cmdline) ? NULL : buf.data (),         // 命令行必须可写
+		NULL,                                 // 进程安全属性
+		NULL,                                 // 线程安全属性
+		FALSE,                                // 不继承句柄
+		0,                                    // 创建标志
+		NULL,                                 // 使用父进程环境变量
+		workdir,                              // 工作目录
+		&si,
+		&pi
+	);
+	if (!ok) return static_cast <int> (GetLastError ());
+	if (wait) WaitForSingleObject (pi.hProcess, INFINITE);
+	CloseHandle (pi.hThread);
+	CloseHandle (pi.hProcess);
+	return 0;
+}
+bool KillProcessByFilePath (
+	const std::wstring &filepath,
+	bool multiple = false,
+	bool isonlyname = false
+)
+{
+	if (filepath.empty ()) return false;
+	std::wstring targetPath = filepath;
+	std::wstring targetName;
+	if (isonlyname)
+	{
+		size_t pos = filepath.find_last_of (L"\\/");
+		if (pos != std::wstring::npos) targetName = filepath.substr (pos + 1);
+		else targetName = filepath;  // 直接是文件名
+	}
+	HANDLE hSnap = CreateToolhelp32Snapshot (TH32CS_SNAPPROCESS, 0);
+	if (hSnap == INVALID_HANDLE_VALUE) return false;
+	PROCESSENTRY32W pe;
+	pe.dwSize = sizeof (pe);
+	bool killed = false;
+	if (Process32FirstW (hSnap, &pe))
+	{
+		do
+		{
+			bool match = false;
+			if (isonlyname)
+			{
+				if (PathEquals (pe.szExeFile, targetName.c_str ())) match = true;
+			}
+			else
+			{
+				// 比较完整路径，需要 QueryFullProcessImageNameW
+				HANDLE hProc = OpenProcess (PROCESS_QUERY_INFORMATION | PROCESS_TERMINATE, FALSE, pe.th32ProcessID);
+				if (hProc)
+				{
+					wchar_t exePath [MAX_PATH] = {0};
+					DWORD sz = MAX_PATH;
+
+					if (QueryFullProcessImageNameW (hProc, 0, exePath, &sz))
+					{
+						if (_wcsicmp (exePath, targetPath.c_str ()) == 0)
+							match = true;
+					}
+					CloseHandle (hProc);
+				}
+			}
+			if (match)
+			{
+				HANDLE hProc = OpenProcess (PROCESS_TERMINATE, FALSE, pe.th32ProcessID);
+				if (hProc)
+				{
+					TerminateProcess (hProc, 1);
+					CloseHandle (hProc);
+					killed = true;
+				}
+				if (!multiple) break;
+			}
+
+		} while (Process32NextW (hSnap, &pe));
+	}
+	CloseHandle (hSnap);
+	return killed;
+}
 
 [ComVisible (true)]
 public ref class SplashForm: public System::Windows::Forms::Form
@@ -679,11 +852,85 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form, public IScrip
 			}
 			property _I_UI2 ^UI { _I_UI2 ^get () { return ui2; } }
 		};
+		[ComVisible (true)]
+		ref class _I_Process
+		{
+			public:
+			using String = System::String;
+			ref class ProcessWorker
+			{
+				_I_Process ^parent;
+				public:
+				ProcessWorker (_I_Process ^parent): parent (parent) {}
+				ProcessWorker (): parent (gcnew _I_Process ()) {}
+				String ^cmdline = String::Empty;
+				String ^filepath = String::Empty;
+				int wndtype = SW_NORMAL;
+				String ^runpath = String::Empty;
+				Object ^callback = nullptr;
+				void Work ()
+				{
+					int ret = parent->Run (cmdline, filepath, wndtype, true, runpath);
+					if (callback)
+					{
+						try
+						{
+							callback->GetType ()->InvokeMember (
+								"call",
+								BindingFlags::InvokeMethod,
+								nullptr,
+								callback,
+								gcnew array<Object^>{ 1, ret }
+							);
+						}
+						catch (...) {}
+					}
+				}
+			};
+			public:
+			int Run (String ^cmdline, String ^filepath, int wndtype, bool wait, String ^runpath)
+			{
+				return ExecuteProgram (
+					MPStringToStdW (cmdline),
+					MPStringToStdW (filepath),
+					wndtype,
+					wait,
+					MPStringToStdW (runpath)
+				);
+			}
+			void RunAsync (String ^cmdline, String ^filepath, int wndtype, String ^runpath, Object ^callback)
+			{
+				auto worker = gcnew ProcessWorker (this);
+				worker->cmdline = cmdline;
+				worker->filepath = filepath;
+				worker->wndtype = wndtype;
+				worker->runpath = runpath;
+				worker->callback = callback;
+				Thread^ th = gcnew Thread (gcnew ThreadStart (worker, &ProcessWorker::Work));
+				th->IsBackground = true;
+				th->Start ();
+			}
+			bool Kill (String ^filename, bool allproc, bool onlyname) { return KillProcessByFilePath (MPStringToStdW (filename), allproc, onlyname); }
+		};
+		[ComVisible (true)]
+		ref class _I_ResourcePri
+		{
+			public:
+			using String = System::String;
+			String ^GetString (String ^uri) 
+			{ 
+				auto ret = g_winjspri.get (MPStringToStdW (uri));
+				auto retstr = CStringToMPString (ret);
+				return retstr;
+			}
+		};
 		private:
 		_I_IEFrame ^ieframe;
 		_I_System3 ^sys;
 		_I_VisualElements2 ^ve;
 		_I_Download ^download;
+		_I_Process ^proc;
+		_I_ResourcePri ^winjs_res;
 		public:
 		IBridge (MainHtmlWnd ^wnd): wndinst (wnd), _I_Bridge_Base2 (wnd)
 		{
@@ -692,17 +939,30 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form, public IScrip
 			storage = gcnew _I_Storage ();
 			ve = gcnew _I_VisualElements2 ();
 			download = gcnew _I_Download ();
+			proc = gcnew _I_Process ();
+			winjs_res = gcnew _I_ResourcePri ();
 		}
 		property _I_IEFrame ^IEFrame { _I_IEFrame ^get () { return ieframe; }}
 		property _I_System3 ^System { _I_System3 ^get () { return sys; }}
 		property _I_VisualElements2 ^VisualElements { _I_VisualElements2 ^get () { return ve; } }
 		property _I_Download ^Download { _I_Download ^get () { return download; }}
+		property _I_Process ^Process { _I_Process ^get () { return proc; }}
+		property _I_ResourcePri ^WinJsStringRes { _I_ResourcePri ^get () { return winjs_res; }}
+		void CloseWindow ()
+		{
+			if (wndinst && wndinst->IsHandleCreated) wndinst->Close ();
+		}
 	};
 	protected:
 	property WebBrowser ^WebUI { WebBrowser ^get () { return this->webui; } }
 	property SplashForm ^SplashScreen { SplashForm ^get () { return this->splash; } }
 	property int DPIPercent { int get () { return GetDPI (); }}
 	property double DPI { double get () { return DPIPercent * 0.01; }}
+	virtual void OnHandleCreated (EventArgs ^e) override
+	{
+		::SetClassLongPtrW ((HWND)this->Handle.ToPointer (), GCLP_HBRBACKGROUND, (LONG_PTR)g_wndclass);
+		Form::OnHandleCreated (e);
+	}
 	void InitSize ()
 	{
 		unsigned ww = 0, wh = 0;
@@ -1009,10 +1269,71 @@ HRESULT SetCurrentAppUserModelID (PCWSTR appID)
 	catch (...) { return E_FAIL; }
 	return E_FAIL;
 }
+
+void SetProgramSingleInstance (
+	const std::wstring &mutexName,
+	std::function <void ()> repeatCallback = nullptr,
+	bool focusMain = true)
+{
+	HANDLE hMutex = CreateMutexW (NULL, TRUE, mutexName.c_str ());
+	if (hMutex == NULL) return;
+	destruct _mutexFree ([&] () { CloseHandle (hMutex); });
+	if (GetLastError () != ERROR_ALREADY_EXISTS) return;
+	if (repeatCallback) repeatCallback ();
+	wchar_t pathBuf [MAX_PATH] = {0};
+	GetModuleFileNameW (NULL, pathBuf, MAX_PATH);
+	std::wstring exeName = pathBuf;
+	exeName = exeName.substr (exeName.find_last_of (L"\\/") + 1);
+	DWORD existingPid = 0;
+	HANDLE snap = CreateToolhelp32Snapshot (TH32CS_SNAPPROCESS, 0);
+	if (snap != INVALID_HANDLE_VALUE)
+	{
+		PROCESSENTRY32W pe = {sizeof (pe)};
+		if (Process32FirstW (snap, &pe))
+		{
+			do {
+				if (_wcsicmp (pe.szExeFile, exeName.c_str ()) == 0 &&
+					pe.th32ProcessID != GetCurrentProcessId ())
+				{
+					existingPid = pe.th32ProcessID;
+					break;
+				}
+			} while (Process32NextW (snap, &pe));
+		}
+		CloseHandle (snap);
+	}
+	HWND targetHwnd = NULL;
+	if (existingPid)
+	{
+		EnumWindows ([] (HWND hwnd, LPARAM lParam) -> BOOL {
+			DWORD pid = 0;
+			GetWindowThreadProcessId (hwnd, &pid);
+			if (pid == (DWORD)lParam && IsWindowVisible (hwnd))
+			{
+				*((HWND *)(&lParam)) = hwnd;
+				return FALSE;
+			}
+			return TRUE;
+		}, (LPARAM)&targetHwnd);
+	}
+	if (focusMain && targetHwnd)
+	{
+		if (IsIconic (targetHwnd)) ShowWindow (targetHwnd, SW_RESTORE);
+		DWORD thisThread = GetCurrentThreadId ();
+		DWORD wndThread = GetWindowThreadProcessId (targetHwnd, NULL);
+		AttachThreadInput (thisThread, wndThread, TRUE);
+		SetActiveWindow (targetHwnd);
+		SetForegroundWindow (targetHwnd);
+		AttachThreadInput (thisThread, wndThread, FALSE);
+		BringWindowToTop (targetHwnd);
+	}
+	ExitProcess (0);
+}
 [STAThread]
 int APIENTRY wWinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
 {
 	SetCurrentProcessExplicitAppUserModelID (g_lpAppId);
+	SetProgramSingleInstance (g_lpAppId);
 	SetProcessDPIAware ();
 	{
 		// 设置当前目录为程序所在目录

@@ -128,3 +128,63 @@
         }
     }
 })(this);
+// attachEvent / detachEvent polyfill for IE11+
+(function() {
+    if (!Element.prototype.attachEvent) {
+        Element.prototype.attachEvent = function(eventName, handler) {
+            // IE attachEvent 的事件名需要 "on" 前缀
+            eventName = eventName.toLowerCase();
+
+            // 包装函数，模仿旧 IE 的 event 对象
+            var wrapper = function(e) {
+                e = e || window.event;
+
+                // 兼容 IE 风格 event 属性
+                e.srcElement = e.target || this;
+                e.returnValue = true;
+                e.cancelBubble = false;
+
+                // 模拟 IE 的防止默认行为
+                Object.defineProperty(e, "cancelBubble", {
+                    set: function(val) {
+                        if (val) e.stopPropagation();
+                    }
+                });
+                Object.defineProperty(e, "returnValue", {
+                    set: function(val) {
+                        if (val === false) e.preventDefault();
+                    }
+                });
+
+                // 调用原事件处理函数
+                return handler.call(this, e);
+            };
+
+            // 存储 handler 映射，供 detachEvent 用
+            if (!this._attachEventWrappers) this._attachEventWrappers = {};
+            if (!this._attachEventWrappers[eventName]) this._attachEventWrappers[eventName] = [];
+
+            this._attachEventWrappers[eventName].push({
+                original: handler,
+                wrapped: wrapper
+            });
+
+            this.addEventListener(eventName.replace(/^on/, ""), wrapper, false);
+        };
+
+        Element.prototype.detachEvent = function(eventName, handler) {
+            eventName = eventName.toLowerCase();
+            if (!this._attachEventWrappers || !this._attachEventWrappers[eventName]) return;
+
+            var list = this._attachEventWrappers[eventName];
+
+            for (var i = 0; i < list.length; i++) {
+                if (list[i].original === handler) {
+                    this.removeEventListener(eventName.replace(/^on/, ""), list[i].wrapped, false);
+                    list.splice(i, 1);
+                    break;
+                }
+            }
+        };
+    }
+})();

@@ -179,6 +179,12 @@ aside .container ul li:focus {
     border: 1px solid white;
 }
 
+aside .container ul li:disabled,
+aside .container ul li[data-require-disabled] {
+    background-color: rgba(0, 0, 0, 0);
+    color: rgba(0, 0, 0, 0.5);
+}
+
 #back:disabled {
     display: none;
 }

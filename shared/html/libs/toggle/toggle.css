@@ -1,0 +1,209 @@
+.toggle-switch {
+    box-sizing: border-box;
+    border: 2px solid rgb(166, 166, 166);
+    width: 50px;
+    height: 19px;
+    max-width: 50px !important;
+    max-height: 19px !important;
+    position: relative;
+    display: block;
+}
+
+.toggle-switch>input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    z-index: 2;
+    cursor: pointer;
+}
+
+.toggle-background {
+    background-color: rgb(166, 166, 166);
+    position: absolute;
+    top: 1px;
+    left: 1px;
+    right: 1px;
+    bottom: 1px;
+    z-index: 1;
+    transition: all 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
+}
+
+.toggle-switch>input[type="checkbox"]:disabled {
+    cursor: not-allowed;
+}
+
+.toggle-switch>input[type="checkbox"]:disabled+.toggle-background {
+    background-color: rgb(224, 224, 224);
+}
+
+.toggle-switch>input[type="checkbox"]:disabled~.toggle-switch-border {
+    border-color: rgb(204, 204, 204);
+}
+
+.toggle-switch>input[type="checkbox"]:disabled~.toggle-switch {
+    border-color: rgb(204, 204, 204);
+}
+
+.toggle-switch:hover>input[type="checkbox"]:not(:disabled):not(:checked)+.toggle-background {
+    background-color: rgb(181, 181, 181);
+}
+
+.toggle-switch:active>input[type="checkbox"]:not(:disabled):not(:checked)+.toggle-background {
+    background-color: rgb(189, 189, 189);
+}
+
+.toggle-switch-border {
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border: 2px solid rgb(166, 166, 166);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.toggle-background:after {
+    position: absolute;
+    content: "";
+    height: 19px;
+    width: 12px;
+    background-color: black;
+    transition: transform 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
+    top: -3px;
+    left: -3px;
+}
+
+.toggle-switch>input[type="checkbox"]:checked+.toggle-background:after {
+    transform: translateX(38px);
+}
+
+.toggle-background:before {
+    position: absolute;
+    content: "";
+    width: 0;
+    height: 100%;
+    background-color: rgb(70, 23, 181);
+    transition: all 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
+    top: 0px;
+    left: 0px;
+}
+
+.toggle-switch>input[type="checkbox"]:checked+.toggle-background:before {
+    width: 100%;
+}
+
+.toggle-switch:hover>input:checked:not(:disabled)+.toggle-background:before {
+    background-color: rgb(90, 43, 202);
+}
+
+.toggle-switch:active>input:checked:not(:disabled)+.toggle-background:before {
+    background-color: rgb(143, 100, 244);
+}
+
+.toggle-showstatus {
+    margin-left: 90px;
+}
+
+.toggle-status {
+    position: absolute;
+    z-index: 4;
+    height: 100%;
+    width: 0px;
+}
+
+.toggle-status:before {
+    content: "Off";
+    position: absolute;
+    left: -92px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-weight: bold;
+    color: black;
+    font-family: "Microsoft YaHei", "Segoe UI", "Ebrima", "Nirmala", "Gadugi", "Segoe UI Emoji", "Segoe UI Symbol", "Meiryo", "Leelawadee", "Microsoft JhengHei", "Malgun Gothic", "Estrangelo Edessa", "Microsoft Himalaya", "Microsoft New Tai Lue", "Microsoft PhagsPa", "Microsoft Tai Le", "Microsoft Yi Baiti", "Mongolian Baiti", "MV Boli", "Myanmar Text", "Javanese Text", "Cambria Math";
+}
+
+label.toggle-status:has(input:checked)::before {
+    content: "On";
+}
+
+.toggle-switch>input:checked~.toggle-status::before {
+    content: "On";
+}
+
+
+/* Dark Mode */
+
+.toggle-switch-dark {
+    border: 2px solid rgb(87, 29, 222);
+}
+
+.toggle-background-dark {
+    background-color: rgb(94, 43, 213);
+}
+
+.toggle-switch-dark>input[type="checkbox"]:disabled:not(:checked)+.toggle-background-dark {
+    background-color: rgb(97, 69, 160);
+}
+
+.toggle-switch-dark>input[type="checkbox"]:disabled:checked+.toggle-background-dark {
+    background-color: rgb(81, 81, 81);
+}
+
+.toggle-switch-dark>input[type="checkbox"]:disabled~.toggle-switch-border-dark {
+    border-color: rgb(79, 26, 204);
+}
+
+.toggle-switch-dark>input[type="checkbox"]:disabled~.toggle-switch-dark {
+    border-color: rgb(79, 26, 204);
+}
+
+.toggle-switch-dark:hover>input[type="checkbox"]:not(:disabled):not(:checked)+.toggle-background-dark {
+    background-color: rgb(120, 83, 207);
+}
+
+.toggle-switch-dark:active>input[type="checkbox"]:not(:disabled):not(:checked)+.toggle-background-dark {
+    background-color: rgb(143, 100, 244);
+}
+
+.toggle-switch-border-dark {
+    border: 2px solid rgb(87, 29, 222);
+}
+
+.toggle-background-dark:after {
+    background-color: white;
+}
+
+.toggle-switch-dark>input:disabled+.toggle-background:after {
+    background-color: rgb(87, 29, 222);
+}
+
+.toggle-background-dark:before {
+    background-color: rgb(70, 23, 181);
+}
+
+.toggle-switch-dark:hover>input:checked:not(:disabled)+.toggle-background:before {
+    background-color: rgb(90, 43, 202);
+}
+
+.toggle-switch-dark:active>input:checked:not(:disabled)+.toggle-background:before {
+    background-color: rgb(143, 100, 244);
+}
+
+.toggle-switch-dark>input:checked:disabled+.toggle-background:before {
+    background-color: rgb(81, 81, 81);
+}
+
+.toggle-switch-dark:hover>input:checked:disabled+.toggle-background:before {
+    background-color: rgb(81, 81, 81);
+}
+
+.toggle-switch-dark:active>input:checked:disabled+.toggle-background:before {
+    background-color: rgb(81, 81, 81);
+}
+
+.toggle-status-dark:before {
+    color: white;
+}

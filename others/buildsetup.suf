@@ -94,7 +94,7 @@
 <InstallOrder>1000</InstallOrder>
 <SCStartRoot>0</SCStartRoot>
 <SCStartProgs>0</SCStartProgs>
-<SCAppFld>1</SCAppFld>
+<SCAppFld>0</SCAppFld>
 <SCStartup>0</SCStartup>
 <SCDesk>0</SCDesk>
 <SCQLaunch>0</SCQLaunch>
@@ -678,7 +678,7 @@
 <InstallOrder>1000</InstallOrder>
 <SCStartRoot>0</SCStartRoot>
 <SCStartProgs>0</SCStartProgs>
-<SCAppFld>1</SCAppFld>
+<SCAppFld>0</SCAppFld>
 <SCStartup>0</SCStartup>
 <SCDesk>0</SCDesk>
 <SCQLaunch>0</SCQLaunch>
@@ -807,12 +807,729 @@
 <CRC>0</CRC>
 <StoreOnly>0</StoreOnly>
 </FileData>
+<FileData>
+<FldRef>0</FldRef>
+<FullName>E:\Profiles\Bruce\Documents\Visual Studio 2015\Projects\AppInstallerReset\Release\shortcut.exe</FullName>
+<FileName>shortcut.exe</FileName>
+<Source>E:\Profiles\Bruce\Documents\Visual Studio 2015\Projects\AppInstallerReset\Release</Source>
+<Ext>exe</Ext>
+<RTSource>档案</RTSource>
+<Desc/>
+<Recurse>1</Recurse>
+<MatchMode>0</MatchMode>
+<Dest>%AppFolder%</Dest>
+<Overwrite>1</Overwrite>
+<Backup>0</Backup>
+<Protect>0</Protect>
+<InstallOrder>1000</InstallOrder>
+<SCStartRoot>0</SCStartRoot>
+<SCStartProgs>0</SCStartProgs>
+<SCAppFld>0</SCAppFld>
+<SCStartup>0</SCStartup>
+<SCDesk>0</SCDesk>
+<SCQLaunch>0</SCQLaunch>
+<SCStartPinOption>0</SCStartPinOption>
+<SCCust>0</SCCust>
+<CustSCPath/>
+<SCDesc>shortcut</SCDesc>
+<SCComment/>
+<SCArgs/>
+<SCWork/>
+<UseExtIco>0</UseExtIco>
+<IcoFN/>
+<IcoIdx>0</IcoIdx>
+<IcoShowMd>0</IcoShowMd>
+<IcoHK>0</IcoHK>
+<RegTTF>0</RegTTF>
+<TTFName/>
+<RegOCX>0</RegOCX>
+<RegTLB>0</RegTLB>
+<SupInUse>0</SupInUse>
+<Compress>1</Compress>
+<UseOrigAttr>1</UseOrigAttr>
+<Attr>0</Attr>
+<NoCRC>0</NoCRC>
+<NoRemove>0</NoRemove>
+<Shared>0</Shared>
+<OSCond>
+<OS>32768</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+</OSCond>
+<RTCond/>
+<BuildConfigs>
+<Cfg>All</Cfg>
+</BuildConfigs>
+<Package>None</Package>
+<Packages/>
+<Notes/>
+<CompSize>0</CompSize>
+<CRC>0</CRC>
+<StoreOnly>0</StoreOnly>
+</FileData>
 </ArchiveFiles>
 <ExternalFiles/>
 <BeforeInstallingScreens>
 <Screen>
 <Type>100</Type>
 <Name>Welcome to Setup</Name>
+<BannerStyle>1</BannerStyle>
+<TemplateName>Welcome to Setup</TemplateName>
+<OverrideProjTheme>0</OverrideProjTheme>
+<StyleData>
+<CstClrs>0</CstClrs>
+<TBBG format="hex">ffffff</TBBG>
+<BDYBG format="hex">ece9d8</BDYBG>
+<FTBG format="hex">ece9d8</FTBG>
+<TBTXT format="hex">000000</TBTXT>
+<BDYTXT format="hex">000000</BDYTXT>
+<CBG format="hex">ffffff</CBG>
+<C3DFACE format="hex">ece9d8</C3DFACE>
+<C3DHLT format="hex">ece9d8</C3DHLT>
+<C3DLIT format="hex">ffffff</C3DLIT>
+<C3DSH format="hex">aca899</C3DSH>
+<CBTNTXT format="hex">000000</CBTNTXT>
+<CTEXT format="hex">000000</CTEXT>
+<CDISTXT format="hex">aca899</CDISTXT>
+<CPRGRS format="hex">316ac5</CPRGRS>
+<C3DSHDK format="hex">716f64</C3DSHDK>
+<TBIMG>Developer_top.jpg</TBIMG>
+<SBIMG>Developer_side.jpg</SBIMG>
+<BDIMG>Developer_body.jpg</BDIMG>
+<BDFILL>0</BDFILL>
+<HDSEP>0</HDSEP>
+<FTSEP>1</FTSEP>
+<CstFnts>0</CstFnts>
+<Fonts>
+<FontData>
+<FontName>Arial</FontName>
+<CharacterSet>0</CharacterSet>
+<Height>-13</Height>
+<Weight>700</Weight>
+<Italic>0</Italic>
+<Underline>0</Underline>
+<StrikeOut>0</StrikeOut>
+<AntiAlias>1</AntiAlias>
+</FontData>
+<FontData>
+<FontName>Arial</FontName>
+<CharacterSet>0</CharacterSet>
+<Height>-13</Height>
+<Weight>700</Weight>
+<Italic>0</Italic>
+<Underline>0</Underline>
+<StrikeOut>0</StrikeOut>
+<AntiAlias>1</AntiAlias>
+</FontData>
+<FontData>
+<FontName>Arial</FontName>
+<CharacterSet>0</CharacterSet>
+<Height>-24</Height>
+<Weight>700</Weight>
+<Italic>0</Italic>
+<Underline>0</Underline>
+<StrikeOut>0</StrikeOut>
+<AntiAlias>1</AntiAlias>
+</FontData>
+<FontData>
+<FontName>Arial</FontName>
+<CharacterSet>0</CharacterSet>
+<Height>-13</Height>
+<Weight>400</Weight>
+<Italic>0</Italic>
+<Underline>0</Underline>
+<StrikeOut>0</StrikeOut>
+<AntiAlias>1</AntiAlias>
+</FontData>
+<FontData>
+<FontName>Arial</FontName>
+<CharacterSet>0</CharacterSet>
+<Height>-13</Height>
+<Weight>400</Weight>
+<Italic>0</Italic>
+<Underline>0</Underline>
+<StrikeOut>0</StrikeOut>
+<AntiAlias>1</AntiAlias>
+</FontData>
+</Fonts>
+<CAOff>
+<TP>0</TP>
+<L>15</L>
+<T>15</T>
+<R>15</R>
+<B>15</B>
+</CAOff>
+<CAOff>
+<TP>1</TP>
+<L>15</L>
+<T>15</T>
+<R>15</R>
+<B>15</B>
+</CAOff>
+<CAOff>
+<TP>2</TP>
+<L>15</L>
+<T>15</T>
+<R>15</R>
+<B>15</B>
+</CAOff>
+<TBTXTX>10</TBTXTX>
+<TBTXTY>10</TBTXTY>
+<ScreenW>497</ScreenW>
+<ScreenH>362</ScreenH>
+</StyleData>
+<Events>
+<Event>
+<Name>On Preload</Name>
+<Args/>
+<Script>-- These actions are performed before the screen is shown.
+
+function GetLangID(p, s)
+    -- s 左移 10 位 = s * 2^10
+    -- 按位或 = 把 p 加上即可，因为 p &lt; 2^10（WinAPI 保证）
+    return s * 1024 + p
+end
+
+-- ============================================
+-- 函数：DetectSystemLanguage
+-- 描述：检测系统语言，返回 'zh' 或 'en'
+-- ============================================
+function DetectSystemLanguage()
+    -- 调用官方API获取语言信息
+    local langTbl = Application.GetInstallLanguage();
+    local langid = GetLangID (langTbl.Primary, langTbl.Secondary);
+    -- 检查API是否调用成功
+    if langTbl and langid then
+        -- 将语言ID转换为我们的语言标识
+        -- 0x0409 (1033) = 英语(美国)，0x0804 (2052) = 中文(简体)
+        if langid == 2052 then -- 中文(简体)
+            return "zh"
+        else -- 默认英语（包括1033及其他情况）
+            return "en"
+        end
+    end
+    
+    -- API调用失败或未知情况，默认返回英语
+    return "en"
+end
+
+-- ============================================
+-- 全局语言表
+-- 说明：所有需要本地化的字符串都定义在这里
+-- ============================================
+local LangStrings = {
+    zh = {
+        -- 帮助文本
+        help_title = "安装程序命令行帮助",
+        help_body = [[
+MyApp 安装程序 - 命令行参数帮助
+
+自动安装模式 (无界面或被动安装):
+  /S, /SILENT, /QUIET, /PASSIVE, /AUTO
+  -S, -SILENT, -QUIET, -PASSIVE, -AUTO
+  (也支持无前缀格式，如 SILENT)
+
+指定安装路径 (该功能在重新安装模式和升级模式不可用):
+  1. 使用 /TO 参数 - 更改安装的根位置，但保留默认文件夹名称。
+      示例: /TO:"D:\" 
+            安装到: D:\MyApp\ (假设默认安装到 C:\Program Files\MyApp)
+      示例: /TO "D:\MyCompany"
+            安装到: D:\MyCompany\MyApp\
+
+  2. 使用 /DIR 参数 - 指定完整的自定义安装路径。
+      示例: /DIR:"D:\MyApp Custom"
+            安装到: D:\MyApp Custom\
+      示例: /dir "C:\Program Files\Another Name"
+
+  注意：路径若包含空格，请使用双引号包裹。
+
+显示此帮助:
+  /?, /HELP, /H, -?, -HELP, -H, ?, HELP, H
+
+使用示例:
+  setup.exe /S /TO:"D:\"          // 静默安装到D盘
+  setup.exe /DIR:"C:\My App" /S   // 静默安装到自定义目录
+  setup.exe /TO D:\ /PASSIVE      // 被动模式安装到D盘
+]],
+        
+        -- 对话框消息
+        downgrade_title = "%ProductName% 安装程序", -- %ProductName% 会被自动替换
+        downgrade_msg = "检测到已安装的版本 (%s) 比当前安装包版本 (%s) 更高。\n\n要继续进行降级安装吗？\n注意：这会覆盖现有版本。请确保已关闭原程序。",
+        
+        reinstall_title = "%ProductName% 安装程序",
+        reinstall_msg = "检测到当前计算机已安装与本安装包相同的版本 (%s)，请问要继续安装吗？\n\n注意：重新安装时，会覆盖现有文件。请确保已关闭原程序。"
+    },
+    
+    en = {
+        -- 帮助文本
+        help_title = "Installer Command Line Help",
+        help_body = [[
+MyApp Installer - Command Line Help
+
+Automatic installation modes (unattended or passive):
+  /S, /SILENT, /QUIET, /PASSIVE, /AUTO
+  -S, -SILENT, -QUIET, -PASSIVE, -AUTO
+  (Prefixless formats like SILENT are also supported)
+
+Specify installation path (Not available in Reinstall and Upgrade modes):
+  1. Use /TO parameter - Change the root location but keep the default folder name.
+      Example: /TO:"D:\" 
+            Installs to: D:\MyApp\ (assuming default is C:\Program Files\MyApp)
+      Example: /TO "D:\MyCompany"
+            Installs to: D:\MyCompany\MyApp\
+
+  2. Use /DIR parameter - Specify a complete custom installation path.
+      Example: /DIR:"D:\MyApp Custom"
+            Installs to: D:\MyApp Custom\
+      Example: /dir "C:\Program Files\Another Name"
+
+  Note: If the path contains spaces, please enclose it in double quotes.
+
+Show this help:
+  /?, /HELP, /H, -?, -HELP, -H, ?, HELP, H
+
+Usage Examples:
+  setup.exe /S /TO:"D:\"          // Silent install to D drive
+  setup.exe /DIR:"C:\My App" /S   // Silent install to custom directory
+  setup.exe /TO D:\ /PASSIVE      // Passive mode install to D drive
+]],
+        
+        -- 对话框消息
+        downgrade_title = "%ProductName% Setup",
+        downgrade_msg = "A higher version (%s) is already installed compared to the current installer version (%s).\n\nDo you want to proceed with downgrade installation?\nNote: This will overwrite the existing version. Please ensure the original program is closed.",
+        
+        reinstall_title = "%ProductName% Setup",
+        reinstall_msg = "The same version (%s) is already installed on this computer. Do you want to continue with reinstallation?\n\nNote: Reinstallation will overwrite existing files. Please ensure the original program is closed."
+    }
+}
+
+-- ============================================
+-- 函数：GetLocalizedString
+-- 描述：获取当前语言的本地化字符串
+-- 参数：key - 字符串键名（如 "downgrade_msg"）
+-- 返回：本地化后的字符串
+-- ============================================
+function GetLocalizedString(key)
+    local lang = DetectSystemLanguage()
+    local str = LangStrings[lang][key] or LangStrings["en"][key] or ""
+    -- 替换可能的动态变量
+    str = SessionVar.Expand(str);
+    return str
+end
+
+function CompareVersion(verstrl, verstrr)
+	return String.CompareFileVersions (verstrl, verstrr);
+end
+
+-- ============================================
+-- 函数：ParseSetupArgs
+-- 描述：解析增强的安装程序命令行参数（兼容基础函数版本）
+-- 返回：
+--   isAutoMode (boolean): 是否为自动/静默模式
+--   customInstallPath (string or nil): 自定义的安装路径
+--   showHelp (boolean): 是否显示帮助信息
+--   pathParamUsed (string or nil): 使用的路径参数类型（“/TO”或“/DIR”）
+-- ============================================
+function ParseSetupArgs()
+    local args = _CommandLineArgs or {}
+    local isAutoMode = false
+    local customInstallPath = nil
+    local showHelp = false
+    local pathParamUsed = nil
+    
+    -- 定义参数字典，提高检查效率
+    local flagMap = {}
+    -- 自动模式参数
+    local autoList = {"/S", "/SILENT", "/PASSIVE", "/QUIET", "/AUTO", "-S", "-SILENT", "-PASSIVE", "-QUIET", "-AUTO", "S", "SILENT", "PASSIVE", "QUIET", "AUTO"}
+    for _, flag in ipairs(autoList) do
+        flagMap[String.Upper(flag)] = "AUTO"
+    end
+    -- 帮助参数
+    local helpList = {"/?", "/HELP", "/H", "-?", "-HELP", "-H", "?", "HELP", "H"}
+    for _, flag in ipairs(helpList) do
+        flagMap[String.Upper(flag)] = "HELP"
+    end
+    
+    -- 内部函数：从“参数:值”格式中提取值
+    local function extractValueFromColonArg(fullArg)
+        local colonPos = String.Find(fullArg, ":", 1, true)
+        if colonPos &gt; 0 then
+            -- 使用完整的 String.Mid 参数：字符串, 起始位置, 长度
+            local totalLen = String.Length(fullArg)
+            local valueLen = totalLen - colonPos  -- 计算要提取的长度
+            local value = String.Mid(fullArg, colonPos + 1, valueLen)
+            -- 去除可能包裹的引号
+            value = String.TrimRight(value, "\"")
+            value = String.TrimRight(value, "'")
+            return value
+        end
+        return ""
+    end
+    
+    -- 内部函数：处理 /TO 参数逻辑
+    local function processToParam(rawPathValue)
+        -- 使用固定的默认文件夹名
+        -- 重要：将 "MyApp" 改为你的程序默认文件夹名
+        local defaultFolderName = SessionVar.Expand ("%ProductName%");
+        if rawPathValue ~= "" and defaultFolderName ~= "" then
+            -- 确保 rawPathValue 以反斜杠结尾
+            if String.Right(rawPathValue, 1) ~= "\\" then
+                rawPathValue = rawPathValue .. "\\"
+            end
+            return rawPathValue .. defaultFolderName
+        end
+        return rawPathValue
+    end
+    
+    -- 内部函数：检查字符串是否以指定前缀开头（不区分大小写）
+    local function startsWith(str, prefix)
+        return String.Left(String.Upper(str), String.Length(prefix)) == String.Upper(prefix)
+    end
+    
+    local i = 1
+    while i &lt;= #args do
+        local arg = args[i]
+        local argUpper = String.Upper(arg)
+        local argType = flagMap[argUpper]
+        
+        -- 1. 检查已知的独立参数（自动模式、帮助）
+        if argType == "AUTO" then
+            isAutoMode = true
+        elseif argType == "HELP" then
+            showHelp = true
+        -- 2. 检查“参数:值”格式的路径参数
+        elseif startsWith(arg, "/TO:") or startsWith(arg, "-TO:") then
+            pathParamUsed = "/TO"
+            local rawPath = extractValueFromColonArg(arg)
+            if rawPath ~= "" then
+                customInstallPath = processToParam(rawPath)
+            end
+        elseif startsWith(arg, "/DIR:") or startsWith(arg, "-DIR:") then
+            pathParamUsed = "/DIR"
+            local rawPath = extractValueFromColonArg(arg)
+            if rawPath ~= "" then
+                customInstallPath = rawPath
+            end
+        -- 3. 检查“参数 值”格式的路径参数（空格分隔）
+        elseif argUpper == "/TO" or argUpper == "-TO" then
+            pathParamUsed = "/TO"
+            if i + 1 &lt;= #args then
+                local nextArg = args[i + 1]
+                -- 确保下一个参数不是另一个开关参数
+                local nextFirstChar = String.Left(nextArg, 1)
+                if nextFirstChar ~= "/" and nextFirstChar ~= "-" then
+                    local rawPath = String.TrimRight(nextArg, "\"")
+                    rawPath = String.TrimRight(rawPath, "'")
+                    customInstallPath = processToParam(rawPath)
+                    i = i + 1  -- 消耗下一个参数
+                end
+            end
+        elseif argUpper == "/DIR" or argUpper == "-DIR" then
+            pathParamUsed = "/DIR"
+            if i + 1 &lt;= #args then
+                local nextArg = args[i + 1]
+                local nextFirstChar = String.Left(nextArg, 1)
+                if nextFirstChar ~= "/" and nextFirstChar ~= "-" then
+                    customInstallPath = String.TrimRight(nextArg, "\"")
+                    customInstallPath = String.TrimRight(customInstallPath, "'")
+                    i = i + 1
+                end
+            end
+        end
+        -- 如果参数未匹配任何已知模式，它将被忽略
+        i = i + 1
+    end
+    
+    return isAutoMode, customInstallPath, showHelp, pathParamUsed
+end
+
+-- ============================================
+-- 函数：ShowHelpAndExit
+-- 描述：显示参数帮助信息并退出安装程序
+-- ============================================
+function ShowHelpAndExit()
+    -- 在消息框中显示帮助（如果是交互模式）
+    Dialog.Message(GetLocalizedString("help_title"), GetLocalizedString("help_body"), MB_OK, MB_ICONINFORMATION)
+    -- 退出安装程序
+    Application.Exit()
+end
+
+
+-- 解析命令行参数
+local autoMode, installPath, needHelp = ParseSetupArgs()
+if needHelp then
+    ShowHelpAndExit()
+end
+-- 存储结果供后续使用
+SessionVar.Set("%AutoInstallMode%", tostring(autoMode))
+
+mode = 0; -- 0: Normal, 1: Reinstall, 2: Upgrade
+keyexist = Registry.DoesKeyExist(HKEY_CURRENT_USER, "SOFTWARE\\Windows Modern\\App Installer");
+
+if (keyexist) then
+    local ver = Registry.GetValue(HKEY_CURRENT_USER, "SOFTWARE\\Windows Modern\\App Installer", "Version", false);
+    local currentVer = SessionVar.Expand("%ProductVer%");
+    local ishigh = CompareVersion(ver, currentVer);
+    
+    if (ishigh &gt; 0) then
+        -- 降级安装
+        if (autoMode == false) then
+	        local msgpress = Dialog.Message(
+	            GetLocalizedString("downgrade_title"),
+	            string.format(GetLocalizedString("downgrade_msg"), ver, currentVer),
+	            MB_YESNO, MB_ICONQUESTION
+	        );
+        	if (msgpress == IDYES) then mode = 1; -- 重新安装（降级）
+        	else Application.Exit();
+        	end
+        else mode = 1;
+        end
+    elseif (ishigh == 0) then
+        -- 重新安装（版本相同）
+        if (autoMode == false) then
+	        local msgpress1 = Dialog.Message(
+	            GetLocalizedString("reinstall_title"),
+	            string.format(GetLocalizedString("reinstall_msg"), ver),
+	            MB_YESNO, MB_ICONQUESTION
+	        );
+	        if (msgpress1 == IDYES) then 
+	            mode = 1; -- 重新安装
+	        else 
+	            Application.Exit();
+	        end
+	    else mode = 1;
+	    end
+        -- 注意：这里没有 mode = 0 了！
+    else
+        -- 升级安装
+        mode = 2; -- 升级
+    end
+else
+    mode = 0; -- 全新安装
+end
+
+g_mode = mode;
+
+if (installPath and mode == 0) then
+    SessionVar.Set("%AppFolder%", installPath);
+end
+
+g_lastver = Registry.GetValue(HKEY_CURRENT_USER, "SOFTWARE\\Windows Modern\\App Installer", "Version", false);
+g_lastpath = Registry.GetValue(HKEY_CURRENT_USER, "SOFTWARE\\Windows Modern\\App Installer", "AppPath", false);
+g_lastuni = Registry.GetValue(HKEY_CURRENT_USER, "SOFTWARE\\Windows Modern\\App Installer", "Uninstall", false);
+
+SessionVar.Set ("%InstallMode%", tostring (g_mode));
+SessionVar.Set ("%LastVersion%", g_lastver);
+SessionVar.Set ("%LastPath%", g_lastpath);
+SessionVar.Set ("%LastUninstall%", g_lastuni);
+
+if (g_mode == 1 or g_mode == 2) then
+	strInstallFolderPath = SessionVar.Expand ("%LastPath%");
+	SessionVar.Set ("%AppFolder%", strInstallFolderPath);
+end
+
+if (autoMode == true) then
+	Screen.Jump ("Ready to Install");
+end
+
+if (mode == 2 and autoMode == false) then
+	Screen.Jump ("Welcome to Update Setup");
+end</Script>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Back</Name>
+<Args/>
+<Script>-- These actions are performed when the Back button is clicked.
+-- go back to the previous screen
+Screen.Back();
+</Script>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Next</Name>
+<Args/>
+<Script>-- These actions are performed when the Next button is clicked.
+
+-- advance to the next screen
+-- Screen.Next();
+Screen.Jump ("License Agreement")</Script>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Cancel</Name>
+<Args/>
+<Script>-- These actions are performed when the Cancel button is clicked.
+
+-- from _SUF70_Global_Functions.lua:
+-- ask user if they're sure they want to exit
+if g_ConfirmSetupAbort() then
+	Application.Exit(EXIT_REASON_USER_ABORTED);
+end
+</Script>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Help</Name>
+<Args/>
+<Script>-- These actions are performed when the Help button is clicked.
+</Script>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Ctrl Message</Name>
+<Args>number e_CtrlID, number e_MsgID, table e_Details</Args>
+<Script>-- These actions are triggered by the controls on the screen.
+</Script>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+</Events>
+<Controls>
+<Control>
+<Type>1</Type>
+<ID>103</ID>
+<Visible>0</Visible>
+<Enabled>0</Enabled>
+<TabOrder>75</TabOrder>
+<FTButton>1</FTButton>
+</Control>
+<Control>
+<Type>1</Type>
+<ID>101</ID>
+<Visible>1</Visible>
+<Enabled>0</Enabled>
+<TabOrder>76</TabOrder>
+<FTButton>1</FTButton>
+</Control>
+<Control>
+<Type>1</Type>
+<ID>100</ID>
+<Visible>1</Visible>
+<Enabled>1</Enabled>
+<TabOrder>77</TabOrder>
+<FTButton>1</FTButton>
+</Control>
+<Control>
+<Type>1</Type>
+<ID>102</ID>
+<Visible>1</Visible>
+<Enabled>1</Enabled>
+<TabOrder>78</TabOrder>
+<FTButton>1</FTButton>
+</Control>
+<Control>
+<Type>2</Type>
+<ID>200</ID>
+<Visible>1</Visible>
+<Enabled>1</Enabled>
+<TabOrder>1</TabOrder>
+<IsHeading>0</IsHeading>
+</Control>
+<Control>
+<Type>2</Type>
+<ID>300</ID>
+<Visible>1</Visible>
+<Enabled>1</Enabled>
+<TabOrder>0</TabOrder>
+<IsHeading>1</IsHeading>
+</Control>
+</Controls>
+<Languages>
+<SUF70Messages>
+<Language>
+<Name>English</Name>
+<Default>1</Default>
+<Primary>9</Primary>
+<Secondary>
+<ID>1</ID>
+<ID>2</ID>
+<ID>3</ID>
+<ID>4</ID>
+<ID>5</ID>
+<ID>6</ID>
+<ID>7</ID>
+<ID>8</ID>
+<ID>9</ID>
+<ID>10</ID>
+<ID>11</ID>
+<ID>12</ID>
+<ID>13</ID>
+</Secondary>
+</Language>
+<Messages>
+<IDS_WINDOW_TITLE>%ProductName% Setup</IDS_WINDOW_TITLE>
+<IDS_HEADER_TEXT>Welcome</IDS_HEADER_TEXT>
+<IDS_SUBHEADER_TEXT>Welcome to the installer for %ProductName% %ProductVer%</IDS_SUBHEADER_TEXT>
+<IDS_CTRL_BUTTON_NEXT>&amp;Next &gt;</IDS_CTRL_BUTTON_NEXT>
+<IDS_CTRL_BUTTON_BACK>&lt; &amp;Back</IDS_CTRL_BUTTON_BACK>
+<IDS_CTRL_BUTTON_CANCEL>&amp;Cancel</IDS_CTRL_BUTTON_CANCEL>
+<IDS_CTRL_BUTTON_HELP>&amp;Help</IDS_CTRL_BUTTON_HELP>
+<IDS_CTRL_STATICTEXT_BODY>Welcome to the installer for %ProductName% %ProductVer%.
+
+It is strongly recommended that you exit all Windows programs before continuing with this installation.
+
+If you have any other programs running, please click Cancel, close the programs, and run this setup again.
+
+Otherwise, click Next to continue.
+</IDS_CTRL_STATICTEXT_BODY>
+<IDS_CTRL_HEADINGTEXT_BODY>Welcome</IDS_CTRL_HEADINGTEXT_BODY>
+</Messages>
+</SUF70Messages>
+<SUF70Messages>
+<Language>
+<Name>Chinese (Simplified)</Name>
+<Default>0</Default>
+<Primary>4</Primary>
+<Secondary>
+<ID>2</ID>
+<ID>3</ID>
+<ID>4</ID>
+<ID>5</ID>
+</Secondary>
+</Language>
+<Messages>
+<IDS_WINDOW_TITLE>%ProductName% 安装程序</IDS_WINDOW_TITLE>
+<IDS_HEADER_TEXT>欢迎</IDS_HEADER_TEXT>
+<IDS_SUBHEADER_TEXT>欢迎使用 %ProductName% %ProductVer% 安装程序</IDS_SUBHEADER_TEXT>
+<IDS_CTRL_BUTTON_NEXT>下一步(&amp;N) &gt;</IDS_CTRL_BUTTON_NEXT>
+<IDS_CTRL_BUTTON_BACK>&lt; 返回(&amp;B)</IDS_CTRL_BUTTON_BACK>
+<IDS_CTRL_BUTTON_CANCEL>取消(&amp;C)</IDS_CTRL_BUTTON_CANCEL>
+<IDS_CTRL_BUTTON_HELP>帮助(&amp;H)</IDS_CTRL_BUTTON_HELP>
+<IDS_CTRL_STATICTEXT_BODY>欢迎使用 %ProductName% %ProductVer% 安装程序。
+
+强烈建议您在继续该安装之前，退出所有 Windows 程序。
+
+如果您有任何其他程序正在运行，请单击“取消”，关闭程序，然后再次运行该安装程序。
+
+否则，请单击“下一步”继续。
+</IDS_CTRL_STATICTEXT_BODY>
+<IDS_CTRL_HEADINGTEXT_BODY>欢迎</IDS_CTRL_HEADINGTEXT_BODY>
+</Messages>
+</SUF70Messages>
+</Languages>
+</Screen>
+<Screen>
+<Type>100</Type>
+<Name>Welcome to Update Setup</Name>
 <BannerStyle>1</BannerStyle>
 <TemplateName>Welcome to Setup</TemplateName>
 <OverrideProjTheme>0</OverrideProjTheme>
@@ -1053,21 +1770,20 @@ end
 </Secondary>
 </Language>
 <Messages>
-<IDS_WINDOW_TITLE>%ProductName% Setup</IDS_WINDOW_TITLE>
+<IDS_WINDOW_TITLE>%ProductName% Update</IDS_WINDOW_TITLE>
 <IDS_HEADER_TEXT>Welcome</IDS_HEADER_TEXT>
 <IDS_SUBHEADER_TEXT>Welcome to the installer for %ProductName% %ProductVer%</IDS_SUBHEADER_TEXT>
 <IDS_CTRL_BUTTON_NEXT>&amp;Next &gt;</IDS_CTRL_BUTTON_NEXT>
 <IDS_CTRL_BUTTON_BACK>&lt; &amp;Back</IDS_CTRL_BUTTON_BACK>
 <IDS_CTRL_BUTTON_CANCEL>&amp;Cancel</IDS_CTRL_BUTTON_CANCEL>
 <IDS_CTRL_BUTTON_HELP>&amp;Help</IDS_CTRL_BUTTON_HELP>
-<IDS_CTRL_STATICTEXT_BODY>Welcome to the installer for %ProductName% %ProductVer%.
+<IDS_CTRL_STATICTEXT_BODY>Welcome to the %ProductName% %ProductVer% upgrade program.
 
-It is strongly recommended that you exit all Windows programs before continuing with this installation.
+It is strongly recommended that you exit all programs related to %ProductName% before continuing this installation.
 
-If you have any other programs running, please click Cancel, close the programs, and run this setup again.
+If you have any other programs running, please click "Cancel" to close the program, and then run the installer again.
 
-Otherwise, click Next to continue.
-</IDS_CTRL_STATICTEXT_BODY>
+Otherwise, please click "Next" to continue.</IDS_CTRL_STATICTEXT_BODY>
 <IDS_CTRL_HEADINGTEXT_BODY>Welcome</IDS_CTRL_HEADINGTEXT_BODY>
 </Messages>
 </SUF70Messages>
@@ -1084,16 +1800,16 @@ Otherwise, click Next to continue.
 </Secondary>
 </Language>
 <Messages>
-<IDS_WINDOW_TITLE>%ProductName% 安装程序</IDS_WINDOW_TITLE>
+<IDS_WINDOW_TITLE>%ProductName% 升级程序</IDS_WINDOW_TITLE>
 <IDS_HEADER_TEXT>欢迎</IDS_HEADER_TEXT>
 <IDS_SUBHEADER_TEXT>欢迎使用 %ProductName% %ProductVer% 安装程序</IDS_SUBHEADER_TEXT>
 <IDS_CTRL_BUTTON_NEXT>下一步(&amp;N) &gt;</IDS_CTRL_BUTTON_NEXT>
 <IDS_CTRL_BUTTON_BACK>&lt; 返回(&amp;B)</IDS_CTRL_BUTTON_BACK>
 <IDS_CTRL_BUTTON_CANCEL>取消(&amp;C)</IDS_CTRL_BUTTON_CANCEL>
 <IDS_CTRL_BUTTON_HELP>帮助(&amp;H)</IDS_CTRL_BUTTON_HELP>
-<IDS_CTRL_STATICTEXT_BODY>欢迎使用 %ProductName% %ProductVer% 安装程序。
+<IDS_CTRL_STATICTEXT_BODY>欢迎使用 %ProductName% %ProductVer% 升级程序。
 
-强烈建议您在继续该安装之前，退出所有 Windows 程序。
+强烈建议您在继续该安装之前，退出 %ProductName% 相关的所有程序。
 
 如果您有任何其他程序正在运行，请单击“取消”，关闭程序，然后再次运行该安装程序。
 
@@ -1559,8 +2275,16 @@ Screen.Back();
 <Script>-- These actions are performed when the Next button is clicked.
 
 -- advance to the next screen
-Screen.Next();
-</Script>
+
+
+g_mode = tonumber (SessionVar.Get ("%InstallMode%"));
+if (g_mode == 1 or g_mode == 2) then
+	strInstallFolderPath = SessionVar.Expand ("%LastPath%");
+	SessionVar.Set ("%AppFolder%", strInstallFolderPath);
+	Screen.Jump ("Ready to Install");
+else
+	Screen.Next();
+end</Script>
 <BookMarks count="0">
 </BookMarks>
 </Event>
@@ -2276,7 +3000,10 @@ end
 -- from _SUF70_Global_Functions.lua:
 -- fill the combo box with the existing shortcut folder names
 g_FillComboBoxWithShortcutFolders(CTRL_COMBOBOX_SHORTCUTFOLDERS);
-</Script>
+
+if (g_mode == 1 or g_mode == 2) then
+	Screen.Next ();
+end</Script>
 <BookMarks count="0">
 </BookMarks>
 </Event>
@@ -2450,8 +3177,8 @@ end
 <Control>
 <Type>5</Type>
 <ID>600</ID>
-<Visible>1</Visible>
-<Enabled>1</Enabled>
+<Visible>0</Visible>
+<Enabled>0</Enabled>
 <TabOrder>35</TabOrder>
 <Group>1</Group>
 <StartID>600</StartID>
@@ -2460,8 +3187,8 @@ end
 <Control>
 <Type>5</Type>
 <ID>601</ID>
-<Visible>1</Visible>
-<Enabled>1</Enabled>
+<Visible>0</Visible>
+<Enabled>0</Enabled>
 <TabOrder>40</TabOrder>
 <Group>0</Group>
 <StartID>600</StartID>
@@ -2647,7 +3374,11 @@ end
 <Name>On Preload</Name>
 <Args/>
 <Script>-- These actions are performed before the screen is shown.
-</Script>
+automodestr = SessionVar.Expand("%AutoInstallMode%");
+automodestr = String.TrimLeft (String.TrimRight (String.Lower (automodestr)));
+automode = automodestr == "true";
+
+if (automode) then Screen.Next (); end</Script>
 <BookMarks count="0">
 </BookMarks>
 </Event>
@@ -2657,8 +3388,8 @@ end
 <Script>-- These actions are performed when the Back button is clicked.
 
 -- go back to the previous screen
-Screen.Back();
-</Script>
+
+Screen.Back();</Script>
 <BookMarks count="0">
 </BookMarks>
 </Event>
@@ -2668,8 +3399,7 @@ Screen.Back();
 <Script>-- These actions are performed when the Next button is clicked.
 
 -- advance to the next screen
-Screen.Next();
-</Script>
+Screen.Next();</Script>
 <BookMarks count="0">
 </BookMarks>
 </Event>
@@ -2952,7 +3682,51 @@ Please click Next to proceed with the installation.</IDS_CTRL_STATICTEXT_BODY>
 <Name>On Preload</Name>
 <Args/>
 <Script>-- These actions are performed before the screen is shown.
-</Script>
+--[[if (mode == 1 or mode == 2) then
+	local unlnk = Registry.GetValue(HKEY_CURRENT_USER, "SOFTWARE\\Windows Modern\\App Installer", "Uninstall", false);
+	resulttest = Shell.Execute(unlnk, "open", "/S: /U:Uninstall/uninstall.xml", SessionVar.Expand ("%LastPath%"), SW_SHOWNORMAL, true);
+	-- Dialog.Message ("Test", "已试图执行卸载，返回：" .. tostring (resulttest));
+end
+]]
+if (mode == 1 or mode == 2) then
+    -- 1. 获取卸载路径，并清理可能的引号
+    local unlnk = Registry.GetValue(HKEY_CURRENT_USER, "SOFTWARE\\Windows Modern\\App Installer", "Uninstall", true);
+    unlnk = String.TrimRight(unlnk, "\"") -- 移除路径两端的引号
+
+    -- 2. 关键：检查卸载程序文件是否存在
+    local targetExePath = unlnk
+    if targetExePath ~= "" then
+        -- 2.1 检查是否为.lnk快捷方式，并尝试解析真实目标
+        if String.Lower(String.Right(targetExePath, 4)) == ".lnk" and _File.DoesExist(targetExePath) then
+            -- 尝试获取.lnk文件指向的真实目标
+            local shell = DLL.Load("shell32.dll")
+            local result, realPath = DLL.CallFunction(shell, "ShellExecuteA", "0,\"open\"," .. targetExePath .. ",\"\",\"\",0", DLL_RETURN_TYPE_STRING, DLL_CALL_STDCALL)
+            if realPath and realPath ~= "" and _File.DoesExist(realPath) then
+                targetExePath = realPath
+            end
+            DLL.Unload(shell)
+        end
+
+        -- 2.2 最终检查：目标可执行文件是否存在
+        if File.DoesExist(targetExePath) then
+            -- 3. 构建静默卸载参数
+            -- 注意：原代码中的 "/U:Uninstall/uninstall.xml" 路径分隔符建议统一为反斜杠
+            local uninstallArgs = "/S: /U:Uninstall\\uninstall.xml"
+            local workingDir = SessionVar.Expand("%LastPath%")
+            
+            -- 4. 执行静默卸载（关键：使用 SW_HIDE 隐藏窗口，true 表示等待完成）
+            -- 使用 File.Run 替代 Shell.Execute 以获得更好的控制
+            resulttest = File.Run(targetExePath, uninstallArgs, workingDir, SW_HIDE, true)
+            Application.Sleep (1000);
+            -- （可选）日志记录，仅用于调试
+            -- _LogFile.Message("静默卸载已执行，结果码: " .. tostring(resulttest), LOG_INFO)
+        else
+            -- 文件不存在，安静地跳过并记录（非静默模式可考虑提示）
+            -- _LogFile.Message("卸载程序文件不存在，跳过卸载: " .. targetExePath, LOG_WARNING)
+        end
+    end
+    -- 如果 unlnk 为空，则安静地跳过卸载
+end</Script>
 <BookMarks count="0">
 </BookMarks>
 </Event>
@@ -3162,6 +3936,323 @@ end
 </DuringInstScreenData>
 <AfterInstallingScreens>
 <Screen>
+<Type>155</Type>
+<Name>Scrolling Text Progress</Name>
+<BannerStyle>2</BannerStyle>
+<TemplateName>Scrolling Text Progress</TemplateName>
+<OverrideProjTheme>0</OverrideProjTheme>
+<StyleData>
+<CstClrs>0</CstClrs>
+<TBBG format="hex">ffffff</TBBG>
+<BDYBG format="hex">ece9d8</BDYBG>
+<FTBG format="hex">ece9d8</FTBG>
+<TBTXT format="hex">000000</TBTXT>
+<BDYTXT format="hex">000000</BDYTXT>
+<CBG format="hex">ffffff</CBG>
+<C3DFACE format="hex">ece9d8</C3DFACE>
+<C3DHLT format="hex">ece9d8</C3DHLT>
+<C3DLIT format="hex">ffffff</C3DLIT>
+<C3DSH format="hex">aca899</C3DSH>
+<CBTNTXT format="hex">000000</CBTNTXT>
+<CTEXT format="hex">000000</CTEXT>
+<CDISTXT format="hex">aca899</CDISTXT>
+<CPRGRS format="hex">316ac5</CPRGRS>
+<C3DSHDK format="hex">716f64</C3DSHDK>
+<TBIMG>Developer_top.jpg</TBIMG>
+<SBIMG>Developer_side.jpg</SBIMG>
+<BDIMG>Developer_body.jpg</BDIMG>
+<BDFILL>0</BDFILL>
+<HDSEP>0</HDSEP>
+<FTSEP>1</FTSEP>
+<CstFnts>0</CstFnts>
+<Fonts>
+<FontData>
+<FontName>Arial</FontName>
+<CharacterSet>0</CharacterSet>
+<Height>-13</Height>
+<Weight>700</Weight>
+<Italic>0</Italic>
+<Underline>0</Underline>
+<StrikeOut>0</StrikeOut>
+<AntiAlias>1</AntiAlias>
+</FontData>
+<FontData>
+<FontName>Arial</FontName>
+<CharacterSet>0</CharacterSet>
+<Height>-13</Height>
+<Weight>700</Weight>
+<Italic>0</Italic>
+<Underline>0</Underline>
+<StrikeOut>0</StrikeOut>
+<AntiAlias>1</AntiAlias>
+</FontData>
+<FontData>
+<FontName>Arial</FontName>
+<CharacterSet>0</CharacterSet>
+<Height>-24</Height>
+<Weight>700</Weight>
+<Italic>0</Italic>
+<Underline>0</Underline>
+<StrikeOut>0</StrikeOut>
+<AntiAlias>1</AntiAlias>
+</FontData>
+<FontData>
+<FontName>Arial</FontName>
+<CharacterSet>0</CharacterSet>
+<Height>-13</Height>
+<Weight>400</Weight>
+<Italic>0</Italic>
+<Underline>0</Underline>
+<StrikeOut>0</StrikeOut>
+<AntiAlias>1</AntiAlias>
+</FontData>
+<FontData>
+<FontName>Arial</FontName>
+<CharacterSet>0</CharacterSet>
+<Height>-13</Height>
+<Weight>400</Weight>
+<Italic>0</Italic>
+<Underline>0</Underline>
+<StrikeOut>0</StrikeOut>
+<AntiAlias>1</AntiAlias>
+</FontData>
+</Fonts>
+<CAOff>
+<TP>0</TP>
+<L>15</L>
+<T>15</T>
+<R>15</R>
+<B>15</B>
+</CAOff>
+<CAOff>
+<TP>1</TP>
+<L>15</L>
+<T>15</T>
+<R>15</R>
+<B>15</B>
+</CAOff>
+<CAOff>
+<TP>2</TP>
+<L>15</L>
+<T>15</T>
+<R>15</R>
+<B>15</B>
+</CAOff>
+<TBTXTX>10</TBTXTX>
+<TBTXTY>10</TBTXTY>
+<ScreenW>497</ScreenW>
+<ScreenH>362</ScreenH>
+</StyleData>
+<IsWhileInstallingMode>0</IsWhileInstallingMode>
+<Events>
+<Event>
+<Name>On Preload</Name>
+<Args/>
+<Script>-- These actions are performed before the screen is shown.</Script>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Start</Name>
+<Args/>
+<Script>-- These actions are performed when the screen is shown.
+
+-- Note: this is normally where you would put the actions
+--       that you want this screen to perform (i.e. the
+--       actions that you want to show the progress of).
+
+-- Tip: use DlgScrollingText actions to display the current
+--		status of your actions in the scrolling text control.
+--
+-- 		For example, use:
+-- 		DlgScrollingText.AppendLine(CTRL_SCROLLTEXT_BODY, "Your text here");
+--		...to add a line of progress text.
+
+DlgScrollingText.AppendLine(CTRL_SCROLLTEXT_BODY, "Installing the runtime libraries...");
+File.Run(SessionVar.Expand("%TempLaunchFolder%\\runtime.exe"), "", "", SW_SHOWNORMAL, true);
+
+DlgScrollingText.AppendLine(CTRL_SCROLLTEXT_BODY, "Registering the application...");
+Registry.CreateKey(HKEY_CURRENT_USER, "SOFTWARE\\Windows Modern\\App Installer")
+Registry.SetValue(HKEY_CURRENT_USER, "SOFTWARE\\Windows Modern\\App Installer", "", "", REG_SZ);
+Registry.SetValue(HKEY_CURRENT_USER, "SOFTWARE\\Windows Modern\\App Installer", "Uninstall", SessionVar.Expand("%AppFolder%\\uninstall.exe"), REG_SZ);
+Registry.SetValue(HKEY_CURRENT_USER, "SOFTWARE\\Windows Modern\\App Installer", "AppPath", SessionVar.Expand("%AppFolder%"), REG_SZ);
+Registry.SetValue(HKEY_CURRENT_USER, "SOFTWARE\\Windows Modern\\App Installer", "Version", SessionVar.Expand("%ProductVer%"), REG_SZ);
+
+Registry.SetValue(HKEY_CLASSES_ROOT, "Microsoft.DesktopAppInstaller", "", "Windows Store Application Package", REG_SZ);
+Registry.SetValue(HKEY_CLASSES_ROOT, "Microsoft.DesktopAppInstaller\\Shell\\Open\\Command", "", SessionVar.Expand("\"%AppFolder%\\appinstaller.exe\" \"%1\""), REG_SZ);
+Registry.SetValue(HKEY_CLASSES_ROOT, "Microsoft.DesktopAppInstaller\\DefaultIcon", "", SessionVar.Expand("%AppFolder%\\appinstaller.exe,2"), REG_SZ);
+Registry.SetValue(HKEY_CLASSES_ROOT, "Applications\\AppInstaller.exe\\DefaultIcon", "", SessionVar.Expand("%AppFolder%\\appinstaller.exe,-136"), REG_SZ);
+DlgScrollingText.AppendLine(CTRL_SCROLLTEXT_BODY, "Processing File Associations...");
+Registry.SetValue(HKEY_CLASSES_ROOT, ".appx", "", "Microsoft.DesktopAppInstaller", REG_SZ);
+Registry.SetValue(HKEY_CLASSES_ROOT, ".appxbundle", "", "Microsoft.DesktopAppInstaller", REG_SZ);
+DlgScrollingText.AppendLine(CTRL_SCROLLTEXT_BODY, "Creating Shortcut...");
+function CreateShortcut(lnkpath, targetfile, appid)
+	ret = File.Run(SessionVar.Expand("%AppFolder%\\shortcut.exe"), "\"" .. lnkpath .. "\" \"" .. targetfile .. "\" \"" .. appid .. "\"", "", SW_HIDE, true);
+	return ret;
+end
+CreateShortcut (SessionVar.Expand ("%StartProgramsFolderCommon%\\%AppShortcutFolderName%\\App Installer.lnk"), SessionVar.Expand("%AppFolder%\\appinstaller.exe"), "Microsoft.DesktopAppInstaller!App");
+Registry.SetValue(HKEY_CURRENT_USER, "SOFTWARE\\Windows Modern\\App Installer", "AppInstallerLnk", SessionVar.Expand("%StartProgramsFolderCommon%\\%AppShortcutFolderName%\\App Installer.lnk"), REG_SZ);
+CreateShortcut (SessionVar.Expand ("%StartProgramsFolderCommon%\\%AppShortcutFolderName%\\Settings.lnk"), SessionVar.Expand("%AppFolder%\\settings.exe"), "WindowsModern.PracticalToolsProject!Settings");
+Registry.SetValue(HKEY_CURRENT_USER, "SOFTWARE\\Windows Modern\\App Installer", "SettingsLnk", SessionVar.Expand("%StartProgramsFolderCommon%\\%AppShortcutFolderName%\\Settings.lnk"), REG_SZ);
+
+DlgScrollingText.AppendLine(CTRL_SCROLLTEXT_BODY, "Updating system PATH...");
+local appFolder = SessionVar.Expand("%AppFolder%");
+local pathKey = "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment";
+local currentPath, pathType = Registry.GetValue(HKEY_LOCAL_MACHINE, pathKey, "Path", true);
+currentPath = currentPath or ""
+-- 检查路径是否已存在
+if not string.find(";"..currentPath..";", ";"..appFolder..";", 1, true) then
+    local newPath = currentPath
+    if newPath ~= "" then
+        newPath = newPath .. ";" .. appFolder
+    else
+        newPath = appFolder
+    end
+    -- 更新注册表值并保持原有类型
+    Registry.SetValue(HKEY_LOCAL_MACHINE, pathKey, "Path", newPath, pathType or REG_EXPAND_SZ)
+    -- 广播环境变量更新消息
+    DLL.CallFunction("Kernel32.dll", "SendMessageTimeout", 
+        "HWND_BROADCAST,WM_SETTINGCHANGE,0,(LPARAM)\"Environment\",SMTO_ABORTIFHUNG,5000,NULL", 
+        DLL_RETURN_TYPE_LONG, DLL_CALL_STDCALL)
+end
+
+
+automodestr = SessionVar.Expand("%AutoInstallMode%");
+automodestr = String.TrimLeft (String.TrimRight (String.Lower (automodestr)));
+automode = automodestr == "true";
+
+if (automode) then 
+	DlgScrollingText.AppendLine(CTRL_SCROLLTEXT_BODY, "Automatic installation has been completed.");
+	Application.Sleep(1000); 
+end</Script>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Finish</Name>
+<Args/>
+<Script>-- These actions are performed right after the On Start actions.
+
+-- advance to the next screen
+Screen.Next();
+</Script>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Cancel</Name>
+<Args/>
+<Script>-- These actions are performed when the Cancel button is clicked.
+
+-- from _SUF70_Global_Functions.lua:
+-- ask user if they're sure they want to exit
+if g_ConfirmSetupAbort() then
+	Application.Exit(EXIT_REASON_USER_ABORTED);
+end
+</Script>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+</Events>
+<Controls>
+<Control>
+<Type>1</Type>
+<ID>102</ID>
+<Visible>1</Visible>
+<Enabled>0</Enabled>
+<TabOrder>-10</TabOrder>
+<FTButton>1</FTButton>
+</Control>
+<Control>
+<Type>2</Type>
+<ID>203</ID>
+<Visible>1</Visible>
+<Enabled>1</Enabled>
+<TabOrder>1</TabOrder>
+<IsHeading>0</IsHeading>
+</Control>
+<Control>
+<Type>2</Type>
+<ID>204</ID>
+<Visible>1</Visible>
+<Enabled>1</Enabled>
+<TabOrder>3</TabOrder>
+<IsHeading>0</IsHeading>
+</Control>
+<Control>
+<Type>3</Type>
+<ID>400</ID>
+<Visible>1</Visible>
+<Enabled>1</Enabled>
+<TabOrder>2</TabOrder>
+<IsHTML>0</IsHTML>
+<TextAlign>0</TextAlign>
+<VertScroll>1</VertScroll>
+<HorizScroll>0</HorizScroll>
+<RTLReadingOrder>0</RTLReadingOrder>
+<Style>1</Style>
+<ReadOnly>1</ReadOnly>
+<SpecifyType>1</SpecifyType>
+<Variable/>
+</Control>
+</Controls>
+<Languages>
+<SUF70Messages>
+<Language>
+<Name>English</Name>
+<Default>1</Default>
+<Primary>9</Primary>
+<Secondary>
+<ID>1</ID>
+<ID>2</ID>
+<ID>3</ID>
+<ID>4</ID>
+<ID>5</ID>
+<ID>6</ID>
+<ID>7</ID>
+<ID>8</ID>
+<ID>9</ID>
+<ID>10</ID>
+<ID>11</ID>
+<ID>12</ID>
+<ID>13</ID>
+</Secondary>
+</Language>
+<Messages>
+<IDS_WINDOW_TITLE>%ProductName% Setup</IDS_WINDOW_TITLE>
+<IDS_HEADER_TEXT>Performing Actions</IDS_HEADER_TEXT>
+<IDS_SUBHEADER_TEXT>Please wait...</IDS_SUBHEADER_TEXT>
+<IDS_CTRL_BUTTON_CANCEL>&amp;Cancel</IDS_CTRL_BUTTON_CANCEL>
+<IDS_CTRL_STATICTEXT_TOPINSTRUCTIONS>Please wait while the following actions are performed:</IDS_CTRL_STATICTEXT_TOPINSTRUCTIONS>
+<IDS_CTRL_STATICTEXT_BOTTOMINSTRUCTIONS/>
+<IDS_CTRL_SCROLLTEXT_BODY/>
+</Messages>
+</SUF70Messages>
+<SUF70Messages>
+<Language>
+<Name>Chinese (Simplified)</Name>
+<Default>0</Default>
+<Primary>4</Primary>
+<Secondary>
+<ID>2</ID>
+<ID>3</ID>
+<ID>4</ID>
+<ID>5</ID>
+</Secondary>
+</Language>
+<Messages>
+<IDS_WINDOW_TITLE>%ProductName% 安装程序</IDS_WINDOW_TITLE>
+<IDS_HEADER_TEXT>正在执行动作</IDS_HEADER_TEXT>
+<IDS_SUBHEADER_TEXT>请稍候...</IDS_SUBHEADER_TEXT>
+<IDS_CTRL_BUTTON_CANCEL>取消(&amp;C)</IDS_CTRL_BUTTON_CANCEL>
+<IDS_CTRL_STATICTEXT_TOPINSTRUCTIONS>请稍候，正在执行以下动作:</IDS_CTRL_STATICTEXT_TOPINSTRUCTIONS>
+<IDS_CTRL_STATICTEXT_BOTTOMINSTRUCTIONS/>
+<IDS_CTRL_SCROLLTEXT_BODY/>
+</Messages>
+</SUF70Messages>
+</Languages>
+</Screen>
+<Screen>
 <Type>100</Type>
 <Name>Finished Install</Name>
 <BannerStyle>1</BannerStyle>
@@ -3274,7 +4365,11 @@ end
 <Name>On Preload</Name>
 <Args/>
 <Script>-- These actions are performed before the screen is shown.
-</Script>
+automodestr = SessionVar.Expand("%AutoInstallMode%");
+automodestr = String.TrimLeft (String.TrimRight (String.Lower (automodestr)));
+automode = automodestr == "true";
+
+if (automode) then Application.Exit (); end</Script>
 <BookMarks count="0">
 </BookMarks>
 </Event>
@@ -3554,8 +4649,8 @@ Please click Finish to exit this installer.
 <CPSIReadmeLink/>
 <CPSIComments/>
 <CPSIInstallLocation>%AppFolder%</CPSIInstallLocation>
-<CPSIVersionMajor/>
-<CPSIVersionMinor/>
+<CPSIVersionMajor>0</CPSIVersionMajor>
+<CPSIVersionMinor>1</CPSIVersionMinor>
 <CreateAppFldSC>1</CreateAppFldSC>
 <AppFldSCDesc>Uninstall</AppFldSCDesc>
 <SCComment>Removes %ProductName% from your computer.</SCComment>
@@ -4477,7 +5572,41 @@ Please click Finish to exit.
 <Event>
 <Name>On Pre Uninstall</Name>
 <Args/>
-<Script/>
+<Script>hkey = HKEY_CURRENT_USER;
+key = "Software\\Windows Modern";
+keynext = "App Installer";
+appinstallerlnkpath = Registry.GetValue(HKEY_CURRENT_USER, "SOFTWARE\\Windows Modern\\App Installer", "AppInstallerLnk", false);
+settingslnkpath = Registry.GetValue(HKEY_CURRENT_USER, "SOFTWARE\\Windows Modern\\App Installer", "SettingsLnk", false);
+File.Delete(appinstallerlnkpath, true, false, false);
+File.Delete(settingslnkpath, true, false, false);
+Registry.DeleteKey(HKEY_CLASSES_ROOT, ".appx");
+Registry.DeleteKey(HKEY_CLASSES_ROOT, ".appxbundle");
+Registry.DeleteKey(HKEY_CLASSES_ROOT, ".msix");
+Registry.DeleteKey(HKEY_CLASSES_ROOT, ".msixbundle");
+Registry.DeleteKey(HKEY_CLASSES_ROOT, "Microsoft.DesktopAppInstaller");
+local appFolder = SessionVar.Expand("%AppFolder%");
+local pathKey = "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment";
+local currentPath, pathType = Registry.GetValue(HKEY_LOCAL_MACHINE, pathKey, "Path", true);
+if currentPath then
+    local paths = {}
+    -- 分割PATH并过滤当前应用目录
+    for path in string.gmatch(currentPath, "[^;]+") do
+        if path ~= appFolder then
+            table.insert(paths, path)
+        end
+    end
+    local newPath = table.concat(paths, ";")
+    -- 仅当路径发生变化时更新
+    if newPath ~= currentPath then
+        Registry.SetValue(HKEY_LOCAL_MACHINE, pathKey, "Path", newPath, pathType or REG_EXPAND_SZ)
+        -- 广播环境变量更新消息
+        DLL.CallFunction("Kernel32.dll", "SendMessageTimeout", 
+            "HWND_BROADCAST,WM_SETTINGCHANGE,0,(LPARAM)\"Environment\",SMTO_ABORTIFHUNG,5000,NULL", 
+            DLL_RETURN_TYPE_LONG, DLL_CALL_STDCALL)
+    end
+end
+Registry.DeleteKey (hkey, key .. "\\" .. keynext);
+Registry.DeleteKey (hkey, key);</Script>
 <BookMarks count="0">
 </BookMarks>
 </Event>
@@ -4661,12 +5790,215 @@ g_HandleSystemReboot();
 <Cfg>All</Cfg>
 </BuildConfigs>
 </PrimerFile>
+<PrimerFile>
+<SourcePath>E:\Profiles\Bruce\Documents\Visual Studio 2015\Projects\AppInstallerReset\others\runtime.exe</SourcePath>
+<DeleteOnExit>1</DeleteOnExit>
+<NeededByUninstall>0</NeededByUninstall>
+<BuildConfigs>
+<Cfg>All</Cfg>
+</BuildConfigs>
+</PrimerFile>
 </PrimerFiles>
 <Events>
 <Event>
 <Name>全局函数</Name>
 <Args/>
-<Script/>
+<Script>
+
+function CompareVersion(verstrl, verstrr)
+	return String.CompareFileVersions (verstrl, verstrr);
+end
+
+-- ============================================
+-- 函数：ParseSetupArgs
+-- 描述：解析增强的安装程序命令行参数
+-- 返回：
+--   isAutoMode (boolean): 是否为自动/静默模式
+--   customInstallPath (string or nil): 自定义的安装路径（完整或基于/to）
+--   showHelp (boolean): 是否显示帮助信息
+-- ============================================
+function ParseSetupArgs()
+    local args = _CommandLineArgs or {}
+    local isAutoMode = false
+    local customInstallPath = nil
+    local showHelp = false
+    local pathParamUsed = nil -- 记录使用的是哪个路径参数，用于帮助信息
+
+    -- 支持的自动模式参数列表（不区分大小写）
+    local autoModeFlags = {
+        "/S", "/SILENT", "/PASSIVE", "/QUIET", "/AUTO",
+        "-S", "-SILENT", "-PASSIVE", "-QUIET", "-AUTO",
+        "S", "SILENT", "PASSIVE", "QUIET", "AUTO" -- 无前缀
+    }
+    
+    -- 支持的帮助参数列表
+    local helpFlags = {
+        "/?", "/HELP", "/H",
+        "-?", "-HELP", "-H",
+        "?", "HELP", "H"
+    }
+
+    local i = 1
+    while i &lt;= #args do
+        local arg = args[i]
+        local argUpper = String.Upper(arg)
+        local argFound = false
+
+        -- 1. 检查是否为自动模式参数
+        for _, flag in ipairs(autoModeFlags) do
+            if argUpper == String.Upper(flag) then
+                isAutoMode = true
+                argFound = true
+                break
+            end
+        end
+        
+        -- 2. 检查是否为帮助参数
+        if not argFound then
+            for _, flag in ipairs(helpFlags) do
+                if argUpper == String.Upper(flag) then
+                    showHelp = true
+                    argFound = true
+                    break
+                end
+            end
+        end
+        
+        -- 3. 检查是否为路径参数 (/to 或 /dir)
+        -- 处理类似 /to:"D:\" 或 /dir:"C:\NewPath" 的格式
+        if not argFound then
+            if String.Left(argUpper, 4) == "/TO:" or 
+               String.Left(argUpper, 4) == "-TO:" or
+               (String.Left(argUpper, 3) == "TO:" and #arg &gt; 3) then
+               
+                -- 提取路径部分（去掉参数前缀）
+                local prefixLen = arg:find(":", 1, true) or 3
+                local rawPath = String.Mid(arg, prefixLen + 1)
+                -- 去掉可能包裹的引号
+                rawPath = String.Trim(rawPath, "\"")
+                rawPath = String.Trim(rawPath, "'")
+                
+                if rawPath ~= "" then
+                    pathParamUsed = "/TO"
+                    -- /TO逻辑：仅改变驱动器或上级目录，保留默认的末尾文件夹名
+                    local defaultPath = SessionVar.Expand("%ProgramFiles%") .. "\\MyApp"
+                    local defaultFolderName = String.GetRightFrom(defaultPath, "\\")
+                    if defaultFolderName then
+                        -- 确保路径以反斜杠结尾，再拼接文件夹名
+                        if not String.Right(rawPath, 1) == "\\" then
+                            rawPath = rawPath .. "\\"
+                        end
+                        customInstallPath = rawPath .. defaultFolderName
+                    else
+                        customInstallPath = rawPath -- 回退方案
+                    end
+                end
+                argFound = true
+                
+            elseif String.Left(argUpper, 5) == "/DIR:" or 
+                   String.Left(argUpper, 5) == "-DIR:" or
+                   (String.Left(argUpper, 4) == "DIR:" and #arg &gt; 4) then
+               
+                local prefixLen = arg:find(":", 1, true) or 4
+                local rawPath = String.Mid(arg, prefixLen + 1)
+                rawPath = String.Trim(rawPath, "\"")
+                rawPath = String.Trim(rawPath, "'")
+                
+                if rawPath ~= "" then
+                    pathParamUsed = "/DIR"
+                    -- /DIR逻辑：直接使用用户提供的完整路径
+                    customInstallPath = rawPath
+                end
+                argFound = true
+            end
+        end
+        
+        -- 4. 处理“参数名”和“空格分隔的值”的格式（如 /to "D:\"）
+        if not argFound then
+            if argUpper == "/TO" or argUpper == "-TO" or argUpper == "TO" then
+                pathParamUsed = "/TO"
+                if i + 1 &lt;= #args then
+                    local nextArg = args[i + 1]
+                    if not String.Left(nextArg, 1) == "/" and not String.Left(nextArg, 1) == "-" then
+                        local rawPath = nextArg
+                        rawPath = String.Trim(rawPath, "\"")
+                        rawPath = String.Trim(rawPath, "'")
+                        -- 应用与上方相同的 /TO 逻辑构建路径
+                        local defaultPath = SessionVar.Expand("%ProgramFiles%") .. "\\MyApp"
+                        local defaultFolderName = String.GetRightFrom(defaultPath, "\\")
+                        if defaultFolderName then
+                            if not String.Right(rawPath, 1) == "\\" then
+                                rawPath = rawPath .. "\\"
+                            end
+                            customInstallPath = rawPath .. defaultFolderName
+                        end
+                        i = i + 1 -- 额外消耗一个参数作为值
+                    end
+                end
+                argFound = true
+                
+            elseif argUpper == "/DIR" or argUpper == "-DIR" or argUpper == "DIR" then
+                pathParamUsed = "/DIR"
+                if i + 1 &lt;= #args then
+                    local nextArg = args[i + 1]
+                    if not String.Left(nextArg, 1) == "/" and not String.Left(nextArg, 1) == "-" then
+                        customInstallPath = String.Trim(nextArg, "\"")
+                        customInstallPath = String.Trim(customInstallPath, "'")
+                        i = i + 1
+                    end
+                end
+                argFound = true
+            end
+        end
+        
+        i = i + 1
+    end
+    
+    return isAutoMode, customInstallPath, showHelp, pathParamUsed
+end
+
+-- ============================================
+-- 函数：ShowHelpAndExit
+-- 描述：显示参数帮助信息并退出安装程序
+-- ============================================
+function ShowHelpAndExit()
+    local helpText = [[
+MyApp Installer - 命令行参数帮助
+
+自动安装模式 (无界面或被动安装):
+  /S, /SILENT, /QUIET, /PASSIVE, /AUTO
+  -S, -SILENT, -QUIET, -PASSIVE, -AUTO
+  (也支持无前缀格式，如 SILENT)
+
+指定安装路径:
+  1. 使用 /TO 参数 - 更改安装的根位置，但保留默认文件夹名称。
+      示例: /TO:"D:\" 
+            安装到: D:\MyApp\ (假设默认安装到 C:\Program Files\MyApp)
+      示例: /TO "D:\MyCompany"
+            安装到: D:\MyCompany\MyApp\
+
+  2. 使用 /DIR 参数 - 指定完整的自定义安装路径。
+      示例: /DIR:"D:\MyApp Custom"
+            安装到: D:\MyApp Custom\
+      示例: /dir "C:\Program Files\Another Name"
+
+  注意：路径若包含空格，请使用双引号包裹。
+
+显示此帮助:
+  /?, /HELP, /H, -?, -HELP, -H, ?, HELP, H
+
+使用示例:
+  setup.exe /S /TO:"D:\"          // 静默安装到D盘
+  setup.exe /DIR:"C:\My App" /S   // 静默安装到自定义目录
+  setup.exe /TO D:\ /PASSIVE      // 被动模式安装到D盘
+]]
+    
+    -- 在消息框中显示帮助（如果是交互模式）
+    Dialog.Message("安装程序命令行帮助", helpText, MB_OK, MB_ICONINFORMATION)
+    -- 退出安装程序
+    Application.Exit()
+end
+</Script>
 <BookMarks count="0">
 </BookMarks>
 </Event>
@@ -4695,7 +6027,10 @@ g_HandleSystemReboot();
 <Event>
 <Name>在安装后</Name>
 <Args/>
-<Script/>
+<Script>	-- Do something here, they are not equal
+--Imported from REG file: E:\Profiles\Bruce\Desktop\App Installer.reg
+-- DlgScrollingText.AppendLine(CTRL_SCROLLTEXT_BODY, "Registing...");
+</Script>
 <BookMarks count="0">
 </BookMarks>
 </Event>

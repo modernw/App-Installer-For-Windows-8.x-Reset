@@ -358,3 +358,46 @@ Windows.UI.Event.Util.removeEvent(window, "resize", handler);
     }
     module.exports = { debounce: debounce };
 })(this);
+
+(function(global) {
+    "use strict";
+
+    var eToEvent = {}; // 存储元素和回调
+    var lastContent = {}; // 存储上一次的 textContent
+
+    // 注册文本变化事件
+    global.setTextChangeEvent = function(el, fn) {
+        if (!el || typeof fn !== "function") return;
+
+        var id = el.__textChangeId;
+        if (!id) {
+            id = Math.random().toString(36).substr(2, 9);
+            el.__textChangeId = id;
+            lastContent[id] = el.textContent;
+        }
+
+        eToEvent[id] = { el: el, callback: fn };
+    };
+
+    // 定时轮询
+    setInterval(function() {
+        var keys = Object.keys(eToEvent);
+        for (var i = 0; i < keys.length; i++) {
+            var key = keys[i];
+            var obj = eToEvent[key];
+            var el = obj.el;
+            var currentText = el.textContent;
+
+            if (currentText !== lastContent[key]) {
+                lastContent[key] = currentText;
+                try {
+                    obj.callback.call(el, currentText);
+                } catch (e) {
+                    // 忽略回调错误
+                    if (typeof console !== "undefined") console.error(e);
+                }
+            }
+        }
+    }, 20);
+
+})(this);
