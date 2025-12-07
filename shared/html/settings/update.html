@@ -244,6 +244,14 @@
             window.parent.setItemHighlight("update");
         } catch (e) {}
     </script>
+    <script>
+        if (typeof window.parent.setDisabledForOperation === "undefined") {
+            window.parent.setDisabledForOperation = function() {};
+        }
+        if (typeof window.parent.setItemHighlight === "undefined") {
+            window.parent.setItemHighlight = function() {};
+        }
+    </script>
 </head>
 
 <body>
@@ -274,19 +282,18 @@
         </div>
         <div class="section padding" style="margin: 10px 0;"><button id="check-update" data-action="check" data-res-fromfile="publicRes (115)"></button></div>
         <div class="section padding" style="display: none; overflow-y: auto; height: 0px; transition: all 0.5s cubic-bezier(0.1, 0.9, 0.2, 1); margin-top: 20px;">
-            <h2 data-res-fromfile="publicRes (108)"></h2>
+            <h2 data-res-fromfile="publicRes (108)"></h2><br>
             <div class="block" id="newversion-details">
                 <h3 id="newversion-title"><span data-res-fromfile="publicRes (109)"></span>: <span id="newversion-version"></span></h3>
                 <span id="newversion-releasedate"></span><br>
                 <a id="newversion-url" target="_blank" data-res-fromfile="publicRes (110)"></a><br>
                 <span data-res-fromfile="publicRes (111)"></span>:
                 <a id="newversion-desc-showall-hide" data-res-fromfile="publicRes (122)"></a>
-                <div id="newversion-desc"></div>
+                <div id="newversion-desc" style="font-weight: normal; font-size: 10pt;"></div>
             </div>
         </div>
         <script>
             (function() {
-                "use strict";
                 var eutils = Windows.UI.Event.Util;
                 var monitor = Windows.UI.Event.Monitor;
                 var section = document.querySelector(".pagesection .section").parentNode;
@@ -357,12 +364,13 @@
                             }).done(function(resp) {
                                 // console.log("success", resp);
                                 var json = JSON.parse(resp.responseText);
+                                window.fetchedJson = json;
                                 // console.log(json);
                                 self.disabled = false;
                                 newVersionVersion.textContent = json.name;
                                 newVersionVersion.setAttribute("data-version", json.tag_name);
                                 window.newver = json.tag_name;
-                                newVersionReleaseDate.textContent = getPublicRes(112) + ": " + json.published_at;
+                                newVersionReleaseDate.textContent = getPublicRes(112) + ": " + Bridge.External.formatDateTime("{0:yyyy-MM-dd HH:mm:ss}", json.published_at);
                                 newVersionUrl.href = json.html_url;
                                 newVersionDesc.innerHTML = markdown.toHTML(json.body);
                                 checkUpdateText.textContent = getPublicRes(113);
@@ -383,7 +391,7 @@
                                     checkUpdateBtn.setAttribute("data-action", "check");
                                 } else {
                                     checkUpdateText.textContent = Bridge.String.format(getPublicRes(116), window.newver);
-                                    checkUpdateBtn.textContent = getPublicRes(118);
+                                    checkUpdateBtn.textContent = getPublicRes(117);
                                     checkUpdateBtn.setAttribute("data-action", "download");
                                 }
                                 window.parent.setDisabledForOperation(false);

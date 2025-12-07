@@ -827,6 +827,7 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form, public IScrip
 		private:
 		MainHtmlWnd ^wndinst = nullptr;
 		public:
+		using String = System::String;
 		[ComVisible (true)]
 		ref class _I_IEFrame: public _I_IEFrame_Base
 		{
@@ -948,6 +949,7 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form, public IScrip
 		property _I_Download ^Download { _I_Download ^get () { return download; }}
 		property _I_Process ^Process { _I_Process ^get () { return proc; }}
 		property _I_ResourcePri ^WinJsStringRes { _I_ResourcePri ^get () { return winjs_res; }}
+		String ^FormatDateTime (String ^fmt, String ^jsDate) { return FormatString (fmt, Convert::ToDateTime (jsDate)); }
 		void CloseWindow ()
 		{
 			if (wndinst && wndinst->IsHandleCreated) wndinst->Close ();
@@ -1094,10 +1096,10 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form, public IScrip
 	{
 		auto &ini = g_initfile;
 		auto setsect = ini ["Settings"];
-		auto lasts = setsect [L"AppInstaller:LastWndState"];
-		auto savepos = setsect [L"AppInstaller:SavePosAndSizeBeforeCancel"];
-		auto lastw = setsect [L"AppInstaller:LastWidth"];
-		auto lasth = setsect [L"AppInstaller:LastHeight"];
+		auto lasts = setsect [L"Settings:LastWndState"];
+		auto savepos = setsect [L"Settings:SavePosAndSizeBeforeCancel"];
+		auto lastw = setsect [L"Settings:LastWidth"];
+		auto lasth = setsect [L"Settings:LastHeight"];
 		switch (this->WindowState)
 		{
 			case System::Windows::Forms::FormWindowState::Normal:

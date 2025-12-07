@@ -17,7 +17,8 @@
         };
     }
     var settingItems = {
-        appinstaller: getSettingsItem("appinstaller.html", getLibRes("appinstaller.exe", 300))
+        appinstaller: getSettingsItem("appinstaller.html", getLibRes("appinstaller.exe", 300)),
+	settings: getSettingsItem("settings.html", getLibRes("settings.exe", 200))
     };
     Object.defineProperty(global, "settingPages", {
         get: function() { return settingItems; }

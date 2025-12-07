@@ -17,7 +17,7 @@
             inode.setAttribute("data-page", item.page);
             inode.textContent = item.displayName;
             Windows.UI.Event.Util.addEvent(inode, "click", function(e) {
-                window.location = "settings/" + inode.getAttribute("data-page");
+                window.location = "settings/" + this.getAttribute("data-page");
             });
             list.appendChild(inode);
             // WinJS.UI.Animation.createAddToListAnimation(list, inode).execute();

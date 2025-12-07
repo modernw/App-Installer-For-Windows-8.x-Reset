@@ -45,7 +45,10 @@ video,
 canvas,
 form,
 fieldset,
-legend {
+legend,
+.win-type-x-large,
+.win-type-xx-large,
+.font-fixed {
     font-family: "Microsoft YaHei", "Segoe UI", "Ebrima", "Nirmala", "Gadugi", "Segoe UI Emoji", "Segoe UI Symbol", "Meiryo", "Leelawadee", "Microsoft JhengHei", "Malgun Gothic", "Estrangelo Edessa", "Microsoft Himalaya", "Microsoft New Tai Lue", "Microsoft PhagsPa", "Microsoft Tai Le", "Microsoft Yi Baiti", "Mongolian Baiti", "MV Boli", "Myanmar Text", "Javanese Text", "Cambria Math";
 }
 
@@ -94,6 +97,10 @@ legend {
     align-content: center;
     align-items: center;
     justify-content: flex-start;
+    display: -ms-flexbox;
+    -ms-flex-direction: row;
+    -ms-flex-align: center;
+    -ms-flex-pack: start;
 }
 
 .pagetitle {
@@ -157,6 +164,10 @@ aside .container ul li {
     align-content: center;
     justify-content: flex-start;
     align-items: center;
+    display: -ms-flexbox;
+    -ms-flex-direction: row;
+    -ms-flex-pack: start;
+    -ms-flex-align: center;
     transition: all 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
 }
 
