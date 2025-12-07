@@ -16,7 +16,7 @@ Required runtime libraries:
 
 Download: Download the latest release from the Releases section.
 
-![GitHub release pre-release downloads(https://img.shields.io/github/v/release/modernw/App-Installer-For-Windows-8.x-Reset)](https://github.com/modernw/App-Installer-For-Windows-8.x-Reset/releases)
+[![GitHub release pre-release downloads](https://img.shields.io/github/v/release/modernw/App-Installer-For-Windows-8.x-Reset "Release")](https://github.com/modernw/App-Installer-For-Windows-8.x-Reset/releases)
 
 Note: There is no official release yet, but the test version still does not have the Pre-released label; this is for testing upgrade functionality. Once the official release is complete, previous versions will be marked as Pre-released.
 
