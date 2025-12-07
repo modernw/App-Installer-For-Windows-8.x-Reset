@@ -20,11 +20,13 @@ Download: Download the latest release from the Releases section.
 
 Note: There is no official release yet, but the test version still does not have the Pre-released label; this is for testing upgrade functionality. Once the official release is complete, previous versions will be marked as Pre-released.
 
-Description:
+Attention:
 
 - This program is an x86 program, not an ARM application, not cross-platform, and cannot be used on Windows RT.
 
 - This program uses some third-party libraries and other Github projects, and is completed using AI (ChatGTP). This project can be used for learning and communication purposes.
+
+(Translated by Google Translate)
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://user-images.githubusercontent.com/25423296/163456776-7f95b81a-f1ed-45f7-b7ab-8fa810d529fa.png">
