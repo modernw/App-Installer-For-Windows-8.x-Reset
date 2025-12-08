@@ -25,6 +25,8 @@ Attention:
 - This program is an x86 program, not an ARM application, not cross-platform, and cannot be used on Windows RT.
 
 - This program uses some third-party libraries and other Github projects, and is completed using AI (ChatGTP). This project can be used for learning and communication purposes.
+  
+- (Important) Internet Explorer must support TLS 1.2 (requiring the use of IE's XMLHttpRequest to retrieve update information), especially IE10. You can do this by opening the "Advanced" tab in Control Panel/Internet Explorer's "Internet Options," finding "Use TLS 1.2" and checking the box, then clicking "OK" and saving. The settings will take effect the next time you open the browser.
 
 (Translated by Google Translate)
 
