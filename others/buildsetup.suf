@@ -683,11 +683,11 @@
 <SCDesk>0</SCDesk>
 <SCQLaunch>0</SCQLaunch>
 <SCStartPinOption>0</SCStartPinOption>
-<SCCust>0</SCCust>
-<CustSCPath/>
-<SCDesc>Settings</SCDesc>
+<SCCust>1</SCCust>
+<CustSCPath>%StartProgramsFolderCommon%\\%AppShortcutFolderName%</CustSCPath>
+<SCDesc>Update</SCDesc>
 <SCComment/>
-<SCArgs/>
+<SCArgs>appinstaller update /checkupdate</SCArgs>
 <SCWork/>
 <UseExtIco>0</UseExtIco>
 <IcoFN/>
@@ -832,6 +832,225 @@
 <SCCust>0</SCCust>
 <CustSCPath/>
 <SCDesc>shortcut</SCDesc>
+<SCComment/>
+<SCArgs/>
+<SCWork/>
+<UseExtIco>0</UseExtIco>
+<IcoFN/>
+<IcoIdx>0</IcoIdx>
+<IcoShowMd>0</IcoShowMd>
+<IcoHK>0</IcoHK>
+<RegTTF>0</RegTTF>
+<TTFName/>
+<RegOCX>0</RegOCX>
+<RegTLB>0</RegTLB>
+<SupInUse>0</SupInUse>
+<Compress>1</Compress>
+<UseOrigAttr>1</UseOrigAttr>
+<Attr>0</Attr>
+<NoCRC>0</NoCRC>
+<NoRemove>0</NoRemove>
+<Shared>0</Shared>
+<OSCond>
+<OS>32768</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+</OSCond>
+<RTCond/>
+<BuildConfigs>
+<Cfg>All</Cfg>
+</BuildConfigs>
+<Package>None</Package>
+<Packages/>
+<Notes/>
+<CompSize>0</CompSize>
+<CRC>0</CRC>
+<StoreOnly>0</StoreOnly>
+</FileData>
+<FileData>
+<FldRef>0</FldRef>
+<FullName>E:\Profiles\Bruce\Documents\Visual Studio 2015\Projects\AppInstallerReset\Release\desktopini.exe</FullName>
+<FileName>desktopini.exe</FileName>
+<Source>E:\Profiles\Bruce\Documents\Visual Studio 2015\Projects\AppInstallerReset\Release</Source>
+<Ext>exe</Ext>
+<RTSource>µµ°¸</RTSource>
+<Desc/>
+<Recurse>1</Recurse>
+<MatchMode>0</MatchMode>
+<Dest>%AppFolder%</Dest>
+<Overwrite>1</Overwrite>
+<Backup>0</Backup>
+<Protect>0</Protect>
+<InstallOrder>1000</InstallOrder>
+<SCStartRoot>0</SCStartRoot>
+<SCStartProgs>0</SCStartProgs>
+<SCAppFld>0</SCAppFld>
+<SCStartup>0</SCStartup>
+<SCDesk>0</SCDesk>
+<SCQLaunch>0</SCQLaunch>
+<SCStartPinOption>0</SCStartPinOption>
+<SCCust>0</SCCust>
+<CustSCPath/>
+<SCDesc>desktopini</SCDesc>
+<SCComment/>
+<SCArgs/>
+<SCWork/>
+<UseExtIco>0</UseExtIco>
+<IcoFN/>
+<IcoIdx>0</IcoIdx>
+<IcoShowMd>0</IcoShowMd>
+<IcoHK>0</IcoHK>
+<RegTTF>0</RegTTF>
+<TTFName/>
+<RegOCX>0</RegOCX>
+<RegTLB>0</RegTLB>
+<SupInUse>0</SupInUse>
+<Compress>1</Compress>
+<UseOrigAttr>1</UseOrigAttr>
+<Attr>0</Attr>
+<NoCRC>0</NoCRC>
+<NoRemove>0</NoRemove>
+<Shared>0</Shared>
+<OSCond>
+<OS>32768</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+</OSCond>
+<RTCond/>
+<BuildConfigs>
+<Cfg>All</Cfg>
+</BuildConfigs>
+<Package>None</Package>
+<Packages/>
+<Notes/>
+<CompSize>0</CompSize>
+<CRC>0</CRC>
+<StoreOnly>0</StoreOnly>
+</FileData>
+<FileData>
+<FldRef>0</FldRef>
+<FullName>E:\Profiles\Bruce\Documents\Visual Studio 2015\Projects\AppInstallerReset\Release\PriFileFormat.dll.config</FullName>
+<FileName>PriFileFormat.dll.config</FileName>
+<Source>E:\Profiles\Bruce\Documents\Visual Studio 2015\Projects\AppInstallerReset\Release</Source>
+<Ext>config</Ext>
+<RTSource>µµ°¸</RTSource>
+<Desc/>
+<Recurse>1</Recurse>
+<MatchMode>0</MatchMode>
+<Dest>%AppFolder%</Dest>
+<Overwrite>1</Overwrite>
+<Backup>0</Backup>
+<Protect>0</Protect>
+<InstallOrder>1000</InstallOrder>
+<SCStartRoot>0</SCStartRoot>
+<SCStartProgs>0</SCStartProgs>
+<SCAppFld>0</SCAppFld>
+<SCStartup>0</SCStartup>
+<SCDesk>0</SCDesk>
+<SCQLaunch>0</SCQLaunch>
+<SCStartPinOption>0</SCStartPinOption>
+<SCCust>0</SCCust>
+<CustSCPath/>
+<SCDesc/>
+<SCComment/>
+<SCArgs/>
+<SCWork/>
+<UseExtIco>0</UseExtIco>
+<IcoFN/>
+<IcoIdx>0</IcoIdx>
+<IcoShowMd>0</IcoShowMd>
+<IcoHK>0</IcoHK>
+<RegTTF>0</RegTTF>
+<TTFName/>
+<RegOCX>0</RegOCX>
+<RegTLB>0</RegTLB>
+<SupInUse>0</SupInUse>
+<Compress>1</Compress>
+<UseOrigAttr>1</UseOrigAttr>
+<Attr>0</Attr>
+<NoCRC>0</NoCRC>
+<NoRemove>0</NoRemove>
+<Shared>0</Shared>
+<OSCond>
+<OS>32768</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+</OSCond>
+<RTCond/>
+<BuildConfigs>
+<Cfg>All</Cfg>
+</BuildConfigs>
+<Package>None</Package>
+<Packages/>
+<Notes/>
+<CompSize>0</CompSize>
+<CRC>0</CRC>
+<StoreOnly>0</StoreOnly>
+</FileData>
+<FileData>
+<FldRef>0</FldRef>
+<FullName>E:\Profiles\Bruce\Documents\Visual Studio 2015\Projects\AppInstallerReset\Release\priformatcli.dll.metagen</FullName>
+<FileName>priformatcli.dll.metagen</FileName>
+<Source>E:\Profiles\Bruce\Documents\Visual Studio 2015\Projects\AppInstallerReset\Release</Source>
+<Ext>metagen</Ext>
+<RTSource>µµ°¸</RTSource>
+<Desc/>
+<Recurse>1</Recurse>
+<MatchMode>0</MatchMode>
+<Dest>%AppFolder%</Dest>
+<Overwrite>1</Overwrite>
+<Backup>0</Backup>
+<Protect>0</Protect>
+<InstallOrder>1000</InstallOrder>
+<SCStartRoot>0</SCStartRoot>
+<SCStartProgs>0</SCStartProgs>
+<SCAppFld>0</SCAppFld>
+<SCStartup>0</SCStartup>
+<SCDesk>0</SCDesk>
+<SCQLaunch>0</SCQLaunch>
+<SCStartPinOption>0</SCStartPinOption>
+<SCCust>0</SCCust>
+<CustSCPath/>
+<SCDesc/>
 <SCComment/>
 <SCArgs/>
 <SCWork/>
@@ -4090,10 +4309,24 @@ function CreateShortcut(lnkpath, targetfile, appid)
 	ret = File.Run(SessionVar.Expand("%AppFolder%\\shortcut.exe"), "\"" .. lnkpath .. "\" \"" .. targetfile .. "\" \"" .. appid .. "\"", "", SW_HIDE, true);
 	return ret;
 end
-CreateShortcut (SessionVar.Expand ("%StartProgramsFolderCommon%\\%AppShortcutFolderName%\\App Installer.lnk"), SessionVar.Expand("%AppFolder%\\appinstaller.exe"), "Microsoft.DesktopAppInstaller!App");
-Registry.SetValue(HKEY_CURRENT_USER, "SOFTWARE\\Windows Modern\\App Installer", "AppInstallerLnk", SessionVar.Expand("%StartProgramsFolderCommon%\\%AppShortcutFolderName%\\App Installer.lnk"), REG_SZ);
-CreateShortcut (SessionVar.Expand ("%StartProgramsFolderCommon%\\%AppShortcutFolderName%\\Settings.lnk"), SessionVar.Expand("%AppFolder%\\settings.exe"), "WindowsModern.PracticalToolsProject!Settings");
-Registry.SetValue(HKEY_CURRENT_USER, "SOFTWARE\\Windows Modern\\App Installer", "SettingsLnk", SessionVar.Expand("%StartProgramsFolderCommon%\\%AppShortcutFolderName%\\Settings.lnk"), REG_SZ);
+function SetDesktopInit(inipath, section, key, value)
+	ret = File.Run(SessionVar.Expand ("%AppFolder%\\desktopini.exe"), "\"" .. inipath .. "\" \"" .. section .. "\" \"" .. key .. "\" \"" .. value .. "\"", "", SW_HIDE, true);
+	return ret;
+end
+startitemfolder = SessionVar.Expand ("%StartProgramsFolderCommon%\\%AppShortcutFolderName%");
+applnkpath = startitemfolder .. "\\App Installer.lnk";
+setlnkpath = startitemfolder .. "\\Settings.lnk";
+desktopini = startitemfolder .. "";
+CreateShortcut (applnkpath, SessionVar.Expand("%AppFolder%\\appinstaller.exe"), "Microsoft.DesktopAppInstaller!App");
+Registry.SetValue(HKEY_CURRENT_USER, "SOFTWARE\\Windows Modern\\App Installer", "AppInstallerLnk", applnkpath, REG_SZ);
+CreateShortcut (setlnkpath, SessionVar.Expand("%AppFolder%\\settings.exe"), "WindowsModern.PracticalToolsProject!Settings");
+Registry.SetValue(HKEY_CURRENT_USER, "SOFTWARE\\Windows Modern\\App Installer", "SettingsLnk", setlnkpath, REG_SZ);
+SetDesktopInit (desktopini, ".ShellClassInfo", "ConfirmFileOp", 0);
+SetDesktopInit (desktopini, "LocalizedFileNames", "App Installer.lnk", SessionVar.Expand("@%AppFolder%\\appinstaller.exe,-300"));
+SetDesktopInit (desktopini, "LocalizedFileNames", "Settings.lnk", SessionVar.Expand("@%AppFolder%\\settings.exe,-200"));
+SetDesktopInit (desktopini, "LocalizedFileNames", "Update.lnk", SessionVar.Expand("@%AppFolder%\\reslib.dll,-103"));
+SetDesktopInit (desktopini, "LocalizedFileNames", "Uninstall.lnk", SessionVar.Expand("@%AppFolder%\\reslib.dll,-131"));
+SetDesktopInit (desktopini, ".ShellClassInfo", "LocalizedResourceName", SessionVar.Expand("@%AppFolder%\\appinstaller.exe,-300"));
 
 DlgScrollingText.AppendLine(CTRL_SCROLLTEXT_BODY, "Updating system PATH...");
 local appFolder = SessionVar.Expand("%AppFolder%");
@@ -6095,7 +6328,7 @@ g_HandleSystemReboot();
 </SessionVar>
 <SessionVar>
 <Name>%ProductVer%</Name>
-<Value>0.1.0.0</Value>
+<Value>0.2.0.0</Value>
 <Type>1</Type>
 </SessionVar>
 <SessionVar>

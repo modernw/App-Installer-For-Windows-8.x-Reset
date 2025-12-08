@@ -129,13 +129,7 @@ struct xmlstrres
 	std::string operator [] (const std::string &id) { return get (id); }
 };
 xmlstrres g_winjspri (CombinePath (GetProgramRootDirectoryW (), L"locale\\resources.xml"));
-struct
-{
-	bool jump = false;
-	std::wstring section = L"";
-	std::wstring item = L"";
-	std::wstring arg = L"";
-};
+std::vector <std::wstring> g_cmdargs;
 
 size_t ExploreFile (HWND hParent, std::vector <std::wstring> &results, LPWSTR lpFilter = L"Windows Store App Package (*.appx; *.appxbundle)\0*.appx;*.appxbundle", DWORD dwFlags = OFN_EXPLORER | OFN_ALLOWMULTISELECT | OFN_PATHMUSTEXIST, const std::wstring &swWndTitle = std::wstring (L"Please select the file(-s): "), const std::wstring &swInitDir = GetFileDirectoryW (g_lastfile))
 {
@@ -826,6 +820,9 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form, public IScrip
 	{
 		private:
 		MainHtmlWnd ^wndinst = nullptr;
+		bool hasjump1 = false,
+			hasjump2 = false,
+			hasexec = false;
 		public:
 		using String = System::String;
 		[ComVisible (true)]
@@ -950,6 +947,10 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form, public IScrip
 		property _I_Process ^Process { _I_Process ^get () { return proc; }}
 		property _I_ResourcePri ^WinJsStringRes { _I_ResourcePri ^get () { return winjs_res; }}
 		String ^FormatDateTime (String ^fmt, String ^jsDate) { return FormatString (fmt, Convert::ToDateTime (jsDate)); }
+		property String ^CmdArgs { String ^get () { return CStringToMPString (StringArrayToJson (g_cmdargs)); }}
+		property bool Jump1 { bool get () { return hasjump1; } void set (bool value) { hasjump1 = value; } }
+		property bool Jump2 { bool get () { return hasjump2; } void set (bool value) { hasjump2 = value; } }
+		property bool Exec1 { bool get () { return hasexec; } void set (bool value) { hasexec = value; } }
 		void CloseWindow ()
 		{
 			if (wndinst && wndinst->IsHandleCreated) wndinst->Close ();
@@ -1348,6 +1349,15 @@ int APIENTRY wWinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCm
 	destruct relco ([] () {
 		CoUninitialize ();
 	});
+	{
+		auto cmdline = GetCommandLineW ();
+		int argc = 0;
+		auto argv = CommandLineToArgvW (cmdline, &argc);
+		destruct relt ([&argv] () {
+			if (argv) LocalFree (argv);
+		});
+		for (size_t i = 1; i < argc; i ++) g_cmdargs.push_back (argv [i]);
+	}
 	SetWebBrowserEmulation ();
 	System::Windows::Forms::Application::EnableVisualStyles ();
 	System::Windows::Forms::Application::SetCompatibleTextRenderingDefault (false);

@@ -257,7 +257,7 @@ struct pkg_info
 		pkg_info pi;
 		if (!pkg) throw ref new InvalidArgumentException ("No package found.");
 	#define WAPParseSetValue(_left_part_, _right_part_, _default_value_) \
-	do { try { _left_part_ = _right_part_; } catch (...) { _left_part_ = _default_value_; } } while (false)
+	do { try { _left_part_ = _right_part_; } catch (Platform::Exception ^) { _left_part_ = _default_value_; } catch (...) { _left_part_ = _default_value_; } } while (false)
 	#define WAPParseSetStringValue(_left_part_, _right_part_) \
 	WAPParseSetValue (_left_part_, WinRTStringToStdString (_right_part_), L"")
 		WAPParseSetStringValue (pi.id.name, pkg->Id->Name);
@@ -271,7 +271,15 @@ struct pkg_info
 		WAPParseSetStringValue (pi.prop.displayname, pkg->DisplayName);
 		WAPParseSetStringValue (pi.prop.description, pkg->Description);
 		WAPParseSetStringValue (pi.prop.publisher, pkg->PublisherDisplayName);
-		WAPParseSetStringValue (pi.prop.logo, pkg->Logo->ToString ());
+		try
+		{
+			auto logo = pkg->Logo;
+			String ^logouri = "";
+			if (logo && logo->DisplayUri) { logouri = logo->DisplayUri; }
+			WAPParseSetStringValue (pi.prop.logo, logouri);
+		}
+		catch (Platform::Exception ^) {}
+		catch (...) {}
 		WAPParseSetValue (pi.prop.framework, pkg->IsFramework, false);
 		WAPParseSetValue (pi.prop.resource_package, pkg->IsResourcePackage, false);
 		WAPParseSetValue (pi.bundle, pkg->IsBundle, false);
@@ -298,6 +306,7 @@ struct pkg_info
 				i ++;
 			}
 		}
+		catch (Platform::Exception ^) {}
 		catch (...) {}
 		if (g_enableIterDeps && iterdeps)
 		{
@@ -315,6 +324,7 @@ struct pkg_info
 					}
 				}
 			}
+			catch (Platform::Exception ^) {}
 			catch (...) {}
 		}
 		return pi;

@@ -14,6 +14,9 @@
 #include "strcode.h"
 #include "nstring.h"
 #include "typestrans.h"
+#ifdef _cplusplus_cli
+#include "mpstr.h"
+#endif
 
 template <typename T> std::wstring TypeToString (T value, const std::wstring &reserve = L"") { return std::to_wstring (value); }
 template <typename T> std::string TypeToString (T value, const std::string &reserve = "") { return std::to_string (value); }
@@ -236,6 +239,8 @@ class initkey
 	bool write_string (pcstring value) { return write (value); }
 	bool write (pcwstring value) { return WritePrivateProfileStringW (filepath, section, key, value); }
 	bool write (pcstring value) { return write (StringToWString (value)); }
+	bool write (LPCWSTR value) { return write_string (std::wstring (value ? value : L"")); }
+	bool write (LPCSTR value) { return write_string (value ? value : ""); }
 	bool write (int value) { return write_t (value); }
 	bool write (unsigned int value) { return write_t (value); }
 	bool write (short value) { return write_t (value); }
@@ -351,6 +356,8 @@ class initsection
 	template <typename T> bool read_struct (const std::wstring &key, T &structinst) const { return read_struct (key, &structinst, sizeof (structinst)); }
 	bool write_string (const std::wstring &key, const std::wstring &value) { return WritePrivateProfileStringW (filepath, section, key, value); }
 	bool write_string (const std::string &key, const std::string &value) { return write_string (StringToWString (key), StringToWString (value)); }
+	bool write (pcwstring key, LPCWSTR value) { return write_string (key, value ? value : L""); }
+	bool write (pcstring key, LPCSTR value) { return write_string (key, value ? value : ""); }
 	bool write (const std::wstring &key, const std::wstring &value) { return write_string (key, value); }
 	bool write (const std::string &key, const std::string &value) { return write_string (key, value); }
 	bool write (pcwstring key, short value) { return write_t (key, value); }
@@ -474,6 +481,8 @@ bool write (INIT_WRITE_WARGS (_type_)) { return write_t (section, key, value); }
 		bool write (INIT_WRITE_WARGS (bool)) { return write (section, key, value ? L"true" : L"false"); }
 	bool write (INIT_WRITE_WARGS (int8_t)) { return write_t (section, key, (int16_t)value); }
 	bool write (INIT_WRITE_WARGS (uint8_t)) { return write_t (section, key, (uint16_t)value); }
+	bool write (pcwstring section, pcwstring key, LPCWSTR value) { return write (section, key, std::wstring (value ? value : L"")); }
+	bool write (pcstring section, pcstring key, LPCSTR value) { return write (StringToWString (section), StringToWString (key), StringToWString (value)); }
 	bool write (pcwstring section, pcwstring key, void *buf, size_t bufsize) { return WritePrivateProfileStructW (filepath, section, key, buf, bufsize); }
 	initsection operator [] (pcwstring section) { return initsection (filepath, section); }
 	initsection operator [] (pcstring section) { return initsection (filepath, StringToWString (section)); }
@@ -545,20 +554,20 @@ namespace Win32
 	#define OPERATOR_TRANSITION_DEFINE(type, transfunc, defaultret) \
 operator type () { try { transfunc (Value->ToString ()); } catch (...) { return defaultret; }}
 		OPERATOR_TRANSITION_DEFINE (int8_t, Convert::ToSByte, 0)
-		OPERATOR_TRANSITION_DEFINE (uint8_t, Convert::ToByte, 0)
-		OPERATOR_TRANSITION_DEFINE (int16_t, Convert::ToInt16, 0)
-		OPERATOR_TRANSITION_DEFINE (uint16_t, Convert::ToUInt16, 0)
-		OPERATOR_TRANSITION_DEFINE (int32_t, Convert::ToInt32, 0)
-		OPERATOR_TRANSITION_DEFINE (uint32_t, Convert::ToUInt32, 0)
-		OPERATOR_TRANSITION_DEFINE (int64_t, Convert::ToInt64, 0)
-		OPERATOR_TRANSITION_DEFINE (uint64_t, Convert::ToUInt64, 0)
-		OPERATOR_TRANSITION_DEFINE (float, Convert::ToSingle, 0)
-		OPERATOR_TRANSITION_DEFINE (double, Convert::ToDouble, 0)
-		OPERATOR_TRANSITION_DEFINE (System::Decimal, Convert::ToDecimal, 0)
-		OPERATOR_TRANSITION_DEFINE (System::DateTime, Convert::ToDateTime, Convert::ToDateTime (0))
-	#ifdef OPERATOR_TRANSITION_DEFINE
-	#undef OPERATOR_TRANSITION_DEFINE
-	#endif
+			OPERATOR_TRANSITION_DEFINE (uint8_t, Convert::ToByte, 0)
+			OPERATOR_TRANSITION_DEFINE (int16_t, Convert::ToInt16, 0)
+			OPERATOR_TRANSITION_DEFINE (uint16_t, Convert::ToUInt16, 0)
+			OPERATOR_TRANSITION_DEFINE (int32_t, Convert::ToInt32, 0)
+			OPERATOR_TRANSITION_DEFINE (uint32_t, Convert::ToUInt32, 0)
+			OPERATOR_TRANSITION_DEFINE (int64_t, Convert::ToInt64, 0)
+			OPERATOR_TRANSITION_DEFINE (uint64_t, Convert::ToUInt64, 0)
+			OPERATOR_TRANSITION_DEFINE (float, Convert::ToSingle, 0)
+			OPERATOR_TRANSITION_DEFINE (double, Convert::ToDouble, 0)
+			OPERATOR_TRANSITION_DEFINE (System::Decimal, Convert::ToDecimal, 0)
+			OPERATOR_TRANSITION_DEFINE (System::DateTime, Convert::ToDateTime, Convert::ToDateTime (0))
+		#ifdef OPERATOR_TRANSITION_DEFINE
+		#undef OPERATOR_TRANSITION_DEFINE
+		#endif
 	};
 	[ComVisible (true)]
 	public ref class Section

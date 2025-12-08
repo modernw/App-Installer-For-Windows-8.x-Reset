@@ -252,6 +252,7 @@
             window.parent.setItemHighlight = function() {};
         }
     </script>
+    <script type="text/javascript" src="updateinit.js"></script>
 </head>
 
 <body>
@@ -275,7 +276,7 @@
         </div>
         <div class="section padding" style="">
             <div class="block" id="check-update-block" style="height: 0px;">
-                <span id="loading-amine">123</span><span id="check-update-text" data-res-fromfile="publicRes (106)"></span><br>
+                <span id="loading-amine"></span><span id="check-update-text" data-res-fromfile="publicRes (106)"></span><br>
                 <progress id="progress" min="0" max="100"></progress>
                 <a target="_blank" id="doc-link" data-res-fromfile="publicRes (107)"></a>
             </div>
@@ -385,6 +386,7 @@
                                         break;
                                     }
                                 }
+                                window.parent.setDisabledForOperation(false);
                                 if (compareVersion(window.currver, window.newver) >= 0) {
                                     checkUpdateText.textContent = getPublicRes(114);
                                     checkUpdateBtn.textContent = getPublicRes(115);
@@ -393,8 +395,13 @@
                                     checkUpdateText.textContent = Bridge.String.format(getPublicRes(116), window.newver);
                                     checkUpdateBtn.textContent = getPublicRes(117);
                                     checkUpdateBtn.setAttribute("data-action", "download");
+                                    if (autoInstallUpdate) {
+                                        setTimeout(function(thisnode) {
+                                            thisnode.click();
+                                            autoInstallUpdate = false;
+                                        }, 0, self);
+                                    }
                                 }
-                                window.parent.setDisabledForOperation(false);
                             }, function(error) {
                                 // console.log("error", error);
                                 var json = JSON.parse(error.responseText);
@@ -482,6 +489,22 @@
             })();
         </script>
     </div>
+    <script>
+        (function(global) {
+            "use strict";
+
+            function ready(e) {
+                var checkButton = document.getElementById("check-update");
+                if (autoCheckUpdate) {
+                    setTimeout(function(thisnode) {
+                        thisnode.click();
+                        autoCheckUpdate = false;
+                    }, 0, checkButton);
+                }
+            }
+            OnLoad.add(ready);
+        })(this);
+    </script>
 </body>
 
 </html>

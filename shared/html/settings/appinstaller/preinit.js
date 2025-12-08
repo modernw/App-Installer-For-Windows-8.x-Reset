@@ -27,4 +27,9 @@
         }
         return null;
     };
+    Object.defineProperty(global, "cmdargs", {
+        get: function() {
+            return JSON.parse(Bridge.External.cmdArgs);
+        }
+    });
 })(this);

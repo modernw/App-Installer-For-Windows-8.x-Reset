@@ -42,7 +42,26 @@
             });
             list.appendChild(li);
         }
-        content.src = items.general.page;
+        content.src = guidePage.page;
+        for (var i = 0; i < list.children.length; i++) {
+            var child = list.children[i];
+            child.click();
+            break;
+        }
+        var jumppage = "";
+        try { var args = cmdargs; if (args.length > 1) jumppage = args[1]; } catch (e) {}
+        if (jumppage && jumppage.length > 0 && !Bridge.External.jump2) {
+            for (var i = 0; i < list.children.length; i++) {
+                var child = list.children[i];
+                if (Bridge.NString.equals(child.getAttribute("data-tag"), jumppage)) {
+                    Bridge.External.jump2 = true;
+                    setTimeout(function(thisnode) {
+                        thisnode.click();
+                    }, 0, child)
+                    break;
+                }
+            }
+        }
         global.setDisabledForOperation = function(disabled) {
             var list = document.querySelector("#settingpage .guide aside ul");
             for (var i = 0; i < list.children.length; i++) {

@@ -15,7 +15,6 @@
 #include "stringres.h"
 #include "norstr.h"
 #include "raii.h"
-#include "priformatcli.h"
 #include "filepath.h"
 
 HRESULT GetBundleReader (_In_ LPCWSTR inputFileName, _Outptr_ IAppxBundleReader** bundleReader)

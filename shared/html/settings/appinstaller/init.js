@@ -33,16 +33,37 @@
                     if (child.classList.contains("selected"))
                         child.classList.remove("selected");
                 }
-                content.src = this.getAttribute("data-page");
-                setTimeout(function() {
-                    content.style.display = "";
-                    Windows.UI.Animation.runAsync(content, [Windows.UI.Animation.Keyframes.Flyout.toLeft, Windows.UI.Animation.Keyframes.Opacity.visible]);
-                }, 0);
+
+                setTimeout(function(thisnode) {
+                    content.style.display = "none";
+                    content.src = thisnode.getAttribute("data-page");
+                    setTimeout(function(thisnode2) {
+                        thisnode2.style.display = "";
+                    }, 500, content);
+                }, 0, this);
                 this.classList.add("selected");
             });
             list.appendChild(li);
         }
         content.src = guidePage.page;
+        eventutil.addEvent(content, "load", function() {
+            Windows.UI.Animation.runAsync(this, [Windows.UI.Animation.Keyframes.Flyout.toLeft, Windows.UI.Animation.Keyframes.Opacity.visible]);
+            this.style.display = "";
+        });
+        var jumppage = "";
+        try { var args = cmdargs; if (args.length > 1) jumppage = args[1]; } catch (e) {}
+        if (jumppage && jumppage.length > 0 && !Bridge.External.jump2) {
+            for (var i = 0; i < list.children.length; i++) {
+                var child = list.children[i];
+                if (Bridge.NString.equals(child.getAttribute("data-tag"), jumppage)) {
+                    Bridge.External.jump2 = true;
+                    setTimeout(function(thisnode) {
+                        thisnode.click();
+                    }, 0, child)
+                    break;
+                }
+            }
+        }
         global.setDisabledForOperation = function(disabled) {
             var list = document.querySelector("#settingpage .guide aside ul");
             for (var i = 0; i < list.children.length; i++) {

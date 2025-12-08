@@ -84,13 +84,13 @@
     <ClInclude Include="..\pkgread\pkgread.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\priformatcli\priformatcli.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="localeex.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="bridge.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\priformatcli\priformatcli.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

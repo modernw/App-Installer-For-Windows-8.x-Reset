@@ -94,7 +94,7 @@
 <InstallOrder>1000</InstallOrder>
 <SCStartRoot>0</SCStartRoot>
 <SCStartProgs>0</SCStartProgs>
-<SCAppFld>1</SCAppFld>
+<SCAppFld>0</SCAppFld>
 <SCStartup>0</SCStartup>
 <SCDesk>0</SCDesk>
 <SCQLaunch>0</SCQLaunch>
@@ -678,16 +678,16 @@
 <InstallOrder>1000</InstallOrder>
 <SCStartRoot>0</SCStartRoot>
 <SCStartProgs>0</SCStartProgs>
-<SCAppFld>1</SCAppFld>
+<SCAppFld>0</SCAppFld>
 <SCStartup>0</SCStartup>
 <SCDesk>0</SCDesk>
 <SCQLaunch>0</SCQLaunch>
 <SCStartPinOption>0</SCStartPinOption>
-<SCCust>0</SCCust>
-<CustSCPath/>
-<SCDesc>Settings</SCDesc>
+<SCCust>1</SCCust>
+<CustSCPath>%StartProgramsFolderCommon%\\%AppShortcutFolderName%</CustSCPath>
+<SCDesc>Update</SCDesc>
 <SCComment/>
-<SCArgs/>
+<SCArgs>appinstaller update /checkupdate</SCArgs>
 <SCWork/>
 <UseExtIco>0</UseExtIco>
 <IcoFN/>
@@ -759,6 +759,152 @@
 <SCCust>0</SCCust>
 <CustSCPath/>
 <SCDesc/>
+<SCComment/>
+<SCArgs/>
+<SCWork/>
+<UseExtIco>0</UseExtIco>
+<IcoFN/>
+<IcoIdx>0</IcoIdx>
+<IcoShowMd>0</IcoShowMd>
+<IcoHK>0</IcoHK>
+<RegTTF>0</RegTTF>
+<TTFName/>
+<RegOCX>0</RegOCX>
+<RegTLB>0</RegTLB>
+<SupInUse>0</SupInUse>
+<Compress>1</Compress>
+<UseOrigAttr>1</UseOrigAttr>
+<Attr>0</Attr>
+<NoCRC>0</NoCRC>
+<NoRemove>0</NoRemove>
+<Shared>0</Shared>
+<OSCond>
+<OS>32768</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+</OSCond>
+<RTCond/>
+<BuildConfigs>
+<Cfg>All</Cfg>
+</BuildConfigs>
+<Package>None</Package>
+<Packages/>
+<Notes/>
+<CompSize>0</CompSize>
+<CRC>0</CRC>
+<StoreOnly>0</StoreOnly>
+</FileData>
+<FileData>
+<FldRef>0</FldRef>
+<FullName>E:\Profiles\Bruce\Documents\Visual Studio 2015\Projects\AppInstallerReset\Release\shortcut.exe</FullName>
+<FileName>shortcut.exe</FileName>
+<Source>E:\Profiles\Bruce\Documents\Visual Studio 2015\Projects\AppInstallerReset\Release</Source>
+<Ext>exe</Ext>
+<RTSource>档案</RTSource>
+<Desc/>
+<Recurse>1</Recurse>
+<MatchMode>0</MatchMode>
+<Dest>%AppFolder%</Dest>
+<Overwrite>1</Overwrite>
+<Backup>0</Backup>
+<Protect>0</Protect>
+<InstallOrder>1000</InstallOrder>
+<SCStartRoot>0</SCStartRoot>
+<SCStartProgs>0</SCStartProgs>
+<SCAppFld>0</SCAppFld>
+<SCStartup>0</SCStartup>
+<SCDesk>0</SCDesk>
+<SCQLaunch>0</SCQLaunch>
+<SCStartPinOption>0</SCStartPinOption>
+<SCCust>0</SCCust>
+<CustSCPath/>
+<SCDesc>shortcut</SCDesc>
+<SCComment/>
+<SCArgs/>
+<SCWork/>
+<UseExtIco>0</UseExtIco>
+<IcoFN/>
+<IcoIdx>0</IcoIdx>
+<IcoShowMd>0</IcoShowMd>
+<IcoHK>0</IcoHK>
+<RegTTF>0</RegTTF>
+<TTFName/>
+<RegOCX>0</RegOCX>
+<RegTLB>0</RegTLB>
+<SupInUse>0</SupInUse>
+<Compress>1</Compress>
+<UseOrigAttr>1</UseOrigAttr>
+<Attr>0</Attr>
+<NoCRC>0</NoCRC>
+<NoRemove>0</NoRemove>
+<Shared>0</Shared>
+<OSCond>
+<OS>32768</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+</OSCond>
+<RTCond/>
+<BuildConfigs>
+<Cfg>All</Cfg>
+</BuildConfigs>
+<Package>None</Package>
+<Packages/>
+<Notes/>
+<CompSize>0</CompSize>
+<CRC>0</CRC>
+<StoreOnly>0</StoreOnly>
+</FileData>
+<FileData>
+<FldRef>0</FldRef>
+<FullName>E:\Profiles\Bruce\Documents\Visual Studio 2015\Projects\AppInstallerReset\Release\desktopini.exe</FullName>
+<FileName>desktopini.exe</FileName>
+<Source>E:\Profiles\Bruce\Documents\Visual Studio 2015\Projects\AppInstallerReset\Release</Source>
+<Ext>exe</Ext>
+<RTSource>档案</RTSource>
+<Desc/>
+<Recurse>1</Recurse>
+<MatchMode>0</MatchMode>
+<Dest>%AppFolder%</Dest>
+<Overwrite>1</Overwrite>
+<Backup>0</Backup>
+<Protect>0</Protect>
+<InstallOrder>1000</InstallOrder>
+<SCStartRoot>0</SCStartRoot>
+<SCStartProgs>0</SCStartProgs>
+<SCAppFld>0</SCAppFld>
+<SCStartup>0</SCStartup>
+<SCDesk>0</SCDesk>
+<SCQLaunch>0</SCQLaunch>
+<SCStartPinOption>0</SCStartPinOption>
+<SCCust>0</SCCust>
+<CustSCPath/>
+<SCDesc>desktopini</SCDesc>
 <SCComment/>
 <SCArgs/>
 <SCWork/>
@@ -937,16 +1083,12 @@ end
 function DetectSystemLanguage()
     -- 调用官方API获取语言信息
     local langTbl = Application.GetInstallLanguage();
-    
     local langid = GetLangID (langTbl.Primary, langTbl.Secondary);
-    Dialog.Message ("Language Test", tostring (langTbl.Primary) .. " " .. tostring (langTbl.Secondary) .. " " .. tostring (langid));
     -- 检查API是否调用成功
-    if langTbl and langTbl.Primary then
-        local primaryLangId = langTbl.Primary
-        
+    if langTbl and langid then
         -- 将语言ID转换为我们的语言标识
         -- 0x0409 (1033) = 英语(美国)，0x0804 (2052) = 中文(简体)
-        if primaryLangId == 2052 then -- 中文(简体)
+        if langid == 2052 then -- 中文(简体)
             return "zh"
         else -- 默认英语（包括1033及其他情况）
             return "en"
@@ -3648,7 +3790,7 @@ if (mode == 1 or mode == 2) then
             -- 4. 执行静默卸载（关键：使用 SW_HIDE 隐藏窗口，true 表示等待完成）
             -- 使用 File.Run 替代 Shell.Execute 以获得更好的控制
             resulttest = File.Run(targetExePath, uninstallArgs, workingDir, SW_HIDE, true)
-            
+            Application.Sleep (1000);
             -- （可选）日志记录，仅用于调试
             -- _LogFile.Message("静默卸载已执行，结果码: " .. tostring(resulttest), LOG_INFO)
         else
@@ -3998,12 +4140,69 @@ end
 -- 		For example, use:
 -- 		DlgScrollingText.AppendLine(CTRL_SCROLLTEXT_BODY, "Your text here");
 --		...to add a line of progress text.
+
+DlgScrollingText.AppendLine(CTRL_SCROLLTEXT_BODY, "Installing the runtime libraries...");
+File.Run(SessionVar.Expand("%TempLaunchFolder%\\runtime.exe"), "", "", SW_SHOWNORMAL, true);
+
 DlgScrollingText.AppendLine(CTRL_SCROLLTEXT_BODY, "Registering the application...");
 Registry.CreateKey(HKEY_CURRENT_USER, "SOFTWARE\\Windows Modern\\App Installer")
 Registry.SetValue(HKEY_CURRENT_USER, "SOFTWARE\\Windows Modern\\App Installer", "", "", REG_SZ);
 Registry.SetValue(HKEY_CURRENT_USER, "SOFTWARE\\Windows Modern\\App Installer", "Uninstall", SessionVar.Expand("%AppFolder%\\uninstall.exe"), REG_SZ);
 Registry.SetValue(HKEY_CURRENT_USER, "SOFTWARE\\Windows Modern\\App Installer", "AppPath", SessionVar.Expand("%AppFolder%"), REG_SZ);
 Registry.SetValue(HKEY_CURRENT_USER, "SOFTWARE\\Windows Modern\\App Installer", "Version", SessionVar.Expand("%ProductVer%"), REG_SZ);
+
+Registry.SetValue(HKEY_CLASSES_ROOT, "Microsoft.DesktopAppInstaller", "", "Windows Store Application Package", REG_SZ);
+Registry.SetValue(HKEY_CLASSES_ROOT, "Microsoft.DesktopAppInstaller\\Shell\\Open\\Command", "", SessionVar.Expand("\"%AppFolder%\\appinstaller.exe\" \"%1\""), REG_SZ);
+Registry.SetValue(HKEY_CLASSES_ROOT, "Microsoft.DesktopAppInstaller\\DefaultIcon", "", SessionVar.Expand("%AppFolder%\\appinstaller.exe,2"), REG_SZ);
+Registry.SetValue(HKEY_CLASSES_ROOT, "Applications\\AppInstaller.exe\\DefaultIcon", "", SessionVar.Expand("%AppFolder%\\appinstaller.exe,-136"), REG_SZ);
+DlgScrollingText.AppendLine(CTRL_SCROLLTEXT_BODY, "Processing File Associations...");
+Registry.SetValue(HKEY_CLASSES_ROOT, ".appx", "", "Microsoft.DesktopAppInstaller", REG_SZ);
+Registry.SetValue(HKEY_CLASSES_ROOT, ".appxbundle", "", "Microsoft.DesktopAppInstaller", REG_SZ);
+DlgScrollingText.AppendLine(CTRL_SCROLLTEXT_BODY, "Creating Shortcut...");
+function CreateShortcut(lnkpath, targetfile, appid)
+	ret = File.Run(SessionVar.Expand("%AppFolder%\\shortcut.exe"), "\"" .. lnkpath .. "\" \"" .. targetfile .. "\" \"" .. appid .. "\"", "", SW_HIDE, true);
+	return ret;
+end
+function SetDesktopInit(inipath, section, key, value)
+	ret = File.Run(SessionVar.Expand ("%AppFolder%\\desktopini.exe"), "\"" .. inipath .. "\" \"" .. section .. "\" \"" .. key .. "\" \"" .. value .. "\"", "", SW_HIDE, true);
+	return ret;
+end
+startitemfolder = SessionVar.Expand ("%StartProgramsFolderCommon%\\%AppShortcutFolderName%");
+applnkpath = startitemfolder .. "\\App Installer.lnk";
+setlnkpath = startitemfolder .. "\\Settings.lnk";
+desktopini = startitemfolder .. "";
+CreateShortcut (applnkpath, SessionVar.Expand("%AppFolder%\\appinstaller.exe"), "Microsoft.DesktopAppInstaller!App");
+Registry.SetValue(HKEY_CURRENT_USER, "SOFTWARE\\Windows Modern\\App Installer", "AppInstallerLnk", applnkpath, REG_SZ);
+CreateShortcut (setlnkpath, SessionVar.Expand("%AppFolder%\\settings.exe"), "WindowsModern.PracticalToolsProject!Settings");
+Registry.SetValue(HKEY_CURRENT_USER, "SOFTWARE\\Windows Modern\\App Installer", "SettingsLnk", setlnkpath, REG_SZ);
+SetDesktopInit (desktopini, ".ShellClassInfo", "ConfirmFileOp", 0);
+SetDesktopInit (desktopini, "LocalizedFileNames", "App Installer.lnk", SessionVar.Expand("@%AppFolder%\\appinstaller.exe,-300"));
+SetDesktopInit (desktopini, "LocalizedFileNames", "Settings.lnk", SessionVar.Expand("@%AppFolder%\\settings.exe,-200"));
+SetDesktopInit (desktopini, "LocalizedFileNames", "Update.lnk", SessionVar.Expand("@%AppFolder%\\reslib.dll,-103"));
+SetDesktopInit (desktopini, "LocalizedFileNames", "Uninstall.lnk", SessionVar.Expand("@%AppFolder%\\reslib.dll,-131"));
+SetDesktopInit (desktopini, ".ShellClassInfo", "LocalizedResourceName", SessionVar.Expand("@%AppFolder%\\appinstaller.exe,-300"));
+
+DlgScrollingText.AppendLine(CTRL_SCROLLTEXT_BODY, "Updating system PATH...");
+local appFolder = SessionVar.Expand("%AppFolder%");
+local pathKey = "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment";
+local currentPath, pathType = Registry.GetValue(HKEY_LOCAL_MACHINE, pathKey, "Path", true);
+currentPath = currentPath or ""
+-- 检查路径是否已存在
+if not string.find(";"..currentPath..";", ";"..appFolder..";", 1, true) then
+    local newPath = currentPath
+    if newPath ~= "" then
+        newPath = newPath .. ";" .. appFolder
+    else
+        newPath = appFolder
+    end
+    -- 更新注册表值并保持原有类型
+    Registry.SetValue(HKEY_LOCAL_MACHINE, pathKey, "Path", newPath, pathType or REG_EXPAND_SZ)
+    -- 广播环境变量更新消息
+    DLL.CallFunction("Kernel32.dll", "SendMessageTimeout", 
+        "HWND_BROADCAST,WM_SETTINGCHANGE,0,(LPARAM)\"Environment\",SMTO_ABORTIFHUNG,5000,NULL", 
+        DLL_RETURN_TYPE_LONG, DLL_CALL_STDCALL)
+end
+
 
 automodestr = SessionVar.Expand("%AutoInstallMode%");
 automodestr = String.TrimLeft (String.TrimRight (String.Lower (automodestr)));
@@ -5463,6 +5662,36 @@ Please click Finish to exit.
 <Script>hkey = HKEY_CURRENT_USER;
 key = "Software\\Windows Modern";
 keynext = "App Installer";
+appinstallerlnkpath = Registry.GetValue(HKEY_CURRENT_USER, "SOFTWARE\\Windows Modern\\App Installer", "AppInstallerLnk", false);
+settingslnkpath = Registry.GetValue(HKEY_CURRENT_USER, "SOFTWARE\\Windows Modern\\App Installer", "SettingsLnk", false);
+File.Delete(appinstallerlnkpath, true, false, false);
+File.Delete(settingslnkpath, true, false, false);
+Registry.DeleteKey(HKEY_CLASSES_ROOT, ".appx");
+Registry.DeleteKey(HKEY_CLASSES_ROOT, ".appxbundle");
+Registry.DeleteKey(HKEY_CLASSES_ROOT, ".msix");
+Registry.DeleteKey(HKEY_CLASSES_ROOT, ".msixbundle");
+Registry.DeleteKey(HKEY_CLASSES_ROOT, "Microsoft.DesktopAppInstaller");
+local appFolder = SessionVar.Expand("%AppFolder%");
+local pathKey = "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment";
+local currentPath, pathType = Registry.GetValue(HKEY_LOCAL_MACHINE, pathKey, "Path", true);
+if currentPath then
+    local paths = {}
+    -- 分割PATH并过滤当前应用目录
+    for path in string.gmatch(currentPath, "[^;]+") do
+        if path ~= appFolder then
+            table.insert(paths, path)
+        end
+    end
+    local newPath = table.concat(paths, ";")
+    -- 仅当路径发生变化时更新
+    if newPath ~= currentPath then
+        Registry.SetValue(HKEY_LOCAL_MACHINE, pathKey, "Path", newPath, pathType or REG_EXPAND_SZ)
+        -- 广播环境变量更新消息
+        DLL.CallFunction("Kernel32.dll", "SendMessageTimeout", 
+            "HWND_BROADCAST,WM_SETTINGCHANGE,0,(LPARAM)\"Environment\",SMTO_ABORTIFHUNG,5000,NULL", 
+            DLL_RETURN_TYPE_LONG, DLL_CALL_STDCALL)
+    end
+end
 Registry.DeleteKey (hkey, key .. "\\" .. keynext);
 Registry.DeleteKey (hkey, key);</Script>
 <BookMarks count="0">
@@ -5642,6 +5871,14 @@ g_HandleSystemReboot();
 <PrimerFiles>
 <PrimerFile>
 <SourcePath>E:\Profiles\Bruce\Documents\Visual Studio 2015\Projects\AppInstallerReset\appinstaller\res\icons\main.ico</SourcePath>
+<DeleteOnExit>1</DeleteOnExit>
+<NeededByUninstall>0</NeededByUninstall>
+<BuildConfigs>
+<Cfg>All</Cfg>
+</BuildConfigs>
+</PrimerFile>
+<PrimerFile>
+<SourcePath>E:\Profiles\Bruce\Documents\Visual Studio 2015\Projects\AppInstallerReset\others\runtime.exe</SourcePath>
 <DeleteOnExit>1</DeleteOnExit>
 <NeededByUninstall>0</NeededByUninstall>
 <BuildConfigs>
