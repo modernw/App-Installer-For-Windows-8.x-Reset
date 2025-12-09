@@ -159,6 +159,28 @@
                     })();
                 </script>
             </div>
+            <div class="win-settings-section">
+                <br>
+                <label class="win-label" for="check-app-has-installed" id="check-app-has-installed-label" data-res-fromfile="publicRes (144)"></label>
+                <script>
+                    (function() {
+                        "use strict";
+                        var label = document.getElementById("check-app-has-installed-label");
+                        var toggle = new Toggle();
+                        toggle.create();
+                        toggle.parent = label.parentNode;
+                        toggle.showlabel = true;
+                        var winjsres = Bridge.External.WinJsStringRes;
+                        toggle.setStatusText(winjsres.getString("ms-resource://Microsoft.WinJS.1.0/ui/on"), winjsres.getString("ms-resource://Microsoft.WinJS.1.0/ui/off"));
+                        toggle.inputId = "check-app-has-installed";
+                        var ini = Bridge.External.Config.GetConfig();
+                        toggle.addEventListener("change", function() {
+                            ini.set("Settings", "AppInstaller:CheckPackageIsIntalled", toggle.checked);
+                        });
+                        toggle.checked = parseBool(ini.getSection("Settings").getKey("AppInstaller:CheckPackageIsIntalled").value);
+                    })();
+                </script>
+            </div>
         </div>
     </div>
 </body>

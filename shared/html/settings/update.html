@@ -81,7 +81,8 @@
         }
         
         #newversion-desc {
-            white-space: pre-wrap;
+            /*white-space: pre-wrap;*/
+            white-space: normal;
         }
         
         #newversion-desc img {
@@ -313,6 +314,13 @@
                 var newVersionDescShowOrHide = document.getElementById("newversion-desc-showall-hide");
                 var checkUpdateLoading = document.getElementById("loading-amine");
                 var stopProcess = false;
+                var tbpFlags = {
+                    error: 4,
+                    indeterminate: 1,
+                    noProgress: 0,
+                    normal: 2,
+                    paused: 8
+                };
 
                 function newVersionBlockSizeChanged() {
                     if (stopProcess) return;
@@ -426,20 +434,22 @@
                         var path = storage.path;
                         stopProcess = true;
                         newVersionBlock.parentNode.style.height = "0px";
-                        checkUpdateText.textContent = getPublicRes(117);
+                        checkUpdateText.textContent = getPublicRes(118);
                         progress.style.display = "";
                         checkUpdateBlock.style.height = checkUpdateBlock.scrollHeight + "px";
                         var anime = Windows.UI.Animation;
                         var strutil = Bridge.External.String;
+                        var tbputil = Bridge.External;
 
                         function setError(error) {
                             //console.error("download error", error);
                             checkUpdateText.textContent = strutil.format(getPublicRes(119), error.reason);
                             progress.style.display = "none";
                             self.disabled = false;
-                            self.textContent = "重试";
+                            self.textContent = getPublicRes(132);
                             window.parent.setDisabledForOperation(false);
                             checkUpdateBlock.style.height = checkUpdateBlock.scrollHeight + "px";
+                            tbputil.tbState = tbpFlags.error;
                         }
 
                         function setException(e) {
@@ -447,6 +457,7 @@
                             checkUpdateText.textContent = strutil.format(getPublicRes(119), e.message);
                             window.parent.setDisabledForOperation(false);
                             checkUpdateBlock.style.height = checkUpdateBlock.scrollHeight + "px";
+                            tbputil.tbState = tbpFlags.error;
                         }
 
                         function setComplete(complete) {
@@ -457,16 +468,18 @@
                             var settingsapppath = path.combine(path.root, "settings.exe");
                             window.parent.setDisabledForOperation(false);
                             var process = Bridge.External.Process;
-                            process.kill(appinstallerpath, true, false);
                             checkUpdateBlock.style.height = checkUpdateBlock.scrollHeight + "px";
+                            tbputil.tbState = tbpFlags.noProgress;
+                            process.kill(appinstallerpath, true, false);
                             createProcess(cmdline, tempfile, wndDisplayMode.showNormal, false);
                             process.kill(settingsapppath, true, false);
-                            //Bridge.External.closeWindow();
                         }
                         progress.value = 0;
                         anime.loading(checkUpdateLoading, true);
                         var tempdir = path.expand("%temp%");
                         var tempfile = path.combine(tempdir, "InstallerSetup.exe");
+                        tbputil.tbProgress = 0;
+                        tbputil.tbState = tbpFlags.normal;
                         downloadFile(downloadUrl, tempfile).done(
                             function(complete) {
                                 anime.loading(checkUpdateLoading, false);
@@ -482,6 +495,7 @@
                                 progress.value = prog.progress;
                                 checkUpdateText.textContent = strutil.format(getPublicRes(121), Math.floor(prog.progress), formatBytesSize(prog.received), formatBytesSize(prog.total));
                                 checkUpdateBlock.style.height = checkUpdateBlock.scrollHeight + "px";
+                                tbputil.tbProgress = prog.progress;
                             }
                         )
                     }

@@ -1223,7 +1223,7 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form, public IScrip
 			{
 				try
 				{
-					const auto &pi = *g_pkginfo.begin ();
+					const auto &pi = g_pkginfo.at (0);
 					const std::wstring
 						&name = pi.identity.name,
 						&publisher = pi.identity.publisher,
@@ -1231,7 +1231,9 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form, public IScrip
 						&fullname = pi.identity.package_full_name;
 					std::vector <find_pkginfo> fpkgs;
 					std::wstring err, msg;
-					HRESULT hr = GetAppxPackages (family, fpkgs, err, msg);
+					HRESULT hr = S_OK;
+					if (g_initfile [L"Settings"] [L"AppInstaller:CheckPackageIsIntalled"].read_bool ())
+						hr = GetAppxPackages (family, fpkgs, err, msg);
 					bool isfind = false;
 					find_pkginfo findpkg;
 					if (fpkgs.size () > 0)

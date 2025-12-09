@@ -39,7 +39,21 @@ var MBRET = {
 Object.freeze(MBFLAGS);
 Object.freeze(MBRET);
 
-function GetLocaleStringFromResId(resId) { return Bridge.Resources.byid(resId); }
+(function(global) {
+    try {
+        var storage = Bridge.External.Storage;
+        var path = storage.path;
+        var root = path.getDir(path.program);
+        var respath = path.combine(root, "reslib.dll");
+        var res = Bridge.Resources;
+        global.respath = respath;
+        global.getPublicRes = function(resId) {
+            return res.fromfile(respath, resId);
+        }
+    } catch (e) {}
+})(this);
+
+function GetLocaleStringFromResId(resId) { try { return getPublicRes(resId); } catch (e) {} }
 var msgboxResult = {};
 
 function MessageBox(_lpText, _lpCaption, _uType, _objColor) {
@@ -115,9 +129,29 @@ function MessageBoxForJS(_lpText, _lpCaption, _uType, _objColor, _callback) {
             msgcaption.appendChild(msgtitle);
         }
     }
-    if (_lpText instanceof HTMLElement) {
-        _lpText.classList.add("notice-text");
-        msgcontent.appendChild(_lpText);
+    if (_lpText instanceof HTMLElement || _lpText instanceof HTMLDivElement || typeof _lpText !== "string") {
+        try {
+            _lpText.classList.add("notice-text");
+            msgcontent.appendChild(_lpText);
+        } catch (e) {
+            if (!IsBlackLabel(_lpText)) {
+                var msgtext = document.createElement("p");
+                msgtext.textContent = _lpText;
+                msgtext.classList.add("notice-text");
+                if (IsBlackLabel(_lpCaption)) {
+                    msgtext.style.marginTop = "0";
+                }
+                msgcontent.appendChild(msgtext);
+            } else {
+                var msgtext = document.createElement("p");
+                msgtext.innerText = "";
+                msgtext.classList.add("notice-text");
+                if (IsBlackLabel(_lpCaption)) {
+                    msgtext.style.marginTop = "0";
+                }
+                msgcontent.appendChild(msgtext);
+            }
+        }
     } else {
         if (!IsBlackLabel(_lpText)) {
             var msgtext = document.createElement("p");
@@ -330,7 +364,7 @@ MsgBoxObj.prototype._internalCallback = function(returnValue) {
  * @param {string} swTitle 标题
  * @param {MBFLAGS} uType 标志，使用 MBFLAGS 常量
  * @param {string} swColor 背景颜色文本。
- * @returns 
+ * @returns {Promise}
  */
 function messageBoxAsync(swText, swTitle, uType, swColor, pfCallback) {
     if (typeof Promise === "undefined") {

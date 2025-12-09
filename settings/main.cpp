@@ -574,6 +574,97 @@ bool KillProcessByFilePath (
 	CloseHandle (hSnap);
 	return killed;
 }
+static std::wstring QueryVersionString (const BYTE *data, const std::wstring &langCode,
+	const wchar_t *key)
+{
+	wchar_t query [256] = {0};
+	wsprintfW (query, L"\\StringFileInfo\\%s\\%s", langCode.c_str (), key);
+	LPWSTR value = nullptr;
+	UINT len = 0;
+	if (VerQueryValueW (data, query, (LPVOID *)&value, &len) && value) 
+		return std::wstring (value ? value : L"", len);
+	return L"";
+}
+rapidjson::Document GetFileVersionAsJson (const std::wstring &filePath)
+{
+	rapidjson::Document doc;
+	doc.SetObject ();
+	auto &alloc = doc.GetAllocator ();
+	DWORD dummy = 0;
+	DWORD size = GetFileVersionInfoSizeW (filePath.c_str (), &dummy);
+	if (size == 0)
+	{
+		doc.AddMember ("error", "No version info", alloc);
+		return doc;
+	}
+	std::vector <BYTE> data (size);
+	if (!GetFileVersionInfoW (filePath.c_str (), 0, size, data.data ()))
+	{
+		doc.AddMember ("error", "GetFileVersionInfoW failed", alloc);
+		return doc;
+	}
+	struct LANGANDCODEPAGE
+	{
+		WORD wLanguage;
+		WORD wCodePage;
+	};
+	LANGANDCODEPAGE *lpTranslate = nullptr;
+	UINT cbTranslate = 0;
+	if (!VerQueryValueW (data.data (),
+		L"\\VarFileInfo\\Translation",
+		(LPVOID *)&lpTranslate,
+		&cbTranslate))
+	{
+		doc.AddMember ("error", "No Translation", alloc);
+		return doc;
+	}
+	wchar_t langCode [20] = {};
+	wsprintfW (langCode, L"%04x%04x",
+		lpTranslate [0].wLanguage,
+		lpTranslate [0].wCodePage);
+	std::wstring lc = langCode;
+	const wchar_t *keys [] =
+	{
+		L"CompanyName",
+		L"FileDescription",
+		L"FileVersion",
+		L"InternalName",
+		L"OriginalFilename",
+		L"ProductName",
+		L"ProductVersion",
+		L"LegalCopyright"
+	};
+	for (auto key : keys)
+	{
+		std::wstring val = QueryVersionString (data.data (), lc, key);
+		if (!val.empty ())
+		{
+			rapidjson::Value k;
+			k.SetString (WStringToString (key, CP_UTF8).c_str (), alloc);
+			rapidjson::Value v;
+			v.SetString (WStringToString (val, CP_UTF8).c_str (), alloc);
+			doc.AddMember (k, v, alloc);
+		}
+	}
+	VS_FIXEDFILEINFO *ffi = nullptr;
+	UINT ffiLen = 0;
+	if (VerQueryValueW (data.data (), L"\\", (LPVOID *)&ffi, &ffiLen))
+	{
+		if (ffi && ffiLen)
+		{
+			wchar_t ver [64];
+			wsprintfW (ver, L"%u.%u.%u.%u",
+				HIWORD (ffi->dwFileVersionMS),
+				LOWORD (ffi->dwFileVersionMS),
+				HIWORD (ffi->dwFileVersionLS),
+				LOWORD (ffi->dwFileVersionLS));
+			doc.AddMember ("FileVersionRaw",
+				rapidjson::Value ().SetString (WStringToString (ver, CP_UTF8).c_str (), alloc),
+				alloc);
+		}
+	}
+	return doc;
+}
 
 [ComVisible (true)]
 public ref class SplashForm: public System::Windows::Forms::Form
@@ -946,11 +1037,22 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form, public IScrip
 		property _I_Download ^Download { _I_Download ^get () { return download; }}
 		property _I_Process ^Process { _I_Process ^get () { return proc; }}
 		property _I_ResourcePri ^WinJsStringRes { _I_ResourcePri ^get () { return winjs_res; }}
+		property _I_ResourcePri ^StringResources { _I_ResourcePri ^get () { return winjs_res; }}
 		String ^FormatDateTime (String ^fmt, String ^jsDate) { return FormatString (fmt, Convert::ToDateTime (jsDate)); }
 		property String ^CmdArgs { String ^get () { return CStringToMPString (StringArrayToJson (g_cmdargs)); }}
 		property bool Jump1 { bool get () { return hasjump1; } void set (bool value) { hasjump1 = value; } }
 		property bool Jump2 { bool get () { return hasjump2; } void set (bool value) { hasjump2 = value; } }
 		property bool Exec1 { bool get () { return hasexec; } void set (bool value) { hasexec = value; } }
+		property double TBProgress { void set (double value) { wndinst->TProgressPercent = value; }}
+		property DWORD TBState { void set (DWORD value) { wndinst->TProgressState = (TBPFLAG)value; }}
+		String ^GetVersionInfoToJSON (String ^filepath)
+		{
+			auto doc = GetFileVersionAsJson (MPStringToStdW (filepath));
+			rapidjson::StringBuffer buffer;
+			rapidjson::Writer <rapidjson::StringBuffer> writer (buffer);
+			doc.Accept (writer);
+			return CStringToMPString (StringToWString (buffer.GetString (), CP_UTF8));
+		}
 		void CloseWindow ()
 		{
 			if (wndinst && wndinst->IsHandleCreated) wndinst->Close ();
@@ -1243,6 +1345,9 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form, public IScrip
 			web2->ExecWB (OLECMDID_OPTICAL_ZOOM, OLECMDEXECOPT_DONTPROMPTUSER, &v, nullptr);
 		}
 	}
+	// Ö»ÄÜÉèÖÃ¡£0 - 100
+	property double TProgressPercent { void set (double progressPercent) { if (taskbar) taskbar->SetProgressValue (InvokeGetHWND (), progressPercent * 100, 100 * 100); }}
+	property TBPFLAG TProgressState { void set (TBPFLAG state) { if (taskbar) taskbar->SetProgressState (InvokeGetHWND (), state); }}
 	~MainHtmlWnd ()
 	{
 		if (taskbar) taskbar->Release ();

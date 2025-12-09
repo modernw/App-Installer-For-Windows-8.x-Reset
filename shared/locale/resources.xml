@@ -113,7 +113,6 @@
     <lang name="zh-TW">關閉</lang>
     <lang name="zu-ZA">Cishile</lang>
 </resource>
-
 <resource id="ms-resource://Microsoft.WinJS.1.0/ui/on">
     <lang name="zh-CN">开</lang>
     <lang name="en-US">On</lang>
@@ -226,5 +225,9 @@
     <lang name="zh-HK">開啟</lang>
     <lang name="zh-TW">開啟</lang>
     <lang name="zu-ZA">Vuliwe</lang>
+</resource>
+<resource id="license">
+	<lang name="zh-CN">license_cn.html</lang>
+	<lang name="en-US">license_en.html</lang>
 </resource>
 </resources>
