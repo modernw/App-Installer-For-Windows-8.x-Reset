@@ -6505,7 +6505,7 @@ g_HandleSystemReboot();
 </SessionVar>
 <SessionVar>
 <Name>%ProductVer%</Name>
-<Value>0.2.0.0</Value>
+<Value>0.2.1.0</Value>
 <Type>1</Type>
 </SessionVar>
 <SessionVar>

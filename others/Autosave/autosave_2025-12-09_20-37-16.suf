@@ -687,7 +687,7 @@
 <CustSCPath>%StartProgramsFolderCommon%\\%AppShortcutFolderName%</CustSCPath>
 <SCDesc>Update</SCDesc>
 <SCComment/>
-<SCArgs>appinstaller update /autoupdate</SCArgs>
+<SCArgs>appinstaller update /checkupdate</SCArgs>
 <SCWork/>
 <UseExtIco>0</UseExtIco>
 <IcoFN/>
@@ -905,6 +905,152 @@
 <SCCust>0</SCCust>
 <CustSCPath/>
 <SCDesc>desktopini</SCDesc>
+<SCComment/>
+<SCArgs/>
+<SCWork/>
+<UseExtIco>0</UseExtIco>
+<IcoFN/>
+<IcoIdx>0</IcoIdx>
+<IcoShowMd>0</IcoShowMd>
+<IcoHK>0</IcoHK>
+<RegTTF>0</RegTTF>
+<TTFName/>
+<RegOCX>0</RegOCX>
+<RegTLB>0</RegTLB>
+<SupInUse>0</SupInUse>
+<Compress>1</Compress>
+<UseOrigAttr>1</UseOrigAttr>
+<Attr>0</Attr>
+<NoCRC>0</NoCRC>
+<NoRemove>0</NoRemove>
+<Shared>0</Shared>
+<OSCond>
+<OS>32768</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+</OSCond>
+<RTCond/>
+<BuildConfigs>
+<Cfg>All</Cfg>
+</BuildConfigs>
+<Package>None</Package>
+<Packages/>
+<Notes/>
+<CompSize>0</CompSize>
+<CRC>0</CRC>
+<StoreOnly>0</StoreOnly>
+</FileData>
+<FileData>
+<FldRef>0</FldRef>
+<FullName>E:\Profiles\Bruce\Documents\Visual Studio 2015\Projects\AppInstallerReset\Release\PriFileFormat.dll.config</FullName>
+<FileName>PriFileFormat.dll.config</FileName>
+<Source>E:\Profiles\Bruce\Documents\Visual Studio 2015\Projects\AppInstallerReset\Release</Source>
+<Ext>config</Ext>
+<RTSource>档案</RTSource>
+<Desc/>
+<Recurse>1</Recurse>
+<MatchMode>0</MatchMode>
+<Dest>%AppFolder%</Dest>
+<Overwrite>1</Overwrite>
+<Backup>0</Backup>
+<Protect>0</Protect>
+<InstallOrder>1000</InstallOrder>
+<SCStartRoot>0</SCStartRoot>
+<SCStartProgs>0</SCStartProgs>
+<SCAppFld>0</SCAppFld>
+<SCStartup>0</SCStartup>
+<SCDesk>0</SCDesk>
+<SCQLaunch>0</SCQLaunch>
+<SCStartPinOption>0</SCStartPinOption>
+<SCCust>0</SCCust>
+<CustSCPath/>
+<SCDesc/>
+<SCComment/>
+<SCArgs/>
+<SCWork/>
+<UseExtIco>0</UseExtIco>
+<IcoFN/>
+<IcoIdx>0</IcoIdx>
+<IcoShowMd>0</IcoShowMd>
+<IcoHK>0</IcoHK>
+<RegTTF>0</RegTTF>
+<TTFName/>
+<RegOCX>0</RegOCX>
+<RegTLB>0</RegTLB>
+<SupInUse>0</SupInUse>
+<Compress>1</Compress>
+<UseOrigAttr>1</UseOrigAttr>
+<Attr>0</Attr>
+<NoCRC>0</NoCRC>
+<NoRemove>0</NoRemove>
+<Shared>0</Shared>
+<OSCond>
+<OS>32768</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+<OS>65535</OS>
+</OSCond>
+<RTCond/>
+<BuildConfigs>
+<Cfg>All</Cfg>
+</BuildConfigs>
+<Package>None</Package>
+<Packages/>
+<Notes/>
+<CompSize>0</CompSize>
+<CRC>0</CRC>
+<StoreOnly>0</StoreOnly>
+</FileData>
+<FileData>
+<FldRef>0</FldRef>
+<FullName>E:\Profiles\Bruce\Documents\Visual Studio 2015\Projects\AppInstallerReset\Release\priformatcli.dll.metagen</FullName>
+<FileName>priformatcli.dll.metagen</FileName>
+<Source>E:\Profiles\Bruce\Documents\Visual Studio 2015\Projects\AppInstallerReset\Release</Source>
+<Ext>metagen</Ext>
+<RTSource>档案</RTSource>
+<Desc/>
+<Recurse>1</Recurse>
+<MatchMode>0</MatchMode>
+<Dest>%AppFolder%</Dest>
+<Overwrite>1</Overwrite>
+<Backup>0</Backup>
+<Protect>0</Protect>
+<InstallOrder>1000</InstallOrder>
+<SCStartRoot>0</SCStartRoot>
+<SCStartProgs>0</SCStartProgs>
+<SCAppFld>0</SCAppFld>
+<SCStartup>0</SCStartup>
+<SCDesk>0</SCDesk>
+<SCQLaunch>0</SCQLaunch>
+<SCStartPinOption>0</SCStartPinOption>
+<SCCust>0</SCCust>
+<CustSCPath/>
+<SCDesc/>
 <SCComment/>
 <SCArgs/>
 <SCWork/>
@@ -2119,7 +2265,7 @@ end
 <Visible>1</Visible>
 <Enabled>1</Enabled>
 <TabOrder>0</TabOrder>
-<IsHTML>0</IsHTML>
+<IsHTML>1</IsHTML>
 <TextAlign>0</TextAlign>
 <VertScroll>1</VertScroll>
 <HorizScroll>0</HorizScroll>
@@ -2180,7 +2326,97 @@ end
 <IDS_CTRL_BUTTON_BACK>&lt; &amp;Back</IDS_CTRL_BUTTON_BACK>
 <IDS_CTRL_BUTTON_CANCEL>&amp;Cancel</IDS_CTRL_BUTTON_CANCEL>
 <IDS_CTRL_BUTTON_HELP>&amp;Help</IDS_CTRL_BUTTON_HELP>
-<IDS_CTRL_SCROLLTEXT_BODY>Insert your license agreement text here...</IDS_CTRL_SCROLLTEXT_BODY>
+<IDS_CTRL_SCROLLTEXT_BODY>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;title&gt;End User License Agreement&lt;/title&gt;
+    &lt;style&gt;
+        body {
+            /*font-family: "Segoe UI", "Microsoft YaHei", Arial, sans-serif;*/
+            font-size: 9pt;
+            /*color: #333333;
+    background-color: #ffffff;*/
+-ms-overflow-style: -ms-autohiding-scrollbar;
+box-sizing: border-box;
+        }
+        
+        h1 {
+            font-size: 12.5pt;
+            font-weight: bold;
+            margin-bottom: 5px;
+text-align: center;
+        }
+        
+        h2 {
+            font-size: 10.75pt;
+            font-weight: bold;
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+        
+        p {
+            margin: 5px 0;
+        }
+        
+        ul,
+        ol {
+            margin: 5px 0;
+            padding: 0;
+        }
+        
+        a {
+            color: #1a73e8;
+            text-decoration: underline;
+        }
+        
+        a:hover {
+            color: #0b59d1;
+            text-decoration: none;
+        }
+        
+        strong {
+            font-weight: bold;
+        }
+        
+        em {
+            font-style: italic;
+        }
+    &lt;/style&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+    &lt;h1&gt;End User License Agreement&lt;/h1&gt;
+
+    &lt;p&gt;Please read this license agreement carefully before installing or using this software.&lt;/p&gt;
+
+    &lt;h2&gt;1. Copyright&lt;/h2&gt;
+    &lt;p&gt;Copyright 漏 2025 Windows Modern. This software and its source code are protected by copyright law.&lt;/p&gt;
+
+    &lt;h2&gt;2. License&lt;/h2&gt;
+    &lt;p&gt;This software is licensed under the MIT License. You are free to use, copy, modify, and distribute this software and its source code, including for commercial purposes, subject to the terms of the MIT License.&lt;/p&gt;
+
+    &lt;h2&gt;3. Third-Party Components&lt;/h2&gt;
+    &lt;p&gt;This software includes the following third-party open source components, which are subject to their original licenses:&lt;/p&gt;
+    &lt;ul&gt;
+        &lt;li&gt;PriTools (Apache License 2.0) - &lt;a href="https://github.com/chausner/PriTools" target="_blank"&gt;https://github.com/chausner/PriTools&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;pugixml (MIT License) - &lt;a href="https://pugixml.org/" target="_blank"&gt;https://pugixml.org/&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;RapidJSON (MIT License) - &lt;a href="https://rapidjson.org/" target="_blank"&gt;https://rapidjson.org/&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;WinJS (MIT License) - &lt;a href="https://github.com/winjs/winjs" target="_blank"&gt;https://github.com/winjs/winjs&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;markdown.js (MIT License) - &lt;a href="https://github.com/evilstreak/markdown-js" target="_blank"&gt;https://github.com/evilstreak/markdown-js&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+
+    &lt;h2&gt;4. Disclaimer&lt;/h2&gt;
+    &lt;p&gt;This software is provided "as is", without any express or implied warranties, including but not limited to warranties of merchantability, fitness for a particular purpose, and non-infringement. In no event shall the authors or copyright holders be
+        liable for any damages arising from the use of this software, whether direct, indirect, incidental, or consequential.&lt;/p&gt;
+
+    &lt;h2&gt;5. Acceptance&lt;/h2&gt;
+    &lt;p&gt;By installing or using this software, you agree to this license agreement. If you do not agree, do not install or use the software.&lt;/p&gt;
+&lt;br&gt;
+&lt;/body&gt;
+
+&lt;/html&gt;</IDS_CTRL_SCROLLTEXT_BODY>
 <IDS_CTRL_RADIOBTN_AGREE>I agree to the terms of this license agreement</IDS_CTRL_RADIOBTN_AGREE>
 <IDS_CTRL_RADIOBTN_DISAGREE>I do not agree to the terms of this license agreement</IDS_CTRL_RADIOBTN_DISAGREE>
 <IDS_CTRL_SCROLLTEXT_FILE/>
@@ -2206,7 +2442,94 @@ end
 <IDS_CTRL_BUTTON_BACK>&lt; 返回(&amp;B)</IDS_CTRL_BUTTON_BACK>
 <IDS_CTRL_BUTTON_CANCEL>取消(&amp;C)</IDS_CTRL_BUTTON_CANCEL>
 <IDS_CTRL_BUTTON_HELP>帮助(&amp;H)</IDS_CTRL_BUTTON_HELP>
-<IDS_CTRL_SCROLLTEXT_BODY>在此插入您的许可协议文本...</IDS_CTRL_SCROLLTEXT_BODY>
+<IDS_CTRL_SCROLLTEXT_BODY>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;meta http-equiv="Content-Type" content="text/html; charset=GB2312"&gt;
+    &lt;title&gt;最终用户许可协议&lt;/title&gt;
+    &lt;style&gt;
+        body {
+            /*font-family: "Microsoft YaHei", "Segoe UI", Arial, sans-serif;*/
+            font-size: 9pt;
+            /*color: #333333;
+    background-color: #ffffff;*/
+-ms-overflow-style: -ms-autohiding-scrollbar;
+box-sizing: border-box;
+        }
+        
+        h1 {
+            font-size: 12.5pt;
+            font-weight: bold;
+            margin-bottom: 5px;
+text-align: center;
+        }
+        
+        h2 {
+            font-size: 10.75pt;
+            font-weight: bold;
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+        
+        p {
+            margin: 5px 0;
+        }
+        
+        ul,
+        ol {
+            margin: 5px 0;
+            padding: 0;
+        }
+        
+        a {
+            color: #1a73e8;
+            text-decoration: underline;
+        }
+        
+        a:hover {
+            color: #0b59d1;
+            text-decoration: none;
+        }
+        
+        strong {
+            font-weight: bold;
+        }
+        
+        em {
+            font-style: italic;
+        }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;h1&gt;最终用户许可协议&lt;/h1&gt;
+
+&lt;p&gt;请在安装或使用本软件前仔细阅读本许可协议。&lt;/p&gt;
+
+&lt;h2&gt;一、版权声明&lt;/h2&gt;
+&lt;p&gt;Copyright &amp;#169; 2025 Windows Modern. 本软件及其源码受版权法保护。&lt;/p&gt;
+
+&lt;h2&gt;二、许可范围&lt;/h2&gt;
+&lt;p&gt;本软件遵循 MIT 许可协议。您可以在符合 MIT 许可条件下自由使用、复制、修改、分发本软件及其源码，包括商业用途。&lt;/p&gt;
+
+&lt;h2&gt;三、第三方组件&lt;/h2&gt;
+&lt;p&gt;本软件包含以下第三方开源组件，使用这些组件受其原始许可证约束：&lt;/p&gt;
+&lt;ul&gt;
+    &lt;li&gt;PriTools (Apache License 2.0) - &lt;a href="https://github.com/chausner/PriTools" target="_blank"&gt;https://github.com/chausner/PriTools&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;pugixml (MIT License) - &lt;a href="https://pugixml.org/" target="_blank"&gt;https://pugixml.org/&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;RapidJSON (MIT License) - &lt;a href="https://rapidjson.org/" target="_blank"&gt;https://rapidjson.org/&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;WinJS (MIT License) - &lt;a href="https://github.com/winjs/winjs" target="_blank"&gt;https://github.com/winjs/winjs&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;markdown.js (MIT License) - &lt;a href="https://github.com/evilstreak/markdown-js" target="_blank"&gt;https://github.com/evilstreak/markdown-js&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2&gt;四、免责声明&lt;/h2&gt;
+&lt;p&gt;本软件按“原样”提供，不附带任何明示或暗示的担保，包括但不限于适销性、特定用途适用性和非侵权的保证。无论在何种情况下，作者或版权持有人均不对因使用本软件产生的任何直接、间接、偶然或特殊损害负责。&lt;/p&gt;
+
+&lt;h2&gt;五、接受条款&lt;/h2&gt;
+&lt;p&gt;安装或使用本软件即表示您接受本许可协议。如果您不同意本协议，请不要安装或使用本软件。&lt;/p&gt;
+&lt;br&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</IDS_CTRL_SCROLLTEXT_BODY>
 <IDS_CTRL_RADIOBTN_AGREE>我同意该许可协议的条款</IDS_CTRL_RADIOBTN_AGREE>
 <IDS_CTRL_RADIOBTN_DISAGREE>我不同意该许可协议的条款</IDS_CTRL_RADIOBTN_DISAGREE>
 <IDS_CTRL_SCROLLTEXT_FILE/>
@@ -4164,7 +4487,7 @@ function CreateShortcut(lnkpath, targetfile, appid)
 	return ret;
 end
 function SetDesktopInit(inipath, section, key, value)
-	ret = File.Run(SessionVar.Expand ("%AppFolder%\\desktopini.exe"), "\"" .. inipath .. "\" \"" .. section .. "\" \"" .. key .. "\" \"" .. value .. "\"", "", SW_SHOWNORMAL, true);
+	ret = File.Run(SessionVar.Expand ("%AppFolder%\\desktopini.exe"), "\"" .. inipath .. "\" \"" .. section .. "\" \"" .. key .. "\" \"" .. value .. "\"", "", SW_HIDE, true);
 	return ret;
 end
 startitemfolder = SessionVar.Expand ("%StartProgramsFolderCommon%\\%AppShortcutFolderName%");
@@ -4179,7 +4502,8 @@ SetDesktopInit (desktopini, ".ShellClassInfo", "ConfirmFileOp", 0);
 SetDesktopInit (desktopini, "LocalizedFileNames", "App Installer.lnk", SessionVar.Expand("@%AppFolder%\\appinstaller.exe,-300"));
 SetDesktopInit (desktopini, "LocalizedFileNames", "Settings.lnk", SessionVar.Expand("@%AppFolder%\\settings.exe,-200"));
 SetDesktopInit (desktopini, "LocalizedFileNames", "Update.lnk", SessionVar.Expand("@%AppFolder%\\reslib.dll,-103"));
-SetDesktopInit (desktopini, "LocalizedFileNames", "Uninstaller.lnk", SessionVar.Expand("@%AppFolder%\\reslib.dll,-131"));
+SetDesktopInit (desktopini, "LocalizedFileNames", "Uninstall.lnk", SessionVar.Expand("@%AppFolder%\\reslib.dll,-131"));
+SetDesktopInit (desktopini, ".ShellClassInfo", "LocalizedResourceName", SessionVar.Expand("@%AppFolder%\\appinstaller.exe,-300"));
 
 DlgScrollingText.AppendLine(CTRL_SCROLLTEXT_BODY, "Updating system PATH...");
 local appFolder = SessionVar.Expand("%AppFolder%");
@@ -6181,7 +6505,7 @@ g_HandleSystemReboot();
 </SessionVar>
 <SessionVar>
 <Name>%ProductVer%</Name>
-<Value>0.1.0.0</Value>
+<Value>0.2.1.0</Value>
 <Type>1</Type>
 </SessionVar>
 <SessionVar>
