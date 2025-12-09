@@ -1,10 +1,10 @@
-# App Installer For Windows 8.x (Reset)
+<h1>App Installer For Windows 8.x (Reset)</h1>
 
 This application aims to provide a more elegant way to install Windows Store apps. It offers a visual window for users to browse app information, install, launch apps, or get error details.
 
 Supports running on Windows 8 and later.
 
-## Required runtime libraries
+<h2>Required runtime libraries</h2>
 - Microsoft .NET Framework 4.5 (may be pre-installed on Windows 8.x and later)
 
 - Microsoft .NET Framework 4.6
@@ -13,14 +13,14 @@ Supports running on Windows 8 and later.
 
 - Microsoft Visual C++ 2015 Redistributable (x86)
 
-## Download
+<h2>Download</h2>
 Download the latest release from the Releases section.
 
 [![GitHub release pre-release downloads](https://img.shields.io/github/v/release/modernw/App-Installer-For-Windows-8.x-Reset "Release")](https://github.com/modernw/App-Installer-For-Windows-8.x-Reset/releases)
 
 Note: There is no official release yet, but the test version still does not have the Pre-released label; this is for testing upgrade functionality. Once the official release is complete, previous versions will be marked as Pre-released.
 
-## Attention
+<h2>Attention</h2>
 
 - This program is an x86 program, not an ARM application, not cross-platform, and cannot be used on Windows RT.
 
