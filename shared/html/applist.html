@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" type="text/css" href="libs/winjs/2.0/css/ui-light.css">
+    <link rel="stylesheet" href="libs/winjs/2.0/css/ui-light.css" id="winjs-style">
     <script type="text/javascript" src="js/module.js"></script>
     <script type="text/javascript" src="js/polyfill-ie.js"></script>
     <script type="text/javascript" src="js/bridge.js"></script>
@@ -245,11 +245,13 @@
             font-weight: normal;
         }
     </style>
+    <link rel="stylesheet" type="text/css" href="theme/light/default/default.css" id="theme-style">
+    <script type="text/javascript" src="js/theme.js"></script>
 </head>
 
 <body>
     <div role="template" id="applist-item-template">
-        <div class="applist-list-item">
+        <div class="applist-list-item" role="template">
             <div class="applist-item-picbox" style="background-color: rgb(0,0,0);">
                 <img class="applist-item-pic" src="images/applogo.default.png" width="32" height="32">
                 <div class="applist-item-img-border"></div>
@@ -345,6 +347,7 @@
 
             function createItem(title, logo, appid, color) {
                 var item = AppListElements.template.cloneNode(true);
+                item.removeAttribute("role");
                 var inode = new AppListNodeElement(item);
                 inode.title = title;
                 inode.logo = logo;

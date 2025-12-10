@@ -1,0 +1,91 @@
+/*
+[ThemeInfo]
+Id = default
+DisplayName = Default Theme
+Author = Bruce Winter
+Version = 1.0
+Description = Default theme.
+Url = https://github.com/modernw
+Color = Dark
+*/
+
+.page,
+.page * {
+    transition: background-color 0.3s cubic-bezier(0.1, 0.9, 0.2, 1), color 0.5s cubic-bezier(0.1, 0.9, 0.2, 1), border-color 0.5s cubic-bezier(0.1, 0.9, 0.2, 1);
+}
+
+.page {
+    background-color: #1d1d1d;
+}
+
+.page.splash {
+    background-color: #001629;
+}
+
+.page.splash .content,
+.page.splash .content * {
+    transition: none;
+}
+
+.page .content.loading,
+.page .content.main,
+.page .progress,
+.page .reason p,
+.page .controls .checkbox {
+    color: white;
+}
+
+.page .content.main .pkgapplabel {
+    color: #299fff;
+}
+
+.page .reason textarea {
+    background-color: rgba (255, 255, 255, 0);
+    color: white;
+    border: 2px solid white;
+    box-sizing: border-box;
+}
+
+
+/* App Launch List */
+
+.applist-font-title {
+    color: white;
+}
+
+.applist-font-text {
+    color: white;
+}
+
+.applist-window {
+    border: 2px solid rgb(42, 42, 42);
+    background-color: #1d1d1d;
+}
+
+.applist-title {
+    background: #1d1d1d;
+}
+
+.applist-control {
+    background: #1d1d1d;
+}
+
+.applist-list-item {
+    background-color: rgba(0, 255, 255, 0);
+}
+
+.applist-list-item:hover {
+    background-color: rgba(255, 255, 255, 0.13);
+}
+
+.applist-item-picbox {
+    background-color: #001020;
+}
+
+.applist-item-img-border {
+    border: 1px solid rgba(254, 254, 254, 0.1);
+}
+
+.win10.applist-window {
+    border: 1px solid #ccc;
+}

@@ -159,6 +159,7 @@
     <ClInclude Include="priformatcli.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="strcmp.h" />
     <ClInclude Include="syncutil.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="themeinfo.h" />

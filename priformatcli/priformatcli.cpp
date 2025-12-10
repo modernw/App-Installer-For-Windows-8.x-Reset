@@ -10,6 +10,7 @@
 #include "themeinfo.h"
 #include "localeex.h"
 #include "syncutil.h"
+#include "strcmp.h"
 
 #include <string>
 #include <vector>
@@ -116,44 +117,6 @@ ref class PriFileInst
 		}
 	}
 };
-std::wstring GetStringLeft (const std::wstring &str, size_t length = 1)
-{
-	std::wstring ret = L"";
-	ret.reserve (length + 1);
-	size_t slen = lstrlenW (str.c_str ());
-	for (size_t i = 0; i < length && i < slen; i ++)
-	{
-		ret += str.at (i);
-	}
-	return ret;
-}
-std::wstring GetStringRight (const std::wstring &str, size_t length = 1)
-{
-	std::wstring ret = L"";
-	ret.reserve (length + 1);
-	size_t slen = lstrlenW (str.c_str ());
-	for (size_t i = ((int64_t)slen - length) < 0 ? 0 : slen - length; i < slen; i ++) ret += str.at (i);
-	return ret;
-}
-std::string GetStringLeft (const std::string &str, size_t length = 1)
-{
-	std::string ret = "";
-	ret.reserve (length + 1);
-	size_t slen = strlen (str.c_str ());
-	for (size_t i = 0; i < length && i < slen; i ++)
-	{
-		ret += str.at (i);
-	}
-	return ret;
-}
-std::string GetStringRight (const std::string &str, size_t length = 1)
-{
-	std::string ret = "";
-	ret.reserve (length + 1);
-	size_t slen = strlen (str.c_str ());
-	for (size_t i = ((int64_t)slen - length) < 0 ? 0 : slen - length; i < slen; i ++) ret += str.at (i);
-	return ret;
-}
 size_t KeyToPath (const std::wstring &key, std::vector <std::wnstring> &output);
 typedef struct _TASKITEM_SEARCH
 {
@@ -531,7 +494,7 @@ std::wstring GetSuitablePathValueByDPI (std::vector<candidate_value> &pathcand)
 	});
 	if (pathcand.empty ()) return L"";
 	uint32_t nowdpi = GetDPI ();
-	for (auto &cv : pathcand) if (cv.get_scale () >= nowdpi) return cv.value;
+	for (auto &cv : pathcand) if (cv.get_scale () >= nowdpi && !StrInclude (cv.value, L"layoutdir-RTL", true)) return cv.value;
 	return pathcand.back ().value;
 }
 std::wstring GetSuitablePathValue (std::vector <candidate_value> &pathcand)

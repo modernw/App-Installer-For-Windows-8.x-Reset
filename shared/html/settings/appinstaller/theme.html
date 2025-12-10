@@ -64,14 +64,14 @@
                     <div class="win-settings-row">
                         <div class="win-settings-label" style="font-weight: normal;">白天</div>
                         <div class="win-settings-control">
-                            <div data-win-control="WinJS.UI.TimePicker" data-win-options="{ hour: 9, minute: 0, clock: '24HourClock' }">
+                            <div data-win-control="WinJS.UI.TimePicker" data-win-options="{ hour: 9, minute: 0, clock: '24HourClock' }" id="theme-day-time">
                             </div>
                         </div>
                     </div>
                     <div class="win-settings-row">
                         <div class="win-settings-label" style="font-weight: normal;">夜晚</div>
                         <div class="win-settings-control">
-                            <div data-win-control="WinJS.UI.TimePicker" data-win-options="{ hour: 18, minute: 0, clock: '24HourClock' }">
+                            <div data-win-control="WinJS.UI.TimePicker" data-win-options="{ hour: 18, minute: 0, clock: '24HourClock' }" id="theme-night-time">
                             </div>
                         </div>
                     </div>
@@ -79,7 +79,7 @@
             </div>
             <div class="win-settings-section" id="item-theme">
                 <br>
-                <label>主题模式</label><br>
+                <label>自定义主题模式</label><br>
                 <script>
                     (function() {
                         var sect = document.getElementById("item-theme");
@@ -93,7 +93,10 @@
                 </script>
                 <br>
                 <label>选择主题</label>
-                <div id="theme-items-select" data-win-control="WinJS.UI.ListView"></div>
+                <p>浅色主题</p>
+                <div class="win-listview"></div>
+                <p>深色主题</p>
+                <div class="win-listview"></div>
             </div>
         </div>
     </div>
