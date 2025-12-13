@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>App Installer</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script type="text/javascript" src="js/module.js"></script>
+    <script type="text/javascript" src="js/polyfill-ie.js"></script>
+    <link rel="stylesheet" href="libs/winjs/2.0/css/ui-light.css" id="winjs-style">
+    <script type="text/javascript" src="libs/winjs/1.0/js/base.js"></script>
+    <script type="text/javascript" src="libs/winjs/1.0/js/ui.js"></script>
+    <script type="text/javascript" src="js/color.js"></script>
+    <script type="text/javascript" src="js/promise.js"></script>
+    <script type="text/javascript" src="js/bridge.js"></script>
+    <script type="text/javascript" src="js/dpimodes.js"></script>
+    <script type="text/javascript" src="js/resources.js"></script>
+    <script type="text/javascript" src="js/animation.js"></script>
+    <link rel="stylesheet" href="fonts/fonts.css">
+    <link rel="stylesheet" href="css/pages.css">
+    <script type="text/javascript" src="js/event.js"></script>
+    <script type="text/javascript" src="js/pages.js"></script>
+    <script type="text/javascript" src="js/load.js"></script>
+    <script type="text/javascript" src="js/init.js"></script>
+    <link rel="stylesheet" type="text/css" href="theme/light/default/default.css" id="theme-style">
+    <script type="text/javascript" src="js/theme.js"></script>
+    <script type="text/javascript" src="js/params.js"></script>
+    <script>
+        OnLoad.add(function() {
+            try {
+                var p = params;
+                var keys = Object.keys(p);
+                var hasidparam = false;
+                var hascolorparam = false;
+                for (var i = 0; i < keys.length; i++) {
+                    var key = keys[i];
+                    if (key.indexOf("color") >= 0) {
+                        hascolorparam = true;
+                    }
+                    if (key.indexOf("id") >= 0) {
+                        hasidparam = true;
+                    }
+                }
+                if (hasidparam && hascolorparam) {
+                    Theme.currentColor = parseInt(p["color"]);
+                    Theme.currentTheme = p["id"];
+                } else {
+                    throw new Error("Invalid parameters.");
+                }
+            } catch (e) {
+                Theme.refresh ();
+            }
+        });
+    </script>
+</head>
+
+<body>
+    <div id="page-container" class="pagecontainer full">
+        <div class="page preinstall">
+            <!-- Main Page -->
+            <div class="content select preinstall installing installsuccess installfailed main" style="height: 100%; max-height: 100%; padding: 8px;">
+                <h1 class="win-type-x-large pkgtitle title single" style="margin: 0px;">Aa</h1>
+                <p class="pkgapplabel">App Installer</p>
+                <p class="pkgpublisher">Example Text</p>
+                <button>Click</button>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

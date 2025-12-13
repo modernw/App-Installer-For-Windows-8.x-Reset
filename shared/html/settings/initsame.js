@@ -34,15 +34,17 @@
             slide.style.transition = "all 0.5s cubic-bezier(0.1, 0.9, 0.2, 1)";
         }, 0);
         shead.style.display = "none";
-        list.style.display = "none";
+        if (list) list.style.display = "none";
         content.style.display = "none";
         setTimeout(function() {
             shead.style.display = "";
             Windows.UI.Animation.runAsync(shead, Windows.UI.Animation.Keyframes.Flyout.toLeft);
         }, 0);
         setTimeout(function() {
-            list.style.display = "";
-            Windows.UI.Animation.runAsync(list, Windows.UI.Animation.Keyframes.Flyout.toLeft);
+            if (list) {
+                list.style.display = "";
+                Windows.UI.Animation.runAsync(list, Windows.UI.Animation.Keyframes.Flyout.toLeft);
+            }
         }, 50);
         setTimeout(function() {
             content.style.display = "";

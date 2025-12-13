@@ -39,263 +39,265 @@
 <body>
     <div class="pagecontainer full pagesection">
         <div class="section padding">
-            <h2 data-res-fromfile="publicRes(124)"></h2>
-            <p data-res-fromfile="getFileResPair(exepath, 300)"></p>
-            <p style="white-space: pre-wrap;"><span data-res-fromfile="publicRes (130)"></span>&#9;<span id="current-version"></span></p>
-            <script>
-                try {
-                    var storage = Bridge.External.Storage;
-                    var path = storage.path;
-                    var versionFilePath = path.combine(path.root, "version");
-                    var versionFile = storage.getFile(versionFilePath);
-                    window.currver = versionFile.content;
-                } catch (e) {
-                    window.currver = "0.0.0.1";
-                }
-                document.getElementById("current-version").textContent = window.currver;
-            </script>
-            <p id="about-copyright"></p>
-            <script>
-                (function() {
-                    var storage = Bridge.External.Storage;
-                    var path = storage.path;
-                    var verinfo = JSON.parse(Bridge.External.getVersionInfoToJSON(exepath));
-                    var aboutCopyright = document.getElementById("about-copyright");
-                    aboutCopyright.textContent = verinfo.LegalCopyright;
-                })();
-            </script>
-            <p data-res-fromfile="publicRes (133)"></p>
-            <p>
-                <a href="https://github.com/modernw/App-Installer-For-Windows-8.x-Reset" target="_blank" data-res-fromfile="publicRes (134)"></a>
-            </p>
-            <p>
-                <a id="about-project-description" data-res-fromfile="publicRes(135)"></a>
-            </p>
-            <p>
-                <a id="about-update-log" data-res-fromfile="publicRes(136)"></a>
-            </p>
-            <p>
-                <a id="about-eula" data-res-fromfile="publicRes(137)"></a>
-            </p>
-            <p data-res-fromfile="publicRes (138)"></p>
-            <ul>
-                <li><a href="https://github.com/chausner/PriTools" target="_blank">chausner/PriTools</a></li>
-                <li><a href="https://pugixml.org/" target="_blank">pugixml</a></li>
-                <li><a href="https://rapidjson.org/" target="_blank">RapidJSON</a></li>
-                <li><a href="https://github.com/winjs/winjs" target="_blank">WinJS</a></li>
-                <li><a href="https://github.com/evilstreak/markdown-js" target="_blank">markdown.js</a></li>
-            </ul>
-            <script>
-                (function() {
-                    var aboutUpdateLog = document.getElementById("about-update-log");
-                    var aboutEula = document.getElementById("about-eula");
-                    var aboutProjectDescription = document.getElementById("about-project-description");
-                    var eventutil = Windows.UI.Event.Util;
-                    var storage = Bridge.External.Storage;
-                    var path = storage.path;
-                    var strres = Bridge.External.StringResources;
-                    var jslist = [
-                        "js\\module.js",
-                        "js\\polyfill-ie.js",
-                        "js\\bridge.js",
-                        "js\\dpimodes.js"
-                    ];
-                    var libroot = path.combine(path.root, "html");
-                    /**
-                     * 异步显示消息框，返回一个 Promise 对象。
-                     * @param {string | HTMLElement} swText 内容
-                     * @param {string} swTitle 标题
-                     * @param {MBFLAGS} uType 标志，使用 MBFLAGS 常量
-                     * @param {string} swColor 背景颜色文本。
-                     * @returns 
-                     */
-                    var msgbox = function() {};
-                    var MsgBox = function() {};
-                    if (typeof window.parent !== "undefined") {
-                        msgbox = window.parent.messageBoxAsync;
-                        MsgBox = window.parent.MsgBoxObj;
-                    } else {
-                        msgbox = messageBoxAsync;
-                        MsgBox = MsgBoxObj;
+            <div class="bottom-compensate">
+                <h2 data-res-fromfile="publicRes(124)"></h2>
+                <p data-res-fromfile="getFileResPair(exepath, 300)"></p>
+                <p style="white-space: pre-wrap;"><span data-res-fromfile="publicRes (130)"></span>&#9;<span id="current-version"></span></p>
+                <script>
+                    try {
+                        var storage = Bridge.External.Storage;
+                        var path = storage.path;
+                        var versionFilePath = path.combine(path.root, "version");
+                        var versionFile = storage.getFile(versionFilePath);
+                        window.currver = versionFile.content;
+                    } catch (e) {
+                        window.currver = "0.0.0.1";
                     }
-                    eventutil.addEvent(aboutUpdateLog, "click", function() {
-                        var content = document.createElement("div");
-                        var progressDisplay = document.createElement("div");
-                        var progress = document.createElement("progress");
-                        var retryBtn = document.createElement("button");
-                        retryBtn.textContent = getPublicRes(132);
-                        retryBtn.style.display = "none";
-                        retryBtn.style.margin = "10px 0";
-                        progress.classList.add("win-ring");
-                        progress.style.color = "white";
-                        var state = document.createElement("span");
-                        progress.style.marginRight = "5px";
-                        progressDisplay.appendChild(progress);
-                        progressDisplay.appendChild(state);
-                        progressDisplay.setAttribute("style", "display: flex; flex-direction: row;");
-                        content.appendChild(progressDisplay);
-                        content.appendChild(retryBtn);
-                        content.style.margin = "10px 0";
-                        content.style.maxHeight = "100%";
-                        content.style.width = "100%";
-                        progressDisplay.style.width = "100%";
-                        content.style.boxSizing = "border-box";
-                        progressDisplay.style.boxSizing = "border-box";
-                        content.classList.add("markdown-style");
-                        msgbox(content, getPublicRes(136));
-                        var fetchFunc = function() {
-                            retryBtn.style.display = "none";
-                            state.textContent = getPublicRes(139);
-                            progress.style.display = "";
-                            WinJS.xhr({
-                                url: "https://api.github.com/repos/modernw/App-Installer-For-Windows-8.x-Reset/releases/tags/" + currver,
-                            }).done(
-                                function(resp) {
-                                    var json = JSON.parse(resp.responseText);
-                                    var body = json.body;
-                                    content.innerHTML = markdown.toHTML(body);
-                                    content.style.height = "300px";
-                                    content.style.maxHeight = "100%";
-                                },
-                                function(err) {
-                                    progress.style.display = "none";
-                                    retryBtn.style.display = "block";
-                                    var msg = {
-                                        message: ""
-                                    };
-                                    try {
-                                        msg = JSON.parse(err.responseText);
-                                    } catch (e) {
-                                        msg = err.responseText;
-                                    }
-                                    state.textContent = getPublicRes(140) + (msg.message.length > 0 ? ": " + msg.message : "");
-                                }
-                            );
-                        };
-                        retryBtn.addEventListener("click", function() {
-                            fetchFunc();
-                        });
-                        fetchFunc();
-                    });
-                    eventutil.addEvent(aboutProjectDescription, "click", function() {
-                        function decodeBase64(base64) {
-                            // GitHub 的 content 有换行，必须清理
-                            base64 = base64.replace(/\s/g, "");
-                            return atob(base64);
+                    document.getElementById("current-version").textContent = window.currver;
+                </script>
+                <p id="about-copyright"></p>
+                <script>
+                    (function() {
+                        var storage = Bridge.External.Storage;
+                        var path = storage.path;
+                        var verinfo = JSON.parse(Bridge.External.getVersionInfoToJSON(exepath));
+                        var aboutCopyright = document.getElementById("about-copyright");
+                        aboutCopyright.textContent = verinfo.LegalCopyright;
+                    })();
+                </script>
+                <p data-res-fromfile="publicRes (133)"></p>
+                <p>
+                    <a href="https://github.com/modernw/App-Installer-For-Windows-8.x-Reset" target="_blank" data-res-fromfile="publicRes (134)"></a>
+                </p>
+                <p>
+                    <a id="about-project-description" data-res-fromfile="publicRes(135)"></a>
+                </p>
+                <p>
+                    <a id="about-update-log" data-res-fromfile="publicRes(136)"></a>
+                </p>
+                <p>
+                    <a id="about-eula" data-res-fromfile="publicRes(137)"></a>
+                </p>
+                <p data-res-fromfile="publicRes (138)"></p>
+                <ul>
+                    <li><a href="https://github.com/chausner/PriTools" target="_blank">chausner/PriTools</a></li>
+                    <li><a href="https://pugixml.org/" target="_blank">pugixml</a></li>
+                    <li><a href="https://rapidjson.org/" target="_blank">RapidJSON</a></li>
+                    <li><a href="https://github.com/winjs/winjs" target="_blank">WinJS</a></li>
+                    <li><a href="https://github.com/evilstreak/markdown-js" target="_blank">markdown.js</a></li>
+                </ul>
+                <script>
+                    (function() {
+                        var aboutUpdateLog = document.getElementById("about-update-log");
+                        var aboutEula = document.getElementById("about-eula");
+                        var aboutProjectDescription = document.getElementById("about-project-description");
+                        var eventutil = Windows.UI.Event.Util;
+                        var storage = Bridge.External.Storage;
+                        var path = storage.path;
+                        var strres = Bridge.External.StringResources;
+                        var jslist = [
+                            "js\\module.js",
+                            "js\\polyfill-ie.js",
+                            "js\\bridge.js",
+                            "js\\dpimodes.js"
+                        ];
+                        var libroot = path.combine(path.root, "html");
+                        /**
+                         * 异步显示消息框，返回一个 Promise 对象。
+                         * @param {string | HTMLElement} swText 内容
+                         * @param {string} swTitle 标题
+                         * @param {MBFLAGS} uType 标志，使用 MBFLAGS 常量
+                         * @param {string} swColor 背景颜色文本。
+                         * @returns 
+                         */
+                        var msgbox = function() {};
+                        var MsgBox = function() {};
+                        if (typeof window.parent !== "undefined") {
+                            msgbox = window.parent.messageBoxAsync;
+                            MsgBox = window.parent.MsgBoxObj;
+                        } else {
+                            msgbox = messageBoxAsync;
+                            MsgBox = MsgBoxObj;
                         }
-                        var content = document.createElement("div");
-                        var progressDisplay = document.createElement("div");
-                        var progress = document.createElement("progress");
-                        var retryBtn = document.createElement("button");
-                        retryBtn.textContent = getPublicRes(132);
-                        retryBtn.style.display = "none";
-                        retryBtn.style.margin = "10px 0";
-                        progress.classList.add("win-ring");
-                        progress.style.color = "white";
-                        var state = document.createElement("span");
-                        progress.style.marginRight = "5px";
-                        progressDisplay.appendChild(progress);
-                        progressDisplay.appendChild(state);
-                        progressDisplay.setAttribute("style", "display: flex; flex-direction: row;");
-                        content.appendChild(progressDisplay);
-                        content.appendChild(retryBtn);
-                        content.style.margin = "10px 0";
-                        content.style.maxHeight = "100%";
-                        content.style.whiteSpace = "normal";
-                        content.style.width = "100%";
-                        progressDisplay.style.width = "100%";
-                        content.style.boxSizing = "border-box";
-                        content.classList.add("markdown-style");
-                        progressDisplay.style.boxSizing = "border-box";
-                        msgbox(content, getPublicRes(135));
-                        var fetchFunc = function() {
+                        eventutil.addEvent(aboutUpdateLog, "click", function() {
+                            var content = document.createElement("div");
+                            var progressDisplay = document.createElement("div");
+                            var progress = document.createElement("progress");
+                            var retryBtn = document.createElement("button");
+                            retryBtn.textContent = getPublicRes(132);
                             retryBtn.style.display = "none";
-                            state.textContent = getPublicRes(141);
-                            progress.style.display = "";
-                            WinJS.xhr({
-                                url: "https://api.github.com/repos/modernw/App-Installer-For-Windows-8.x-Reset/readme",
-                            }).done(
-                                function(resp) {
-                                    var json = JSON.parse(resp.responseText);
-                                    var decoderesult = decodeBase64(json.content);
-                                    content.innerHTML = decoderesult;
-                                    content.style.height = "300px";
-                                    content.style.maxHeight = "100%";
-                                },
-                                function(err) {
-                                    progress.style.display = "none";
-                                    retryBtn.style.display = "block";
-                                    var msg = {
-                                        message: ""
-                                    };
-                                    try {
-                                        msg = JSON.parse(err.responseText);
-                                    } catch (e) {
-                                        msg = err.responseText;
+                            retryBtn.style.margin = "10px 0";
+                            progress.classList.add("win-ring");
+                            progress.style.color = "white";
+                            var state = document.createElement("span");
+                            progress.style.marginRight = "5px";
+                            progressDisplay.appendChild(progress);
+                            progressDisplay.appendChild(state);
+                            progressDisplay.setAttribute("style", "display: flex; flex-direction: row;");
+                            content.appendChild(progressDisplay);
+                            content.appendChild(retryBtn);
+                            content.style.margin = "10px 0";
+                            content.style.maxHeight = "100%";
+                            content.style.width = "100%";
+                            progressDisplay.style.width = "100%";
+                            content.style.boxSizing = "border-box";
+                            progressDisplay.style.boxSizing = "border-box";
+                            content.classList.add("markdown-style");
+                            msgbox(content, getPublicRes(136));
+                            var fetchFunc = function() {
+                                retryBtn.style.display = "none";
+                                state.textContent = getPublicRes(139);
+                                progress.style.display = "";
+                                WinJS.xhr({
+                                    url: "https://api.github.com/repos/modernw/App-Installer-For-Windows-8.x-Reset/releases/tags/" + currver,
+                                }).done(
+                                    function(resp) {
+                                        var json = JSON.parse(resp.responseText);
+                                        var body = json.body;
+                                        content.innerHTML = markdown.toHTML(body);
+                                        content.style.height = "300px";
+                                        content.style.maxHeight = "100%";
+                                    },
+                                    function(err) {
+                                        progress.style.display = "none";
+                                        retryBtn.style.display = "block";
+                                        var msg = {
+                                            message: ""
+                                        };
+                                        try {
+                                            msg = JSON.parse(err.responseText);
+                                        } catch (e) {
+                                            msg = err.responseText;
+                                        }
+                                        state.textContent = getPublicRes(140) + (msg.message.length > 0 ? ": " + msg.message : "");
                                     }
-                                    state.textContent = getPublicRes(142) + (msg.message.length > 0 ? ": " + msg.message : "");
-                                }
-                            );
-                        };
-                        retryBtn.addEventListener("click", function() {
+                                );
+                            };
+                            retryBtn.addEventListener("click", function() {
+                                fetchFunc();
+                            });
                             fetchFunc();
                         });
-                        fetchFunc();
-                    });
-                    eventutil.addEvent(aboutEula, "click", function() {
-                        var eulaFilePath = path.combine(path.root, "license");
-                        eulaFilePath = path.combine(eulaFilePath, strres.getString("license"))
-                        var content = document.createElement("iframe");
-                        content.onload = function() {
-                            try {
-                                var winjsurl = path.combine(libroot, "libs\\winjs\\1.0\\css\\ui-light.css");
-                                var style = document.createElement("link");
-                                style.rel = "stylesheet";
-                                style.href = winjsurl;
-                                content.contentWindow.document.head.insertBefore(style, content.contentWindow.document.head.firstChild);
-                                for (var i = 0; i < jslist.length; i++) {
-                                    var jsfile = path.combine(libroot, jslist[i]);
-                                    var script = document.createElement("script");
-                                    script.src = jsfile;
-                                    content.contentWindow.document.head.appendChild(script);
-                                }
-                                var style2 = document.createElement("style");
-                                style2.innerHTML = '*,button,input,select,textarea,a,label,p,span,h1,h2,h3,h4,h5,h6,ul,ol,li,dl,dt,dd,table,th,td,tr,img,iframe,object,embed,audio,video,canvas,form,fieldset,legend,.win-type-x-large,.win-type-xx-large,.font-fixed{font-family:"Microsoft YaHei","Segoe UI","Ebrima","Nirmala","Gadugi","Segoe UI Emoji","Segoe UI Symbol","Meiryo","Leelawadee","Microsoft JhengHei","Malgun Gothic","Estrangelo Edessa","Microsoft Himalaya","Microsoft New Tai Lue","Microsoft PhagsPa","Microsoft Tai Le","Microsoft Yi Baiti","Mongolian Baiti","MV Boli","Myanmar Text","Javanese Text","Cambria Math";}';
-                                content.contentWindow.document.head.appendChild(style2);
-                                content.contentWindow.document.body.style.overflowY = "auto";
-                                content.contentWindow.Windows.UI.DPI.mode = 1;
-                            } catch (e) {}
-                        };
-                        content.src = eulaFilePath;
-                        content.style.margin = "10px 0";
-                        var text = document.createElement("div");
-                        text.style.width = "100%";
-                        text.style.height = "300px";
-                        text.style.overflowY = "hidden";
-                        content.style.width = "100%";
-                        content.style.height = "100%";
-                        content.style.maxHeight = "100%";
-                        text.appendChild(content);
-                        var dlg = new MsgBox();
-                        dlg.text = text;
-                        dlg.title = getPublicRes(143);
-                        dlg.show();
-                        setTimeout(function() {
-                            var element = dlg.getElement();
-                            var body = element.querySelector(".notice-body");
-                            var title = element.querySelector(".notice-title");
-                            var content = element.querySelector(".notice-text");
-                            var ctrls = element.querySelector(".notice-controls");
-                            element.classList.remove("win-ui-dark");
-                            element.classList.add("win-ui-light");
-                            title.style.color = "black";
-                            content.style.color = "black";
-                            body.style.backgroundColor = "white";
-                            body.style.color = "black";
-                        }, 0);
-                    });
-                })();
-            </script>
+                        eventutil.addEvent(aboutProjectDescription, "click", function() {
+                            function decodeBase64(base64) {
+                                // GitHub 的 content 有换行，必须清理
+                                base64 = base64.replace(/\s/g, "");
+                                return atob(base64);
+                            }
+                            var content = document.createElement("div");
+                            var progressDisplay = document.createElement("div");
+                            var progress = document.createElement("progress");
+                            var retryBtn = document.createElement("button");
+                            retryBtn.textContent = getPublicRes(132);
+                            retryBtn.style.display = "none";
+                            retryBtn.style.margin = "10px 0";
+                            progress.classList.add("win-ring");
+                            progress.style.color = "white";
+                            var state = document.createElement("span");
+                            progress.style.marginRight = "5px";
+                            progressDisplay.appendChild(progress);
+                            progressDisplay.appendChild(state);
+                            progressDisplay.setAttribute("style", "display: flex; flex-direction: row;");
+                            content.appendChild(progressDisplay);
+                            content.appendChild(retryBtn);
+                            content.style.margin = "10px 0";
+                            content.style.maxHeight = "100%";
+                            content.style.whiteSpace = "normal";
+                            content.style.width = "100%";
+                            progressDisplay.style.width = "100%";
+                            content.style.boxSizing = "border-box";
+                            content.classList.add("markdown-style");
+                            progressDisplay.style.boxSizing = "border-box";
+                            msgbox(content, getPublicRes(135));
+                            var fetchFunc = function() {
+                                retryBtn.style.display = "none";
+                                state.textContent = getPublicRes(141);
+                                progress.style.display = "";
+                                WinJS.xhr({
+                                    url: "https://api.github.com/repos/modernw/App-Installer-For-Windows-8.x-Reset/readme",
+                                }).done(
+                                    function(resp) {
+                                        var json = JSON.parse(resp.responseText);
+                                        var decoderesult = decodeBase64(json.content);
+                                        content.innerHTML = decoderesult;
+                                        content.style.height = "300px";
+                                        content.style.maxHeight = "100%";
+                                    },
+                                    function(err) {
+                                        progress.style.display = "none";
+                                        retryBtn.style.display = "block";
+                                        var msg = {
+                                            message: ""
+                                        };
+                                        try {
+                                            msg = JSON.parse(err.responseText);
+                                        } catch (e) {
+                                            msg = err.responseText;
+                                        }
+                                        state.textContent = getPublicRes(142) + (msg.message.length > 0 ? ": " + msg.message : "");
+                                    }
+                                );
+                            };
+                            retryBtn.addEventListener("click", function() {
+                                fetchFunc();
+                            });
+                            fetchFunc();
+                        });
+                        eventutil.addEvent(aboutEula, "click", function() {
+                            var eulaFilePath = path.combine(path.root, "license");
+                            eulaFilePath = path.combine(eulaFilePath, strres.getString("license"))
+                            var content = document.createElement("iframe");
+                            content.onload = function() {
+                                try {
+                                    var winjsurl = path.combine(libroot, "libs\\winjs\\1.0\\css\\ui-light.css");
+                                    var style = document.createElement("link");
+                                    style.rel = "stylesheet";
+                                    style.href = winjsurl;
+                                    content.contentWindow.document.head.insertBefore(style, content.contentWindow.document.head.firstChild);
+                                    for (var i = 0; i < jslist.length; i++) {
+                                        var jsfile = path.combine(libroot, jslist[i]);
+                                        var script = document.createElement("script");
+                                        script.src = jsfile;
+                                        content.contentWindow.document.head.appendChild(script);
+                                    }
+                                    var style2 = document.createElement("style");
+                                    style2.innerHTML = '*,button,input,select,textarea,a,label,p,span,h1,h2,h3,h4,h5,h6,ul,ol,li,dl,dt,dd,table,th,td,tr,img,iframe,object,embed,audio,video,canvas,form,fieldset,legend,.win-type-x-large,.win-type-xx-large,.font-fixed{font-family:"Microsoft YaHei","Segoe UI","Ebrima","Nirmala","Gadugi","Segoe UI Emoji","Segoe UI Symbol","Meiryo","Leelawadee","Microsoft JhengHei","Malgun Gothic","Estrangelo Edessa","Microsoft Himalaya","Microsoft New Tai Lue","Microsoft PhagsPa","Microsoft Tai Le","Microsoft Yi Baiti","Mongolian Baiti","MV Boli","Myanmar Text","Javanese Text","Cambria Math";}';
+                                    content.contentWindow.document.head.appendChild(style2);
+                                    content.contentWindow.document.body.style.overflowY = "auto";
+                                    content.contentWindow.Windows.UI.DPI.mode = 1;
+                                } catch (e) {}
+                            };
+                            content.src = eulaFilePath;
+                            content.style.margin = "10px 0";
+                            var text = document.createElement("div");
+                            text.style.width = "100%";
+                            text.style.height = "300px";
+                            text.style.overflowY = "hidden";
+                            content.style.width = "100%";
+                            content.style.height = "100%";
+                            content.style.maxHeight = "100%";
+                            text.appendChild(content);
+                            var dlg = new MsgBox();
+                            dlg.text = text;
+                            dlg.title = getPublicRes(143);
+                            dlg.show();
+                            setTimeout(function() {
+                                var element = dlg.getElement();
+                                var body = element.querySelector(".notice-body");
+                                var title = element.querySelector(".notice-title");
+                                var content = element.querySelector(".notice-text");
+                                var ctrls = element.querySelector(".notice-controls");
+                                element.classList.remove("win-ui-dark");
+                                element.classList.add("win-ui-light");
+                                title.style.color = "black";
+                                content.style.color = "black";
+                                body.style.backgroundColor = "white";
+                                body.style.color = "black";
+                            }, 0);
+                        });
+                    })();
+                </script>
+            </div>
         </div>
     </div>
 </body>

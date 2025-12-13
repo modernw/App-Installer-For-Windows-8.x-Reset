@@ -133,6 +133,18 @@ aside.left {
     color: white;
 }
 
+aside.top {
+    position: absolute;
+    top: 0px;
+    height: 120px;
+    left: 0px;
+    right: 0px;
+    box-sizing: border-box;
+    padding: 0 1px 0 0;
+    background-color: rgb(20, 0, 68);
+    color: white;
+}
+
 aside .container {
     width: 100%;
     height: calc(100% - 120px);
@@ -215,6 +227,23 @@ aside .container ul li[data-require-disabled] {
     overflow-y: auto;
     overflow-x: hidden;
     width: calc(100% - 300px);
+    background-color: white;
+}
+
+.main.bottom {
+    position: absolute;
+    top: 120px;
+    bottom: 0px;
+    right: 0px;
+    left: 0px;
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    overflow-y: auto;
+    overflow-x: hidden;
+    width: 100%;
+    background-color: white;
 }
 
 .main.padding {
@@ -231,8 +260,21 @@ aside .container ul li[data-require-disabled] {
     position: absolute;
     top: 0px;
     left: 0px;
+    background-color: white;
 }
 
 .section.padding {
     padding: 44px 60px;
+}
+
+.section.padding .bottom-compensate {
+    padding-bottom: 44px;
+}
+
+.main.bottom.padding {
+    padding: 30px 60px 44px;
+}
+
+.main.padding .bottom-compensate {
+    padding-bottom: 44px;
 }

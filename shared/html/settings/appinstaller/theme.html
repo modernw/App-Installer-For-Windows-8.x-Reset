@@ -30,6 +30,111 @@
     <link rel="stylesheet" type="text/css" href="../subpage.css">
     <script type="text/javascript" src="preinit.js"></script>
     <script type="text/javascript" src="initsame.js"></script>
+    <script type="text/javascript" src="../../js/theme.js"></script>
+    <style>
+        .win-settings-section {
+            transition: all 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
+            overflow-y: hidden;
+            overflow-x: visible;
+        }
+        
+        .settings-listview-h {
+            width: 100%;
+            height: 200px;
+            max-height: 410px;
+            overflow-y: hidden;
+            overflow-x: auto;
+            display: flex;
+            flex-direction: column;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            justify-content: flex-start;
+            align-items: flex-start;
+            box-sizing: border-box;
+            position: relative;
+            left: 0px;
+            right: 0px;
+        }
+        
+        .settings-listview-item {
+            width: 175px;
+            height: 175px;
+            border: 3px solid transparent;
+            transition: all 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
+            box-sizing: border-box;
+            margin: 0 10px 10px 0;
+            position: relative;
+        }
+        
+        .settings-listview-item p {
+            padding: 0 8px;
+            margin: 0;
+            font-weight: normal;
+        }
+        
+        .settings-listview-item iframe {
+            pointer-events: none;
+            height: 133px;
+        }
+        
+        .settings-listview-item:hover {
+            background-color: rgba(230, 230, 230, 1);
+        }
+        
+        .settings-listview-item:active {
+            transform: scale(0.96);
+            background-color: rgba(204, 204, 204, 1);
+        }
+        
+        .settings-listview-item.selected:hover {
+            background-color: rgba(187, 187, 187, 1);
+        }
+        
+        .settings-listview-item:focus {
+            border-color: rgba(0, 118, 215, 0.275);
+        }
+        
+        .settings-listview-item.selected:before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-style: solid;
+            border-width: 4px;
+            border-color: rgb(119, 119, 119);
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        .settings-listview-item.selected:after {
+            content: "";
+            font-family: "Segoe UI Symbol", Symbols;
+            color: white;
+            position: absolute;
+            top: 0;
+            bottom: auto;
+            left: auto;
+            right: 0;
+            border-left: 0px solid rgba(0, 0, 0, 0);
+            border-right: 30px solid rgb(119, 119, 119);
+            border-top: 0px solid rgba(0, 0, 0, 0);
+            border-bottom: 30px solid rgba(0, 0, 0, 0);
+            z-index: 11;
+            width: 0;
+            height: 0;
+            text-indent: 14px;
+            font-size: 11px;
+            line-height: 22px;
+            display: flex;
+            flex-direction: column;
+            flex-wrap: nowrap;
+            align-content: flex-end;
+            justify-content: flex-start;
+            pointer-events: none;
+        }
+    </style>
     <script>
         try {
             window.parent.setItemHighlight("theme");
@@ -40,27 +145,87 @@
 <body>
     <div class="pagecontainer full pagesection">
         <div class="section padding">
-            <h2 id="page-title" data-res-fromfile="publicRes (102)"></h2>
-            <div class="win-settings-section">
-                <br>
-                <label>主题模式</label><br>
-                <select>
-                    <option>深色</option>
-                    <option>浅色</option>
-                    <option>自动变换</option>
-                    <option>自定义</option>
+            <div class="bottom-compensate">
+                <h2 id="page-title" data-res-fromfile="publicRes (102)"></h2>
+                <div class="win-settings-section">
+                    <br>
+                    <label for="theme-mode">主题模式</label><br>
+                    <select id="theme-mode">
+                    <option value="Theme.ThemeType.light">总是深色</option>
+                    <option value="Theme.ThemeType.dark">总是浅色</option>
+                    <option value="Theme.ThemeType.auto">跟随系统</option>
+                    <option value="Theme.ThemeType.time">跟随时间</option>
+                    <option value="Theme.ThemeType.custom">自定义</option>
                 </select>
-                <br>
-            </div>
-            <div class="win-settings-section">
-                <br>
-                <label>自动变换选项</label><br>
-                <select>
-                    <option>跟随系统</option>
-                    <option>设置变换时间</option>
-                </select><br>
-                <div class="win-settings-section" id="item-automode">
-                    <p>设置变换时间</p>
+                    <script>
+                        function refreshSectionDisplay() {
+                            var timeSect = document.getElementById("item-time");
+                            var customSect = document.getElementById("item-custom-theme");
+                            var themeSect = document.getElementById("item-theme");
+                            var customThemeSect = document.getElementById("item-custom-theme-edit");
+                            switch (Theme.getType()) {
+                                case Theme.ThemeType.time:
+                                    timeSect.style.height = timeSect.scrollHeight + "px";
+                                    customSect.style.height = "0px";
+                                    timeSect.style.opacity = "1";
+                                    customSect.style.opacity = "0";
+                                    themeSect.style.height = themeSect.scrollHeight + "px";
+                                    customThemeSect.style.height = "0px";
+                                    break;
+                                case Theme.ThemeType.custom:
+                                    customSect.style.height = customSect.scrollHeight + "px";
+                                    timeSect.style.height = "0px";
+                                    timeSect.style.opacity = "0";
+                                    customSect.style.opacity = "1";
+                                    themeSect.style.height = "0px";
+                                    customThemeSect.style.height = customThemeSect.scrollHeight + "px";
+                                    break;
+                                default:
+                                case Theme.ThemeType.light:
+                                case Theme.ThemeType.dark:
+                                case Theme.ThemeType.auto:
+                                    timeSect.style.height = "0px";
+                                    customSect.style.height = "0px";
+                                    timeSect.style.opacity = "0";
+                                    customSect.style.opacity = "0";
+                                    themeSect.style.height = themeSect.scrollHeight + "px";
+                                    customThemeSect.style.height = "0px";
+                                    break;
+                            }
+                        }
+                        Windows.UI.Event.Util.addEvent(document.getElementById("theme-mode"), "change", function() {
+                            Theme.setType(eval(document.getElementById("theme-mode").value));
+                            refreshSectionDisplay();
+                        });
+                        OnLoad.add(function() {
+                            var thememode = document.getElementById("theme-mode");
+                            var valuestr = "Theme.ThemeType.";
+                            switch (Theme.getType()) {
+                                case Theme.ThemeType.light:
+                                    valuestr += "light";
+                                    break;
+                                case Theme.ThemeType.dark:
+                                    valuestr += "dark";
+                                    break;
+                                case Theme.ThemeType.auto:
+                                    valuestr += "auto";
+                                    break;
+                                case Theme.ThemeType.time:
+                                    valuestr += "time";
+                                    break;
+                                case Theme.ThemeType.custom:
+                                    valuestr += "custom";
+                                    break;
+                            }
+                            thememode.value = valuestr;
+                            setTimeout(refreshSectionDisplay, 100);
+                        });
+                    </script>
+                    <br>
+                </div>
+                <div class="win-settings-section" id="item-time">
+                    <br>
+                    <label>设置变换时间</label>
                     <div class="win-settings-row">
                         <div class="win-settings-label" style="font-weight: normal;">白天</div>
                         <div class="win-settings-control">
@@ -75,28 +240,132 @@
                             </div>
                         </div>
                     </div>
+                    <script>
+                        var dayTime = document.getElementById("theme-day-time");
+                        var nightTime = document.getElementById("theme-night-time");
+                        dayTime.addEventListener("change", function() {
+                            Theme.setDayTime(dayTime.winControl.current);
+                        });
+                        nightTime.addEventListener("change", function() {
+                            Theme.setNightTime(nightTime.winControl.current);
+                        });
+                        OnLoad.add(function() {
+                            dayTime.winControl.current = Theme.dayTime;
+                            nightTime.winControl.current = Theme.nightTime;
+                        });
+                    </script>
                 </div>
-            </div>
-            <div class="win-settings-section" id="item-theme">
-                <br>
-                <label>自定义主题模式</label><br>
-                <script>
-                    (function() {
-                        var sect = document.getElementById("item-theme");
-                        var toggle = new Toggle();
-                        toggle.create();
-                        toggle.parent = sect;
-                        toggle.setColor("#202020");
-                        toggle.showlabel = true;
-                        toggle.setStatusText("深色", "浅色");
-                    })();
-                </script>
-                <br>
-                <label>选择主题</label>
-                <p>浅色主题</p>
-                <div class="win-listview"></div>
-                <p>深色主题</p>
-                <div class="win-listview"></div>
+                <div class="win-settings-section" id="item-custom-theme">
+                    <br>
+                    <label>自定义主题颜色</label><br>
+                    <script>
+                        (function() {
+                            var sect = document.getElementById("item-custom-theme");
+                            var toggle = new Toggle();
+                            toggle.create();
+                            toggle.parent = sect;
+                            toggle.setColor("#202020");
+                            toggle.showlabel = true;
+                            toggle.setStatusText("深色", "浅色");
+                            toggle.addEventListener("change", function() {
+                                Theme.setCustomColor(toggle.checked ? Theme.ColorType.dark : Theme.ColorType.light);
+                                refreshCustomPreview();
+                            });
+                            OnLoad.add(function() {
+                                toggle.checked = Theme.customColor === Theme.ColorType.dark;
+                            });
+                        })();
+                    </script>
+                </div>
+                <div class="win-settings-section" id="item-theme"> <br>
+                    <h3>选择主题</h3>
+                    <p>浅色主题</p>
+                    <div class="settings-listview-h" id="light-theme-list"></div>
+                    <p>深色主题</p>
+                    <div class="settings-listview-h" id="dark-theme-list"></div>
+                    <script>
+                        var storage = Bridge.External.Storage;
+                        var path = storage.Path;
+                        var config = Bridge.External.Config;
+                        var themeFolder = path.combine(path.root, "html\\theme");
+                        var themeLightFolder = path.combine(themeFolder, "light");
+                        var themeDarkFolder = path.combine(themeFolder, "dark");
+                        var previewHtml = path.combine(path.root, "html\\preview.html");
+                        var themePath = path.combine(path.root, "html\\theme\\{colormode}\\{themeid}\\{themeid}.css");
+
+                        function createThemeItem(id, color) {
+                            var item = document.createElement("div");
+                            item.className = "settings-listview-item";
+                            item.setAttribute("data-theme-id", id);
+                            item.setAttribute("data-item-color", color);
+                            var iframe = document.createElement("iframe");
+                            iframe.width = "100%";
+                            /*iframe.onload = function(e) {
+                                iframe.contentWindow.Theme.currentColor = color;
+                                iframe.contentWindow.Theme.currentTheme = id;
+                            };*/
+                            iframe.src = previewHtml + "?color=" + color + "&id=" + id;
+                            item.appendChild(iframe);
+                            var colorstr = "light";
+                            if (color === Theme.ColorType.dark) colorstr = "dark";
+                            var themeinfo = config.create(themePath.replace("{colormode}", colorstr).replace("{themeid}", id).replace("{themeid}", id));
+                            var displaNameLabel = document.createElement("p");
+                            displaNameLabel.textContent = themeinfo.getKey("ThemeInfo", "DisplayName").value;
+                            if (Bridge.NString.empty(displaNameLabel.textContent)) displaNameLabel.textContent = id;
+                            item.appendChild(displaNameLabel);
+                            return item;
+                        }
+
+                        function eventInitList() {
+                            var lightThemeList = document.getElementById("light-theme-list");
+                            var darkThemeList = document.getElementById("dark-theme-list");
+                            var lightThemeListItems = JSON.parse(path.enumSubDirsToJson(themeLightFolder, false));
+                            var darkThemeListItems = JSON.parse(path.enumSubDirsToJson(themeDarkFolder, false));
+                            lightThemeList.innerHTML = "";
+                            darkThemeList.innerHTML = "";
+                            for (var i = 0; i < lightThemeListItems.length; i++) {
+                                var node = createThemeItem(lightThemeListItems[i], Theme.ColorType.light);
+                                lightThemeList.appendChild(node);
+                                WinJS.UI.Animation.createAddToListAnimation(lightThemeList, node).execute();
+                            }
+                            for (var i = 0; i < darkThemeListItems.length; i++) {
+                                var node = createThemeItem(darkThemeListItems[i], Theme.ColorType.dark);
+                                darkThemeList.appendChild(node);
+                                WinJS.UI.Animation.createAddToListAnimation(darkThemeList, node).execute();
+                            }
+                        }
+                        OnLoad.add(function() {
+                            setTimeout(eventInitList, 0);
+                        });
+                    </script>
+                </div>
+                <div class="win-settings-section" id="item-custom-theme-edit">
+                    <br>
+                    <h3>编辑当前自定义样式</h3>
+                    <label>预览</label><br>
+                    <iframe src="../../preview.html" id="theme-custom-preview"></iframe>
+                    <br><br>
+                    <button id="jump-editpage">编辑</button>
+                    <script>
+                        function refreshCustomPreview() {
+                            var storage = Bridge.External.Storage;
+                            var path = storage.Path;
+                            var config = Bridge.External.Config;
+                            var customcolor = Theme.customColor;
+                            var customcolorstr = "light";
+                            if (customcolor === Theme.ColorType.dark) customcolorstr = "dark";
+                            var customThemePath = path.combine(path.root, "html\\theme\\{colormode}\\custom\\custom.css").replace("{colormode}", customcolorstr);
+                            var iframe = document.getElementById("theme-custom-preview");
+                            iframe.setAttribute("src", "../../preview.html?id=custom&color=" + customcolor);
+                        }
+                        OnLoad.add(function() {
+                            setTimeout(refreshCustomPreview, 100);
+                        });
+                        Windows.UI.Event.Util.addEvent(document.getElementById("jump-editpage"), "click", function() {
+                            window.parent.location.href = "cssedit.html";
+                        });
+                    </script>
+                </div>
             </div>
         </div>
     </div>

@@ -850,7 +850,44 @@ public ref class SplashForm: public System::Windows::Forms::Form
 		}
 	}
 };
-
+uint64_t GetFileSize (String ^filepath)
+{
+	FileInfo ^fi = gcnew FileInfo (filepath);
+	if (!fi->Exists) return -1;
+	return fi->Length; 
+}
+bool CopyFileWithDialog (const std::wstring &src, const std::wstring &dst)
+{
+	HRESULT hr = CoInitializeEx (NULL, COINIT_APARTMENTTHREADED);
+	if (FAILED (hr)) return false;
+	CComPtr <IFileOperation> pfo;
+	hr = pfo.CoCreateInstance (CLSID_FileOperation);
+	if (FAILED (hr)) return false;
+	pfo->SetOperationFlags (
+		FOF_NOCONFIRMMKDIR |
+		FOF_ALLOWUNDO
+	);
+	CComPtr <IShellItem> psiSrc;
+	CComPtr <IShellItem> psiDst;
+	hr = SHCreateItemFromParsingName (
+		src.c_str (),
+		NULL,
+		IID_PPV_ARGS (&psiSrc)
+	);
+	if (FAILED (hr)) return false;
+	std::wstring dstDir = GetFileDirectoryW (dst);
+	hr = SHCreateItemFromParsingName (
+		dstDir.c_str (),
+		NULL,
+		IID_PPV_ARGS (&psiDst)
+	);
+	if (FAILED (hr)) return false;
+	hr = pfo->CopyItem (psiSrc, psiDst, NULL, NULL);
+	if (FAILED (hr)) return false;
+	hr = pfo->PerformOperations ();
+	bool ok = SUCCEEDED (hr);
+	return ok;
+}
 [ComVisible (true)]
 public ref class MainHtmlWnd: public System::Windows::Forms::Form, public IScriptBridge
 {
@@ -1053,6 +1090,16 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form, public IScrip
 			doc.Accept (writer);
 			return CStringToMPString (StringToWString (buffer.GetString (), CP_UTF8));
 		}
+		String ^SelectFilesToJSON (String ^filter, DWORD flags, String ^wndtitle, String ^initdir)
+		{
+			std::vector <std::wstring> ret;
+			std::wstring filterbuf = MPStringToStdW (filter) + L'|||';
+			for (auto &it : filterbuf) if (it == L'|') it = L'\0';
+			ExploreFile (wndinst->InvokeGetHWND (), ret, (LPWSTR)filterbuf.c_str (), flags, MPStringToStdW (wndtitle), MPStringToStdW (initdir));
+			return CStringToMPString (StringArrayToJson (ret));
+		}
+		uint64_t GetFileSize (String ^filepath) { return ::GetFileSize (filepath); }
+		bool ShellCopyFile (String ^src, String ^desc) { return CopyFileWithDialog (MPStringToStdW (src), MPStringToStdW (desc)); }
 		void CloseWindow ()
 		{
 			if (wndinst && wndinst->IsHandleCreated) wndinst->Close ();

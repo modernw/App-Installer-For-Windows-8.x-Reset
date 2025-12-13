@@ -13,6 +13,7 @@
 #include "mpstr.h"
 #include "strcode.h"
 using namespace System;
+using namespace System::IO;
 using namespace System::Runtime::InteropServices;
 
 std::wstring HResultToMessage (HRESULT hr)
@@ -233,7 +234,6 @@ public ref class _I_Path
 		if (path) CoTaskMemFree (path);
 		return CStringToMPString (result);
 	}
-
 	bool PEquals (String ^l, String ^r) { return PathEquals (MPStringToStdW (l), MPStringToStdW (r)); }
 };
 [ComVisible (true)]
@@ -300,6 +300,10 @@ public ref class _I_File: public _I_Entry
 			auto lastEncoding = sr->CurrentEncoding;
 			return text;
 		}
+		catch (...)
+		{
+			return nullptr;
+		}
 		finally
 		{
 			if (sr) delete sr;
@@ -310,6 +314,11 @@ public ref class _I_File: public _I_Entry
 	{
 		using namespace System::IO;
 		if (String::IsNullOrEmpty (path)) return;
+		String ^dir = System::IO::Path::GetDirectoryName (path);
+		if (!String::IsNullOrEmpty (dir) && !System::IO::Directory::Exists (dir))
+		{
+			System::IO::Directory::CreateDirectory (dir);
+		}
 		Encoding ^enc = lastEncoding ? lastEncoding : Encoding::UTF8;
 		FileStream ^fs = nullptr;
 		StreamWriter ^sw = nullptr;
@@ -317,9 +326,9 @@ public ref class _I_File: public _I_Entry
 		{
 			fs = gcnew FileStream (
 				path,
-				FileMode::Create,
-				FileAccess::ReadWrite,
-				FileShare::ReadWrite
+				FileMode::Create,        // 创建或覆盖
+				FileAccess::Write,       // 只写即可
+				FileShare::Read          // 允许别人读
 			);
 			sw = gcnew StreamWriter (fs, enc);
 			sw->Write (content);

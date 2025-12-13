@@ -1,0 +1,67 @@
+﻿custom.css/* The following content is sample content and is for reference only. */
+
+/* Installer */
+
+.page {
+    background-color: #F3F3F3;
+}
+
+.page.splash {
+    background-color: #0078d7;
+}
+
+.page .content.loading,
+.page .content.main,
+.page .progress,
+.page .reason p,
+.page .controls .checkbox {
+    color: black;
+}
+
+.page .content.main .pkgapplabel {
+    color: #0078d7;
+}
+
+
+/* App Launch List */
+
+.applist-font-title {
+    color: black;
+}
+
+.applist-font-text {
+    color: black;
+}
+
+.applist-window {
+    border: 2px solid rgb(42, 42, 42);
+    background-color: white;
+}
+
+.applist-title {
+    background: white;
+}
+
+.applist-control {
+    background: white;
+}
+
+.applist-list-item {
+    background-color: rgba(0, 255, 255, 0);
+}
+
+.applist-list-item:hover {
+    background-color: rgb(222, 222, 222);
+}
+
+.applist-item-picbox {
+    background-color: #001020;
+}
+
+.applist-item-img-border {
+    border: 1px solid rgba(254, 254, 254, 0.1);
+}
+
+.win10.applist-window {
+    border: 1px solid #ccc;
+}

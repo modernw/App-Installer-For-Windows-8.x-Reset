@@ -247,6 +247,33 @@
     </style>
     <link rel="stylesheet" type="text/css" href="theme/light/default/default.css" id="theme-style">
     <script type="text/javascript" src="js/theme.js"></script>
+    <script>
+        OnLoad.add(function() {
+            try {
+                var p = params;
+                var keys = Object.keys(p);
+                var hasidparam = false;
+                var hascolorparam = false;
+                for (var i = 0; i < keys.length; i++) {
+                    var key = keys[i];
+                    if (key.indexOf("color") >= 0) {
+                        hascolorparam = true;
+                    }
+                    if (key.indexOf("id") >= 0) {
+                        hasidparam = true;
+                    }
+                }
+                if (hasidparam && hascolorparam) {
+                    Theme.currentColor = parseInt(p["color"]);
+                    Theme.currentTheme = p["id"];
+                } else {
+                    throw new Error("Invalid parameters.");
+                }
+            } catch (e) {
+                Theme.refresh();
+            }
+        });
+    </script>
 </head>
 
 <body>

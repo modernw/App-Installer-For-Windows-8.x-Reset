@@ -14,6 +14,7 @@
     justify-content: center;
     transition: all 0.15s linear;
     opacity: 0;
+    z-index: 100;
 }
 
 .notice-body {

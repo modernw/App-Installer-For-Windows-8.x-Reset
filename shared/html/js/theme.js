@@ -77,10 +77,12 @@
     }
 
     function getSuitableTheme() {
+        var type = getThemeSwitchType();
         var color = getCurrentThemeColor();
         var ret = "";
         if (color === ColorType.light) ret = themeSection.getKey("AppInstaller:LightTheme").value;
         else ret = themeSection.getKey("AppInstaller:DarkTheme").value;
+        if (type === ThemeType.custom) ret = "custom";
         if (nstrutil.empty(ret)) ret = "default";
         return ret;
     }
@@ -163,6 +165,9 @@
             execFunc("night");
             setupThemeTimers();
         }, nextNight - now);
+        var msgstr = "距下一个白天模式还有 " + Math.floor((nextDay - now) / 1000 / 60 / 60) + " 时\n" +
+            "距下一个夜晚模式还有 " + Math.floor((nextNight - now) / 1000 / 60 / 60) + " 时";
+        // alert(msgstr);
         return isDayTime ? "day" : "night";
     }
 
@@ -183,6 +188,68 @@
         }, 0);
     }
 
+    function setThemeSwitchType(type) {
+        var themeType = themeSection.getKey("AppInstaller:ThemeMode");
+        var value = "light";
+        switch (type) {
+            case ThemeType.light:
+                value = "light";
+                break;
+            case ThemeType.dark:
+                value = "dark";
+                break;
+            case ThemeType.auto:
+                value = "auto";
+                break;
+            case ThemeType.time:
+                value = "time";
+                break;
+            case ThemeType.custom:
+                value = "custom";
+                break;
+            default:
+                value = "light";
+                break;
+        }
+        themeType.value = value;
+    }
+
+    function setTimeModeDayTime(time) {
+        var dayTime = themeSection.getKey("AppInstaller:DayTime");
+        dayTime.value = time.toISOString();
+    }
+
+    function setTimeModeNightTime(time) {
+        var nightTime = themeSection.getKey("AppInstaller:NightTime");
+        nightTime.value = time.toISOString();
+    }
+
+    function setLightTheme(theme) {
+        var lightTheme = themeSection.getKey("AppInstaller:LightTheme");
+        lightTheme.value = theme;
+    }
+
+    function setDarkTheme(theme) {
+        var darkTheme = themeSection.getKey("AppInstaller:DarkTheme");
+        darkTheme.value = theme;
+    }
+
+    function setCustomColor(color) {
+        var customColor = themeSection.getKey("AppInstaller:CustomColor");
+        var value = "light";
+        switch (color) {
+            case ColorType.light:
+                value = "light";
+                break;
+            case ColorType.dark:
+                value = "dark";
+                break;
+            default:
+                value = "light";
+                break;
+        }
+        customColor.value = value;
+    }
     module.exports = {
         Theme: {
             ThemeType: ThemeType,
@@ -191,10 +258,109 @@
             getColor: getCurrentThemeColor,
             getTheme: getSuitableTheme,
             getTimeModeTimeLimit: getTimeModeTimeLimit,
-            refresh: refreshTheme
+            refresh: refreshTheme,
+            setType: setThemeSwitchType,
+            setDayTime: setTimeModeDayTime,
+            setNightTime: setTimeModeNightTime,
+            setLightTheme: setLightTheme,
+            setDarkTheme: setDarkTheme,
+            setCustomColor: setCustomColor
         }
     };
-    if (typeof OnLoad !== "undefined") {
-        OnLoad.add(refreshTheme);
-    }
+    var themeNS = Theme;
+    Object.defineProperty(themeNS, "type", {
+        get: function() {
+            return themeNS.getType();
+        },
+        set: function(value) {
+            return themeNS.setType(value);
+        }
+    });
+    Object.defineProperty(themeNS, "dayTime", {
+        get: function() {
+            return themeNS.getTimeModeTimeLimit().day;
+        },
+        set: function(value) {
+            return themeNS.setTimeModeDayTime(value);
+        }
+    });
+    Object.defineProperty(themeNS, "nightTime", {
+        get: function() {
+            return themeNS.getTimeModeTimeLimit().night;
+        },
+        set: function(value) {
+            return themeNS.setTimeModeNightTime(value);
+        }
+    });
+    Object.defineProperty(themeNS, "lightTheme", {
+        get: function() {
+            return themeSection.getKey("AppInstaller:LightTheme").value;
+        },
+        set: function(value) {
+            return themeNS.setLightTheme(value);
+        }
+    });
+    Object.defineProperty(themeNS, "darkTheme", {
+        get: function() {
+            return themeSection.getKey("AppInstaller:DarkTheme").value;
+        },
+        set: function(value) {
+            return themeNS.setDarkTheme(value);
+        }
+    });
+    Object.defineProperty(themeNS, "customColor", {
+        get: function() {
+            var str = themeSection.getKey("AppInstaller:CustomColor").value;
+            if (nstrutil.equals(str, "light")) return ColorType.light;
+            else if (nstrutil.equals(str, "dark")) return ColorType.dark;
+            else return ColorType.light;
+        },
+        set: function(value) {
+            return themeNS.setCustomColor(value);
+        }
+    });
+    Object.defineProperty(themeNS, "color", {
+        get: function() {
+            return themeNS.getColor();
+        },
+    });
+    Object.defineProperty(themeNS, "theme", {
+        get: function() {
+            return themeNS.getTheme();
+        },
+    });
+    Object.defineProperty(themeNS, "currentTheme", {
+        get: function() {
+            return themeCss.getAttribute("href").split("/").pop().split(".")[0];
+        },
+        set: function(themeId) {
+            var colorstr = "light";
+            var color = themeNS.currentColor;
+            if (color === ColorType.light) colorstr = "light";
+            else if (color === ColorType.dark) colorstr = "dark";
+            var href = themePath.replace("{themecolor}", colorstr).replace("{id}", themeId).replace("{id}", themeId);
+            themeCss.setAttribute("href", href);
+            setTimeout(function() {
+                try { Windows.UI.DPI.mode = 1; } catch (e) {}
+            }, 0);
+        }
+    });
+    Object.defineProperty(themeNS, "currentColor", {
+        get: function() {
+            var href = winjsCss.getAttribute("href");
+            if (href.indexOf("ui-light") >= 0) return ColorType.light;
+            else if (href.indexOf("ui-dark") >= 0) return ColorType.dark;
+            else return ColorType.light;
+        },
+        set: function(color) {
+            var colorstr = "light";
+            if (color === ColorType.light) colorstr = "light";
+            else if (color === ColorType.dark) colorstr = "dark";
+            winjsCss.setAttribute("href", winjsPath.replace("{themecolor}", colorstr));
+            themeCss.setAttribute("href", themePath.replace("{themecolor}", colorstr).replace("{id}", themeNS.theme).replace("{id}", themeNS.currentTheme));
+            setTimeout(function() {
+                try { Windows.UI.DPI.mode = 1; } catch (e) {}
+            }, 0);
+        }
+    });
 })(this);

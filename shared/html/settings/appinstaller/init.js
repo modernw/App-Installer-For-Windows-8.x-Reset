@@ -14,7 +14,7 @@
         var list = slide.querySelector("ul");
         var backbtn = slide.querySelector("#back");
         var title = slide.querySelector("#apptitle");
-        list.innerHTML = "";
+        if (list) list.innerHTML = "";
         var items = pages;
         var tags = Object.keys(items);
         var eventutil = Windows.UI.Event.Util;
@@ -27,6 +27,7 @@
             li.innerHTML = item.title;
             eventutil.addEvent(li, "click", function() {
                 if (li.hasAttribute("data-require-disabled")) return;
+                if (!list) return;
                 content.style.display = "none";
                 for (var j = 0; j < list.children.length; j++) {
                     var child = list.children[j];
@@ -43,7 +44,7 @@
                 }, 0, this);
                 this.classList.add("selected");
             });
-            list.appendChild(li);
+            if (list) list.appendChild(li);
         }
         content.src = guidePage.page;
         eventutil.addEvent(content, "load", function() {
@@ -53,7 +54,7 @@
         var jumppage = "";
         try { var args = cmdargs; if (args.length > 1) jumppage = args[1]; } catch (e) {}
         if (jumppage && jumppage.length > 0 && !Bridge.External.jump2) {
-            for (var i = 0; i < list.children.length; i++) {
+            for (var i = 0; i < list.children.length && list; i++) {
                 var child = list.children[i];
                 if (Bridge.NString.equals(child.getAttribute("data-tag"), jumppage)) {
                     Bridge.External.jump2 = true;
