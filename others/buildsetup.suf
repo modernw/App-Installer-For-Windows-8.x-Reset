@@ -2797,7 +2797,24 @@ end
 <IDS_CTRL_BUTTON_BACK>&lt; &amp;Back</IDS_CTRL_BUTTON_BACK>
 <IDS_CTRL_BUTTON_CANCEL>&amp;Cancel</IDS_CTRL_BUTTON_CANCEL>
 <IDS_CTRL_BUTTON_HELP>&amp;Help</IDS_CTRL_BUTTON_HELP>
-<IDS_CTRL_SCROLLTEXT_BODY>This is currently in test mode, and this release is solely for testing the program's update features. While this version is available, the official release is still recommended.</IDS_CTRL_SCROLLTEXT_BODY>
+<IDS_CTRL_SCROLLTEXT_BODY>This is currently in test mode, and this release is solely for testing the program's update features. While this version is available, the official release is still recommended.
+Before continuing with the installation, please read the following information carefully:
+·
+
+File Association Changes
+
+　　This installer will modify system file association settings to associate .appx and .appxbundle files. After installation, this application will be set as the default handler for these file types.
+
+
+·Automatic Installation of Required Runtimes
+　　
+To ensure proper operation, the installer may automatically download and install required runtime components.
+·
+
+Internet Connection and Data Usage
+　　
+An internet connection is required to download runtime components and related files. This may result in data usage and could increase network charges.
+It is recommended to perform the installation on a non-metered or sufficient data network.</IDS_CTRL_SCROLLTEXT_BODY>
 <IDS_CTRL_SCROLLTEXT_FILE/>
 </Messages>
 </SUF70Messages>
@@ -2821,7 +2838,25 @@ end
 <IDS_CTRL_BUTTON_BACK>&lt; 返回(&amp;B)</IDS_CTRL_BUTTON_BACK>
 <IDS_CTRL_BUTTON_CANCEL>取消(&amp;C)</IDS_CTRL_BUTTON_CANCEL>
 <IDS_CTRL_BUTTON_HELP>帮助(&amp;H)</IDS_CTRL_BUTTON_HELP>
-<IDS_CTRL_SCROLLTEXT_BODY>当前是测试模式，发行此版本仅用于此程序的更新功能测试。虽然此版本可用，但仍建议使用正式版本。</IDS_CTRL_SCROLLTEXT_BODY>
+<IDS_CTRL_SCROLLTEXT_BODY>当前是测试模式，发行此版本仅用于此程序的更新功能测试。虽然此版本可用，但仍建议使用正式版本。
+在继续安装之前，请您仔细阅读以下内容：
+
+·
+文件关联
+　　修改
+本安装程序将在系统中修改文件关联设置，用于关联 .appx 和 .appxbundle 文件。
+　　安装完成后，系统将使用本程序作为上述文件类型的默认处理方式。
+
+
+·自动安装运行库
+　　
+为确保程序正常运行，安装过程中可能会自动下载并安装所需的运行库组件。
+
+
+·网络连接与流量
+　　消耗
+安装运行库及相关组件时需要连接互联网，这可能会产生一定的数据流量消耗，并可能增加网络计费。
+建议在 非计费或流量充足的网络环境 下进行安装。</IDS_CTRL_SCROLLTEXT_BODY>
 <IDS_CTRL_SCROLLTEXT_FILE/>
 </Messages>
 </SUF70Messages>
@@ -6507,7 +6542,7 @@ g_HandleSystemReboot();
 </SessionVar>
 <SessionVar>
 <Name>%ProductVer%</Name>
-<Value>0.2.1.0</Value>
+<Value>0.2.2.0</Value>
 <Type>1</Type>
 </SessionVar>
 <SessionVar>
