@@ -28,13 +28,20 @@
     <script type="text/javascript" src="libs/msgbox/msgbox.js"></script>
     <link rel="stylesheet" type="text/css" href="theme/light/default/default.css" id="theme-style">
     <script type="text/javascript" src="js/theme.js"></script>
+    <script type="text/javascript" src="js/params.js"></script>
     <script>
         OnLoad.add(function() {
+            window.displayMode = "normal";
+            window.setThemeId = "default";
+            window.setThemeColor = 0xFFFFFF;
             try {
                 var p = params;
                 var keys = Object.keys(p);
                 var hasidparam = false;
                 var hascolorparam = false;
+                try {
+                    displayMode = p["mode"];
+                } catch (e) {}
                 for (var i = 0; i < keys.length; i++) {
                     var key = keys[i];
                     if (key.indexOf("color") >= 0) {
@@ -45,20 +52,70 @@
                     }
                 }
                 if (hasidparam && hascolorparam) {
+                    window.setThemeColor = p["color"];
+                    window.setThemeId = p["id"];
                     Theme.currentColor = parseInt(p["color"]);
                     Theme.currentTheme = p["id"];
                 } else {
                     throw new Error("Invalid parameters.");
                 }
             } catch (e) {
-                Theme.refresh ();
+                try {
+                    Theme.refresh();
+                } catch (e) {}
+            }
+            if (displayMode === "preview") {
+                var preview = document.getElementById("preview-operator-panel");
+                var winjsCss = document.getElementById("winjs-style");
+                if (winjsCss) {
+                    winjsCss.setAttribute("href", "libs/winjs/2.0/css/ui-" + (window.setThemeColor == 0xFFFFFF ? "light" : "dark") + ".css");
+                }
+                var themeCss = document.getElementById("theme-style");
+                if (themeCss) {
+                    themeCss.setAttribute("href", "theme/" + (window.setThemeColor == 0xFFFFFF ? "light" : "dark") + "/" + window.setThemeId + "/" + window.setThemeId + ".css");
+                }
+                if (preview) {
+                    preview.style.display = "";
+                }
             }
         });
     </script>
+    <style>
+        #preview-operator-panel {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.3);
+            top: 50%;
+            right: 0;
+            transform: translateY(-50%);
+            box-sizing: border-box;
+            padding: 5px;
+            color: white;
+        }
+    </style>
 </head>
 
 <body>
-    <div id="page-container" class="pagecontainer full">
+    <div id="page-background" class="pagecontainer full background"></div>
+    <script>
+        (function() {
+            var backgroundiv = document.getElementById("page-background");
+            if (backgroundiv) {
+                var storage = Bridge.External.Storage;
+                var path = storage.path;
+                if (Theme.useCustomBackgroundImage) {
+                    var imgpath = Theme.suitableBackgroundImage;
+                    try {
+                        var imgfile = storage.getFile(imgpath);
+                        if (!imgfile.exist) return;
+                        var relative = imgfile.relativePath(path.combine(path.root, "html"));
+                        var backgroundImage = "url('" + relative.replace("\\", "/") + "')";
+                        backgroundiv.style.backgroundImage = backgroundImage;
+                    } catch (e) {}
+                }
+            }
+        })();
+    </script>
+    <div id="page-container" class="pagecontainer full main">
         <div class="page splash">
             <!-- Splash Screen -->
             <img class="splash" src="images/splash.default.png" alt="Splash Screen" width="620" height="300">
@@ -368,6 +425,81 @@
             });
         })();
     </script>
+    <div id="preview-operator-panel" style="display: none;">
+        <label>Please select the page: </label><br>
+        <select id="preview-operator-select" value="splash">
+            <option value="splash">Splash Screen</option>
+            <option value="select">Package Select</option>
+            <option value="preinstall">Pre-install</option>
+            <option value="installing">Installing</option>
+            <option value="installsuccess">Install Successfully</option>
+            <option value="installfailed">Install Failed</option>
+        </select><br>
+        <input type="checkbox" id="preview-operator-checkbox">
+        <label for="preview-operator-checkbox">Multiple Package Page</label><br>
+        <input type="checkbox" id="preview-operator-progress">
+        <label for="preview-operator-progress">Show Progress Bar with Value</label>
+        <script>
+            (function() {
+                var preview_operator_panel = document.getElementById("preview-operator-panel");
+                var preview_operator_select = document.getElementById("preview-operator-select");
+                var preview_operator_checkbox = document.getElementById("preview-operator-checkbox");
+                var preview_operator_progress = document.getElementById("preview-operator-progress");
+                var eventutils = Windows.UI.Event.Util;
+                var page = document.querySelector("#page-container .page");
+
+                function clearPageClass() {
+                    page.setAttribute("class", "page");
+                }
+                eventutils.addEvent(preview_operator_select, "change", function() {
+                    clearPageClass();
+                    page.classList.add(preview_operator_select.value);
+                    if (preview_operator_checkbox.checked) {
+                        page.classList.add("multiple");
+                    } else {
+                        page.classList.remove("multiple");
+                    }
+                });
+                eventutils.addEvent(preview_operator_checkbox, "change", function() {
+                    clearPageClass();
+                    page.classList.add(preview_operator_select.value);
+                    if (preview_operator_checkbox.checked) {
+                        page.classList.add("multiple");
+                    } else {
+                        page.classList.remove("multiple");
+                    }
+                });
+                eventutils.addEvent(preview_operator_progress, "change", function() {
+                    if (preview_operator_progress.checked) {
+                        page.querySelector(".progress.installing progress").value = 50;
+                    } else {
+                        page.querySelector(".progress.installing progress").removeAttribute("value");
+                    }
+                });
+                OnLoad.add(function() {
+                    setTimeout(function() {
+                        if (displayMode === "preview") {
+                            var subnodes = page.querySelectorAll("*");
+                            for (var i = 0; i < subnodes.length; i++) {
+                                var subnode = subnodes[i];
+                                var mark = "";
+                                if (subnode.hasAttribute("id")) {
+                                    mark += "Id: {" + subnode.getAttribute("id") + "} ";
+                                }
+                                if (subnode.hasAttribute("class")) {
+                                    mark += "Class: {" + subnode.getAttribute("class") + "} ";
+                                }
+                                if (subnode.hasAttribute("data-res-byname")) {
+                                    mark += "Res: {" + subnode.getAttribute("data-res-byname") + "} ";
+                                }
+                                subnode.appendChild(document.createTextNode(mark));
+                            }
+                        }
+                    }, 100);
+                });
+            })();
+        </script>
+    </div>
 </body>
 
 </html>

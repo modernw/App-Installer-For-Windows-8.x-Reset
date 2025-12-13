@@ -264,7 +264,16 @@ public ref class _I_Entry
 			using namespace System;
 			try
 			{
-				auto uri = gcnew System::Uri (System::IO::Path::GetFullPath (path));
+				System::Uri ^uri = nullptr;
+				try
+				{
+					uri = gcnew System::Uri (path);
+				} 
+				catch (Exception ^)
+				{
+					uri = gcnew System::Uri (System::IO::Path::GetFullPath (path));
+				}
+				if (!uri) return String::Empty;
 				auto uriText = uri->AbsoluteUri;
 				return uriText;
 			}
@@ -272,6 +281,38 @@ public ref class _I_Entry
 		}
 	}
 	property String ^FullPath { String ^get () { return System::IO::Path::GetFullPath (path); }}
+	String ^RelativePath (String ^frontdir)
+	{
+		auto filepath = path;
+		if (String::IsNullOrEmpty (filepath) || String::IsNullOrEmpty (frontdir)) return String::Empty;
+		try
+		{
+			String ^fullFile = System::IO::Path::GetFullPath (filepath);
+			String ^fullDir = System::IO::Path::GetFullPath (frontdir);
+			if (!fullDir->EndsWith (System::IO::Path::DirectorySeparatorChar.ToString ()))
+				fullDir += System::IO::Path::DirectorySeparatorChar;
+
+			// 比较盘符（跨盘直接失败）
+			if (!String::Equals (
+				System::IO::Path::GetPathRoot (fullFile),
+				System::IO::Path::GetPathRoot (fullDir),
+				StringComparison::OrdinalIgnoreCase))
+			{
+				return String::Empty;
+			}
+
+			// 必须以目录为前缀
+			if (!fullFile->StartsWith (fullDir, StringComparison::OrdinalIgnoreCase))
+				return String::Empty;
+
+			// 截取相对部分
+			return fullFile->Substring (fullDir->Length);
+		}
+		catch (Exception^)
+		{
+			return String::Empty;
+		}
+	}
 };
 [ComVisible (true)]
 public ref class _I_File: public _I_Entry

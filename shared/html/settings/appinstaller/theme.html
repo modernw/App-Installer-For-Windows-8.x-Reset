@@ -79,15 +79,18 @@
         
         .settings-listview-item:hover {
             background-color: rgba(230, 230, 230, 1);
+            background-color: rgba(0, 179, 255, 0.225);
         }
         
         .settings-listview-item:active {
             transform: scale(0.96);
             background-color: rgba(204, 204, 204, 1);
+            background-color: rgba(0, 174, 255, 0.484);
         }
         
         .settings-listview-item.selected:hover {
             background-color: rgba(187, 187, 187, 1);
+            background-color: rgba(0, 179, 255, 0.407);
         }
         
         .settings-listview-item:focus {
@@ -104,6 +107,7 @@
             border-style: solid;
             border-width: 4px;
             border-color: rgb(119, 119, 119);
+            border-color: rgb(0, 172, 255);
             z-index: 10;
             pointer-events: none;
         }
@@ -121,6 +125,7 @@
             border-right: 30px solid rgb(119, 119, 119);
             border-top: 0px solid rgba(0, 0, 0, 0);
             border-bottom: 30px solid rgba(0, 0, 0, 0);
+            border-right: 30px solid rgb(0, 172, 255);
             z-index: 11;
             width: 0;
             height: 0;
@@ -139,6 +144,9 @@
         try {
             window.parent.setItemHighlight("theme");
         } catch (e) {}
+        try {
+            messageBoxAsync = window.parent.messageBoxAsync;
+        } catch (e) {}
     </script>
 </head>
 
@@ -149,14 +157,14 @@
                 <h2 id="page-title" data-res-fromfile="publicRes (102)"></h2>
                 <div class="win-settings-section">
                     <br>
-                    <label for="theme-mode">主题模式</label><br>
+                    <label for="theme-mode" data-res-fromfile="publicRes (145)"></label><br>
                     <select id="theme-mode">
-                    <option value="Theme.ThemeType.light">总是深色</option>
-                    <option value="Theme.ThemeType.dark">总是浅色</option>
-                    <option value="Theme.ThemeType.auto">跟随系统</option>
-                    <option value="Theme.ThemeType.time">跟随时间</option>
-                    <option value="Theme.ThemeType.custom">自定义</option>
-                </select>
+                        <option value="Theme.ThemeType.light" data-res-fromfile="publicRes (146)"></option>
+                        <option value="Theme.ThemeType.dark" data-res-fromfile="publicRes (147)"></option>
+                        <option value="Theme.ThemeType.auto" data-res-fromfile="publicRes (148)"></option>
+                        <option value="Theme.ThemeType.time" data-res-fromfile="publicRes (149)"></option>
+                        <option value="Theme.ThemeType.custom" data-res-fromfile="publicRes (150)"></option>
+                    </select>
                     <script>
                         function refreshSectionDisplay() {
                             var timeSect = document.getElementById("item-time");
@@ -225,16 +233,16 @@
                 </div>
                 <div class="win-settings-section" id="item-time">
                     <br>
-                    <label>设置变换时间</label>
+                    <label data-res-fromfile="publicRes (151)"></label>
                     <div class="win-settings-row">
-                        <div class="win-settings-label" style="font-weight: normal;">白天</div>
+                        <div class="win-settings-label" style="font-weight: normal;" data-res-fromfile="publicRes (152)"></div>
                         <div class="win-settings-control">
                             <div data-win-control="WinJS.UI.TimePicker" data-win-options="{ hour: 9, minute: 0, clock: '24HourClock' }" id="theme-day-time">
                             </div>
                         </div>
                     </div>
                     <div class="win-settings-row">
-                        <div class="win-settings-label" style="font-weight: normal;">夜晚</div>
+                        <div class="win-settings-label" style="font-weight: normal;" data-res-fromfile="publicRes (153)"></div>
                         <div class="win-settings-control">
                             <div data-win-control="WinJS.UI.TimePicker" data-win-options="{ hour: 18, minute: 0, clock: '24HourClock' }" id="theme-night-time">
                             </div>
@@ -257,7 +265,7 @@
                 </div>
                 <div class="win-settings-section" id="item-custom-theme">
                     <br>
-                    <label>自定义主题颜色</label><br>
+                    <label data-res-fromfile="publicRes (154)"></label><br>
                     <script>
                         (function() {
                             var sect = document.getElementById("item-custom-theme");
@@ -266,7 +274,7 @@
                             toggle.parent = sect;
                             toggle.setColor("#202020");
                             toggle.showlabel = true;
-                            toggle.setStatusText("深色", "浅色");
+                            toggle.setStatusText(getPublicRes(155), getPublicRes(156));
                             toggle.addEventListener("change", function() {
                                 Theme.setCustomColor(toggle.checked ? Theme.ColorType.dark : Theme.ColorType.light);
                                 refreshCustomPreview();
@@ -278,10 +286,10 @@
                     </script>
                 </div>
                 <div class="win-settings-section" id="item-theme"> <br>
-                    <h3>选择主题</h3>
-                    <p>浅色主题</p>
+                    <h3 data-res-fromfile="publicRes (157)"></h3>
+                    <p data-res-fromfile="publicRes (158)"></p>
                     <div class="settings-listview-h" id="light-theme-list"></div>
-                    <p>深色主题</p>
+                    <p data-res-fromfile="publicRes (159)"></p>
                     <div class="settings-listview-h" id="dark-theme-list"></div>
                     <script>
                         var storage = Bridge.External.Storage;
@@ -292,6 +300,7 @@
                         var themeDarkFolder = path.combine(themeFolder, "dark");
                         var previewHtml = path.combine(path.root, "html\\preview.html");
                         var themePath = path.combine(path.root, "html\\theme\\{colormode}\\{themeid}\\{themeid}.css");
+                        var themeInfoPath = path.combine(path.root, "html\\theme\\{colormode}\\{themeid}\\themeinfo.json");
 
                         function createThemeItem(id, color) {
                             var item = document.createElement("div");
@@ -308,11 +317,46 @@
                             item.appendChild(iframe);
                             var colorstr = "light";
                             if (color === Theme.ColorType.dark) colorstr = "dark";
-                            var themeinfo = config.create(themePath.replace("{colormode}", colorstr).replace("{themeid}", id).replace("{themeid}", id));
+                            if (!path.fileExist(themeInfoPath.replace("{colormode}", colorstr).replace("{themeid}", id))) return null;
+                            var themeinfo = storage.getFile(themeInfoPath.replace("{colormode}", colorstr).replace("{themeid}", id));
+                            var themeinfojson = {};
+                            try {
+                                themeinfojson = JSON.parse(themeinfo.content);
+                                themeinfojson.Id;
+                                themeinfojson.DisplayName;
+                            } catch (e) {
+                                return null;
+                            }
                             var displaNameLabel = document.createElement("p");
-                            displaNameLabel.textContent = themeinfo.getKey("ThemeInfo", "DisplayName").value;
+                            displaNameLabel.textContent = themeinfojson.DisplayName;
                             if (Bridge.NString.empty(displaNameLabel.textContent)) displaNameLabel.textContent = id;
                             item.appendChild(displaNameLabel);
+                            Windows.UI.Event.Util.addEvent(item, "click", function() {
+                                var self = this;
+                                var color = parseInt(self.getAttribute("data-item-color"));
+                                var id = self.getAttribute("data-theme-id");
+                                for (var i = 0; i < this.parentNode.children.length; i++) {
+                                    var node = this.parentNode.children[i];
+                                    if (node.classList.contains("selected")) {
+                                        node.classList.remove("selected");
+                                    }
+                                }
+                                this.classList.add("selected");
+                                if (color === Theme.ColorType.dark) {
+                                    Theme.darkTheme = id;
+                                } else {
+                                    Theme.lightTheme = id;
+                                }
+                            });
+                            if (color === Theme.ColorType.dark) {
+                                if (Theme.darkTheme === id) {
+                                    item.classList.add("selected");
+                                }
+                            } else {
+                                if (Theme.lightTheme === id) {
+                                    item.classList.add("selected");
+                                }
+                            }
                             return item;
                         }
 
@@ -325,27 +369,91 @@
                             darkThemeList.innerHTML = "";
                             for (var i = 0; i < lightThemeListItems.length; i++) {
                                 var node = createThemeItem(lightThemeListItems[i], Theme.ColorType.light);
-                                lightThemeList.appendChild(node);
-                                WinJS.UI.Animation.createAddToListAnimation(lightThemeList, node).execute();
+                                if (node) {
+                                    lightThemeList.appendChild(node);
+                                    WinJS.UI.Animation.createAddToListAnimation(lightThemeList, node).execute();
+                                }
                             }
                             for (var i = 0; i < darkThemeListItems.length; i++) {
                                 var node = createThemeItem(darkThemeListItems[i], Theme.ColorType.dark);
-                                darkThemeList.appendChild(node);
-                                WinJS.UI.Animation.createAddToListAnimation(darkThemeList, node).execute();
+                                if (node) {
+                                    darkThemeList.appendChild(node);
+                                    WinJS.UI.Animation.createAddToListAnimation(darkThemeList, node).execute();
+                                }
                             }
                         }
                         OnLoad.add(function() {
                             setTimeout(eventInitList, 0);
                         });
                     </script>
+                    <p for="theme-loadfrom-file" data-res-fromfile="publicRes (160)"></p>
+                    <button id="theme-loadfrom-file" data-res-fromfile="publicRes (161)"></button>
+                    <script>
+                        var loadFromFileBtn = document.getElementById("theme-loadfrom-file");
+                        Windows.UI.Event.Util.addEvent(loadFromFileBtn, "click", function() {
+                            var self = this;
+                            var filter = "{0}|*.zip|{1}|*.*";
+                            filter = Bridge.String.format(filter, getPublicRes(162), getPublicRes(163));
+                            var files = JSON.parse(Bridge.External.SelectFilesToJSON(filter, 0x000800000 & 0x800, getPublicRes(164), null));
+                            if (files.length > 0) {
+                                var file = files[0];
+                                try {
+                                    var tpinf = JSON.parse(Bridge.External.GetThemePkgInfo(file));
+                                    var id = tpinf.Id;
+                                    if (Bridge.NString.empty(id)) throw new Error("Invalid theme package.");
+                                    var displayName = tpinf.DisplayName;
+                                    if (Bridge.NString.empty(displayName)) throw new Error("Invalid theme package.");
+                                    var color = tpinf.Color;
+                                    if (!(Bridge.NString.equals(color, "dark") || Bridge.NString.equals(color, "light"))) throw new Error("Invalid color type.");
+                                    var author = tpinf.Author;
+                                    if (Bridge.NString.empty(author)) throw new Error("Invalid theme package.");
+                                    var version = tpinf.Version;
+                                    if (Bridge.NString.empty(version)) throw new Error("Invalid theme package.");
+                                    var description = tpinf.Description;
+                                    if (Bridge.NString.empty(description)) throw new Error("Invalid theme package.");
+                                    var buildpath = path.combine(path.root, "html\\theme\\{colormode}\\{id}").replace("{colormode}", color).replace("{id}", id);
+                                    var extractEvent = function() {
+                                        try {
+                                            Bridge.External.ExtraceThemePkg(file, buildpath);
+                                            messageBoxAsync(getPublicRes(165), getPublicRes(166), MBFLAGS.MB_OK);
+                                            eventInitList();
+                                        } catch (e) {
+                                            messageBoxAsync(getPublicRes(167) + (e.message || e), getPublicRes(168));
+                                        }
+                                    };
+                                    if (path.dirExist(buildpath)) {
+                                        messageBoxAsync(Bridge.String.format(
+                                            getPublicRes(169),
+                                            displayName, author, id, (Bridge.NString.equals(color, "dark") ? getPublicRes(155) : getPublicRes(156))
+                                        ), getPublicRes(170), MBFLAGS.MB_OKCANCEL).done(function(pressid) {
+                                            if (pressid === MBRET.IDOK) {
+                                                extractEvent();
+                                            }
+                                        });
+                                    } else {
+                                        messageBoxAsync(Bridge.String.format(
+                                            getPublicRes(171),
+                                            displayName, author, version, id, (Bridge.NString.equals(color, "dark") ? getPublicRes(155) : getPublicRes(156)), description
+                                        ), getPublicRes(172), MBFLAGS.MB_OKCANCEL).done(function(pressid) {
+                                            if (pressid === MBRET.IDOK) {
+                                                extractEvent();
+                                            }
+                                        });
+                                    }
+                                } catch (e) {
+                                    messageBoxAsync(getPublicRes(173) + (e.message || e), getPublicRes(168));
+                                }
+                            }
+                        });
+                    </script>
                 </div>
                 <div class="win-settings-section" id="item-custom-theme-edit">
                     <br>
-                    <h3>编辑当前自定义样式</h3>
-                    <label>预览</label><br>
+                    <h3 data-res-fromfile="publicRes (174)"></h3>
+                    <label data-res-fromfile="publicRes (175)"></label><br>
                     <iframe src="../../preview.html" id="theme-custom-preview"></iframe>
                     <br><br>
-                    <button id="jump-editpage">编辑</button>
+                    <button id="jump-editpage" data-res-fromfile="publicRes (176)"></button>
                     <script>
                         function refreshCustomPreview() {
                             var storage = Bridge.External.Storage;
@@ -363,6 +471,159 @@
                         });
                         Windows.UI.Event.Util.addEvent(document.getElementById("jump-editpage"), "click", function() {
                             window.parent.location.href = "cssedit.html";
+                        });
+                    </script>
+                </div>
+                <div class="win-settings-section" id="item-custom-background">
+                    <br>
+                    <h3 data-res-fromfile="publicRes (219)"></h3>
+                    <p data-res-fromfile="publicRes (220)"></p>
+                    <label data-res-fromfile="publicRes (221)"></label>
+                    <script>
+                        (function() {
+                            var sect = document.getElementById("item-custom-background");
+                            var toggle = new Toggle();
+                            toggle.create();
+                            toggle.parent = sect;
+                            toggle.setColor("#202020");
+                            toggle.showlabel = true;
+                            var winjsres = Bridge.External.WinJsStringRes;
+                            toggle.setStatusText(winjsres.getString("ms-resource://Microsoft.WinJS.1.0/ui/on"), winjsres.getString("ms-resource://Microsoft.WinJS.1.0/ui/off"));
+                            toggle.addEventListener("change", function() {
+                                var imgsect = document.getElementById("item-custom-background-image");
+                                Theme.useCustomBackgroundImage = toggle.checked;
+                                if (Theme.useCustomBackgroundImage) {
+                                    imgsect.style.height = imgsect.scrollHeight + "px";
+                                } else {
+                                    imgsect.style.height = "0px";
+                                }
+                            });
+                            OnLoad.add(function() {
+                                toggle.checked = Theme.useCustomBackgroundImage;
+                                var imgsect = document.getElementById("item-custom-background-image");
+                                if (Theme.useCustomBackgroundImage) {
+                                    imgsect.style.height = imgsect.scrollHeight + "px";
+                                } else {
+                                    imgsect.style.height = "0px";
+                                }
+                            });
+                        })();
+                    </script>
+                </div>
+                <div class="win-settings-section" id="item-custom-background-image" style="overflow-x: hidden;">
+                    <br>
+                    <h4 data-res-fromfile="publicRes (222)"></h4>
+                    <p data-res-fromfile="publicRes (223)"></p>
+                    <p data-res-fromfile="publicRes (158)"></p>
+                    <p id="backimg-displaypath-light"> </p>
+                    <button id="backimg-select-light" data-res-fromfile="publicRes (225)"></button>
+                    <br>
+                    <p data-res-fromfile="publicRes (159)"></p>
+                    <p id="backimg-displaypath-dark"></p>
+                    <button id="backimg-select-dark" data-res-fromfile="publicRes (225)"></button>
+                    <br><br>
+                    <h4 data-res-fromfile="publicRes (184)"></h4>
+                    <style>
+                        .background-preview {
+                            width: 100%;
+                            height: auto;
+                            max-width: 300px;
+                            max-height: 300px;
+                            overflow-x: hidden;
+                            overflow-y: hidden;
+                            background-color: rgba(0, 0, 0, 0.2);
+                            position: relative;
+                        }
+                        
+                        .background-preview img {
+                            max-width: 100%;
+                            max-height: 0px;
+                            transition: all 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
+                            position: relative;
+                            margin: auto;
+                        }
+                        
+                        .background-preview img[src] {
+                            max-height: none;
+                        }
+                    </style>
+                    <h5 data-res-fromfile="publicRes (158)"></h5>
+                    <div class="background-preview" id="background-preview-light">
+                        <img alt="Cannot Display Image">
+                    </div>
+                    <br>
+                    <h5 data-res-fromfile="publicRes (159)"></h5>
+                    <div class="background-preview" id="background-preview-dark">
+                        <img alt="Cannot Display Image">
+                    </div>
+                    <script>
+                        var displaypath_light = document.getElementById("backimg-displaypath-light");
+                        var displaypath_dark = document.getElementById("backimg-displaypath-dark");
+                        var lightimg = document.getElementById("background-preview-light").querySelector("img");
+                        var darkimg = document.getElementById("background-preview-dark").querySelector("img");
+                        Windows.UI.Event.Util.addEvent(lightimg, "load", function() {
+                            var imgsect = document.getElementById("item-custom-background-image");
+                            if (Theme.useCustomBackgroundImage) {
+                                imgsect.style.height = imgsect.scrollHeight + "px";
+                            }
+                        });
+                        Windows.UI.Event.Util.addEvent(darkimg, "load", function() {
+                            var imgsect = document.getElementById("item-custom-background-image");
+                            if (Theme.useCustomBackgroundImage) {
+                                imgsect.style.height = imgsect.scrollHeight + "px";
+                            }
+                        });
+
+                        function refreshCustomBackground() {
+                            var lightimgsrc = Theme.customBackgroundImageLight;
+                            var darkimgsrc = Theme.customBackgroundImageDark;
+                            displaypath_light.textContent = Bridge.String.format(getPublicRes(224), lightimgsrc);
+                            displaypath_dark.textContent = Bridge.String.format(getPublicRes(224), darkimgsrc);
+                            lightimg.setAttribute("src", lightimgsrc + "?timestamp=" + new Date().getTime());
+                            darkimg.setAttribute("src", darkimgsrc + "?timestamp=" + new Date().getTime());
+                            if (lightimg.getAttribute("src") === "") lightimg.removeAttribute("src");
+                            if (darkimg.getAttribute("src") === "") darkimg.removeAttribute("src");
+                            var imgsect = document.getElementById("item-custom-background-image");
+                            if (Theme.useCustomBackgroundImage) {
+                                imgsect.style.height = imgsect.scrollHeight + "px";
+                            }
+                        }
+                        OnLoad.add(refreshCustomBackground);
+                        var lightImgBtn = document.getElementById("backimg-select-light");
+                        var darkImgBtn = document.getElementById("backimg-select-dark");
+
+                        function copyFile(src, dest, cover) {
+                            if (typeof cover === "undefined") cover = true;
+                            return Bridge.External.CopyFile(src, dest, cover);
+                        }
+                        var customRootFolder = path.combine(path.root, "html\\custom");
+                        Windows.UI.Event.Util.addEvent(lightImgBtn, "click", function() {
+                            var self = this;
+                            var filter = "{0}|*.jpg;*.jpeg;*.png;*.gif;*.bmp|{1}|*.*";
+                            filter = Bridge.String.format(filter, getPublicRes(226), getPublicRes(163));
+                            var files = JSON.parse(Bridge.External.SelectFilesToJSON(filter, 0x000800000 & 0x800, getPublicRes(227), null));
+                            if (files.length > 0) {
+                                var file = files[0];
+                                var savepath = path.combine(customRootFolder, "bglight.pic");
+                                if (copyFile(file, savepath)) {
+                                    Theme.customBackgroundImageLight = savepath;
+                                    refreshCustomBackground();
+                                }
+                            }
+                        });
+                        Windows.UI.Event.Util.addEvent(darkImgBtn, "click", function() {
+                            var self = this;
+                            var filter = "{0}|*.jpg;*.jpeg;*.png;*.gif;*.bmp|{1}|*.*";
+                            filter = Bridge.String.format(filter, getPublicRes(226), getPublicRes(163));
+                            var files = JSON.parse(Bridge.External.SelectFilesToJSON(filter, 0x000800000 & 0x800, getPublicRes(227), null));
+                            if (files.length > 0) {
+                                var file = files[0];
+                                var savepath = path.combine(customRootFolder, "bgdark.pic");
+                                if (copyFile(file, savepath)) {
+                                    Theme.customBackgroundImageDark = savepath;
+                                    refreshCustomBackground();
+                                }
+                            }
                         });
                     </script>
                 </div>

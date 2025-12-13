@@ -1,21 +1,11 @@
-/*
-[ThemeInfo]
-Id = default
-DisplayName = Default Theme
-Author = Bruce Winter
-Version = 1.0
-Description = Default theme.
-Url = https://github.com/modernw
-Color = Dark
-*/
-
 .page,
 .page * {
     transition: background-color 0.3s cubic-bezier(0.1, 0.9, 0.2, 1), color 0.5s cubic-bezier(0.1, 0.9, 0.2, 1), border-color 0.5s cubic-bezier(0.1, 0.9, 0.2, 1);
 }
 
-.page {
+.pagecontainer.background {
     background-color: #1d1d1d;
+    transition: background-color 0.3s cubic-bezier(0.1, 0.9, 0.2, 1), color 0.5s cubic-bezier(0.1, 0.9, 0.2, 1), border-color 0.5s cubic-bezier(0.1, 0.9, 0.2, 1);
 }
 
 .page.splash {

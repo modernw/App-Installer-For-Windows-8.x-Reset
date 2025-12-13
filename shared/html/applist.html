@@ -60,7 +60,7 @@
             right: 0;
             bottom: 0;
             border: 2px solid rgb(42, 42, 42);
-            background-color: white;
+            /* background-color: white; */
             overflow: hidden;
             box-sizing: border-box;
         }
@@ -77,7 +77,7 @@
             align-items: center;
             padding: 0 23px;
             box-sizing: border-box;
-            background: white;
+            /* background: white; */
             z-index: 1;
         }
         
@@ -88,7 +88,7 @@
             width: 100%;
             height: 118px;
             box-sizing: border-box;
-            background: white;
+            /* background: white; */
             z-index: 1;
             padding-bottom: 24px;
             padding-top: 11px;
@@ -244,16 +244,36 @@
             padding-top: 5pt;
             font-weight: normal;
         }
+        
+        .applist-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            box-sizing: border-box;
+            background-size: cover;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            background-position: center center;
+        }
     </style>
     <link rel="stylesheet" type="text/css" href="theme/light/default/default.css" id="theme-style">
     <script type="text/javascript" src="js/theme.js"></script>
+    <script type="text/javascript" src="js/params.js"></script>
     <script>
         OnLoad.add(function() {
+            window.displayMode = "normal";
+            window.setThemeId = "default";
+            window.setThemeColor = 0xFFFFFF;
             try {
                 var p = params;
                 var keys = Object.keys(p);
                 var hasidparam = false;
                 var hascolorparam = false;
+                try {
+                    displayMode = p["mode"];
+                } catch (e) {}
                 for (var i = 0; i < keys.length; i++) {
                     var key = keys[i];
                     if (key.indexOf("color") >= 0) {
@@ -264,16 +284,75 @@
                     }
                 }
                 if (hasidparam && hascolorparam) {
+                    window.setThemeColor = p["color"];
+                    window.setThemeId = p["id"];
                     Theme.currentColor = parseInt(p["color"]);
                     Theme.currentTheme = p["id"];
                 } else {
                     throw new Error("Invalid parameters.");
                 }
             } catch (e) {
-                Theme.refresh();
+                try {
+                    Theme.refresh();
+                } catch (e) {}
+            }
+            if (displayMode === "preview") {
+                var applist = document.querySelector(".applist-window");
+                applist.style.left = "10px";
+                applist.style.top = "10px";
+                applist.style.right = "10px";
+                applist.style.bottom = "10px";
+                var applistbg = document.querySelector(".applist-background");
+                applistbg.style.left = "10px";
+                applistbg.style.top = "10px";
+                applistbg.style.right = "10px";
+                applistbg.style.bottom = "10px";
+                document.body.style.backgroundColor = "gray";
+                var cancelbtn = document.querySelector(".applist-btn-cancel");
+                cancelbtn.style.width = "auto";
+                window.Bridge = {
+                    String: {
+                        tolower: function(str) {
+                            return str;
+                        }
+                    }
+                };
+                var winjsCss = document.getElementById("winjs-style");
+                if (winjsCss) {
+                    winjsCss.setAttribute("href", "libs/winjs/2.0/css/ui-" + (window.setThemeColor == 0xFFFFFF ? "light" : "dark") + ".css");
+                }
+                var themeCss = document.getElementById("theme-style");
+                if (themeCss) {
+                    themeCss.setAttribute("href", "theme/" + (window.setThemeColor == 0xFFFFFF ? "light" : "dark") + "/" + window.setThemeId + "/" + window.setThemeId + ".css");
+                }
+                var previewpanel = document.getElementById("preview-operator-panel");
+                if (previewpanel) {
+                    previewpanel.style.display = "";
+                }
+                var itemslen = 10;
+                var colorstrformat = "rgb({0},{1},{2})";
+                for (var i = 0; i < itemslen; i++) {
+                    var title = "My Application" + i;
+                    var logo = "images/applogo.default.png";
+                    var appid = "appid" + i;
+                    var color = colorstrformat.replace("{0}", Math.floor(Math.random() * 256) % 256).replace("{1}", Math.floor(Math.random() * 256) % 256).replace("{2}", Math.floor(Math.random() * 256) % 256);
+                    addAppToList(title, logo, appid, color);
+                }
             }
         });
     </script>
+    <style>
+        #preview-operator-panel {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.3);
+            top: 50%;
+            right: 0;
+            transform: translateY(-50%);
+            box-sizing: border-box;
+            padding: 5px;
+            color: white;
+        }
+    </style>
 </head>
 
 <body>
@@ -288,15 +367,16 @@
                 <span class="applist-font-text">My Application0</span>
             </div>
         </div>
-        <div class="applist-window win10">
-            <div class="applist-title">
-                <span class="applist-font-title" data-res-byname="IDS_APPLIST_TITLE"></span>
-            </div>
-            <div class="applist-listview">
-            </div>
-            <div class="applist-control">
-                <button class="applist-btn-cancel win-commandbutton div-button-size div-std-button-center" onclick="Bridge.Frame.callEvent ('OnPress_CancelButton')" tabindex="0" data-res-byname="IDS_APPLIST_CANCEL"></button>
-            </div>
+    </div>
+    <div class="applist-background"></div>
+    <div class="applist-window win10">
+        <div class="applist-title">
+            <span class="applist-font-title" data-res-byname="IDS_APPLIST_TITLE"></span>
+        </div>
+        <div class="applist-listview">
+        </div>
+        <div class="applist-control">
+            <button class="applist-btn-cancel win-commandbutton div-button-size div-std-button-center" onclick="Bridge.Frame.callEvent ('OnPress_CancelButton')" tabindex="0" data-res-byname="IDS_APPLIST_CANCEL"></button>
         </div>
     </div>
     <script>
@@ -426,6 +506,50 @@
             global.setWindows10Style = setWindows10Style;
         })(this);
     </script>
+    <div id="preview-operator-panel" style="display: none;">
+        <input type="checkbox" id="preview-operator-win10style" />
+        <label for="preview-operator-win10style">Windows 10 Style</label>
+        <script>
+            (function() {
+                var preview_operator_panel = document.getElementById("preview-operator-panel");
+                var preview_operator_win10style = document.getElementById("preview-operator-win10style");
+                var page = document.querySelector(".applist-window");
+                Windows.UI.Event.Util.addEvent(preview_operator_win10style, "change", function() {
+                    if (this.checked) page.classList.add("win10");
+                    else page.classList.remove("win10");
+                });
+                if (preview_operator_win10style.checked) {
+                    page.classList.add("win10");
+                } else {
+                    page.classList.remove("win10");
+                }
+                OnLoad.add(function() {
+                    setTimeout(function() {
+                        if (displayMode === "preview") {
+                            var subnodes = page.querySelectorAll("*");
+                            for (var i = 0; i < subnodes.length; i++) {
+                                var subnode = subnodes[i];
+                                try {
+                                    if (subnode.classList.contains("applist-list-item") || subnode.classList.contains("applist-item-picbox") || subnode.classList.contains("applist-item-pic") || subnode.className.indexOf("applist-item-") >= 0) continue;
+                                } catch (e) {}
+                                var mark = "";
+                                if (subnode.hasAttribute("id")) {
+                                    mark += "Id: {" + subnode.getAttribute("id") + "} ";
+                                }
+                                if (subnode.hasAttribute("class")) {
+                                    mark += "Class: {" + subnode.getAttribute("class") + "} ";
+                                }
+                                if (subnode.hasAttribute("data-res-byname")) {
+                                    mark += "Res: {" + subnode.getAttribute("data-res-byname") + "} ";
+                                }
+                                subnode.appendChild(document.createTextNode(mark));
+                            }
+                        }
+                    }, 0);
+                });
+            })();
+        </script>
+    </div>
 </body>
 
 </html>

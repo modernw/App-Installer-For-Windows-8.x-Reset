@@ -1,18 +1,6 @@
-/*
-[ThemeInfo]
-Id = default
-DisplayName = Default Theme
-Author = Bruce Winter
-Version = 1.0
-Description = Default theme.
-Url = https://github.com/modernw
-Color = Light
-*/
-
-
 /* Installer */
 
-.page {
+.pagecontainer.background {
     background-color: #F3F3F3;
 }
 

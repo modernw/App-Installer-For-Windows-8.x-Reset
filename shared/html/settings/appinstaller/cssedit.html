@@ -194,29 +194,38 @@
                 <header aria-label="Header content" role="banner" class="titlebanner" id="pagebanner" style="height: 120px;">
                     <button id="back" class="win-backbutton pagetitlewb-backbutton" onclick="onBack_CssEditPage ()" style="margin-left: 20px; transform: scale(0.72);"></button>
                     <h2 class="titlearea win-type-ellipsis" id="apptitle" style="">
-                        <span class="pagetitlewb-title" id="apptitlestr" style="margin-left: 10px; margin-right: 20px;">编辑自定义 CSS 样式</span>
+                        <span class="pagetitlewb-title" id="apptitlestr" style="margin-left: 10px; margin-right: 20px;" data-res-fromfile="publicRes (177)"></span>
                     </h2>
                 </header>
             </aside>
             <main class="main bottom padding">
                 <div class="bottom-compensate" id="page-edit-css" style="height: 100%;">
-                    <p>在这里，编辑自定义的 CSS 样式。</p>
-                    <label id="theme-custom-color">当前主题颜色基于</label>
+                    <p data-res-fromfile="publicRes (178)"></p>
+                    <label id="theme-custom-color" data-res-fromfile="publicRes (179)"></label>
                     <script>
                         (function() {
                             "use strict";
-                            var sect = document.getElementById("theme-custom-color");
+                            var sect = document.getElementById("theme-custom-color").parentNode;
                             var toggle = new Toggle();
                             toggle.create();
                             toggle.parent = sect;
                             toggle.setColor("#202020");
                             toggle.showlabel = true;
-                            toggle.setStatusText("深色", "浅色");
+                            toggle.setStatusText(getPublicRes(155), getPublicRes(156));
                             toggle.addEventListener("change", function() {
                                 saveCurrentEdit();
                                 isSwitching = true;
                                 Theme.setCustomColor(toggle.checked ? Theme.ColorType.dark : Theme.ColorType.light);
                                 reloadCurrentEdit();
+                                var rootDir = document.querySelector(".css-editor-filedir .filedir-rootdir");
+                                var fileList = document.querySelector(".css-editor-filedir .filelist-container");
+                                var storage = Bridge.External.Storage;
+                                var path = storage.path;
+                                var currentColor = Theme.customColor;
+                                var colorStr = currentColor === Theme.ColorType.dark ? "dark" : "light";
+                                var customPath = path.combine(path.root, "html\\theme\\{colortype}\\custom").replace("{colortype}", colorStr);
+                                rootDir.value = customPath;
+                                refreshFileList();
                                 isSwitching = false;
                             });
                             OnLoad.add(function() {
@@ -232,7 +241,7 @@
                     <br>
                     <div class="editor-container">
                         <div class="editor-editblock">
-                            <label for="css-editor">编辑样式</label>
+                            <label for="css-editor" data-res-fromfile="publicRes (180)"></label>
                             <textarea id="css-editor" name="code"></textarea>
                             <script>
                                 var editor = document.getElementById("css-editor");
@@ -284,12 +293,12 @@
                                         if (content === null || content === void 0) {
                                             content = '\n/* Installer */\n\n.page {\n    background-color: #F3F3F3;\n}\n.page.splash {\n    background-color: #0078d7;\n}\n.page .content.loading,\n.page .content.main,\n.page .progress,\n.page .reason p,\n.page .controls .checkbox {\n    color: black;\n}\n.page .content.main .pkgapplabel {\n    color: #0078d7;\n}\n\n/* App Launch List */\n\n.applist-font-title {\n    color: black;\n}\n.applist-font-text {\n    color: black;\n}\n.applist-window {\n    border: 2px solid rgb(42, 42, 42);\n    background-color: white;\n}\n.applist-title {\n    background: white;\n}\n.applist-control {\n    background: white;\n}\n.applist-list-item {\n    background-color: rgba(0, 255, 255, 0);\n}\n.applist-list-item:hover {\n    background-color: rgb(222, 222, 222);\n}\n.applist-item-picbox {\n    background-color: #001020;\n}\n.applist-item-img-border {\n    border: 1px solid rgba(254, 254, 254, 0.1);\n}\n.win10.applist-window {\n    border: 1px solid #ccc;\n}';
                                         } else {
-                                            var idx = content.indexOf("*/");
-                                            if (idx >= 0 && idx < content.length / 2) {
-                                                content = content.substring(idx + 2);
-                                            }
+                                            //var idx = content.indexOf("*/");
+                                            //if (idx >= 0 && idx < content.length / 2) {
+                                            //    content = content.substring(idx + 2);
+                                            //}
                                         }
-                                        var head = "/* The following content is sample content and is for reference only. */";
+                                        var head = "/* The following content is sample content and is for reference only. */\n";
                                         editor.codeMirror.setValue(head + content);
                                     } else {
                                         editor.codeMirror.setValue(content);
@@ -298,7 +307,7 @@
                             </script>
                         </div>
                         <div class="editor-filelist">
-                            <label>自定义文件目录</label>
+                            <label data-res-fromfile="publicRes (181)"></label>
                             <div class="css-editor-filedir">
                                 <input type="text" class="filedir-rootdir" style="direction: rtl; text-align: left;">
                                 <ul class="filelist-container">
@@ -333,47 +342,64 @@
                                                 });
                                             }
                                             for (var i = 0; i < files.length; i++) {
-                                                var li = document.createElement("li");
-                                                li.setAttribute("role", "file");
-                                                li.textContent = files[i];
-                                                fileList.appendChild(li);
-                                                eventutil.addEvent(li, "dblclick", function(e) {
-                                                    var self = this;
-                                                    var filePath = path.combine(root, self.textContent);
-                                                    editor.codeMirror.replaceSelection(self.textContent);
-                                                });
-                                                eventutil.addEvent(li, "click", function(e) {
-                                                    var self = this;
-                                                    var filePath = path.combine(root, self.textContent);
-                                                    var objele = document.createElement("object");
-                                                    objele.data = filePath;
-                                                    var tipele = document.createElement("param");
-                                                    tipele.name = "type";
-                                                    tipele.value = "text/html";
-                                                    tipele.textContent = "不受 Internet Explorer 支持显示的资源。";
-                                                    objele.appendChild(tipele);
-                                                    objele.style.maxWidth = "100%";
-                                                    var title = Bridge.String.format("预览", this.textContent);
-                                                    var contentele = document.createElement("div");
-                                                    var filenameele = document.createElement("p");
-                                                    filenameele.textContent = this.textContent;
-                                                    contentele.appendChild(filenameele);
-                                                    contentele.style.width = "100%";
-                                                    contentele.appendChild(objele);
-                                                    messageBoxAsync(contentele, title).then(function() {
-                                                        if (typeof objele.remove === "function") {
-                                                            objele.remove();
-                                                        } else if (typeof objele.removeNode === "function") {
-                                                            objele.removeNode(true);
-                                                        } else if (typeof objele.parentNode.removeChild === "function") {
-                                                            objele.parentNode.removeChild(objele);
-                                                        }
+                                                (function() {
+                                                    var li = document.createElement("li");
+                                                    li.setAttribute("role", "file");
+                                                    li.textContent = files[i];
+                                                    fileList.appendChild(li);
+                                                    var CLICK_DELAY = 250;
+                                                    var clickTimer = null;
+                                                    var clickCount = 0;
+                                                    eventutil.addEvent(li, "dblclick", function(e) {
+                                                        var self = this;
+                                                        var filePath = path.combine(root, self.textContent);
+                                                        editor.codeMirror.replaceSelection(self.textContent);
                                                     });
-                                                });
+                                                    eventutil.addEvent(li, "click", function(e) {
+                                                        var self = this;
+                                                        clickCount++;
+                                                        if (clickCount === 1) {
+                                                            clickTimer = setTimeout(function() {
+                                                                if (clickCount === 1) {
+                                                                    var filePath = path.combine(root, self.textContent);
+                                                                    var objele = document.createElement("object");
+                                                                    objele.data = filePath;
+                                                                    var tipele = document.createElement("param");
+                                                                    tipele.name = "type";
+                                                                    tipele.value = "text/html";
+                                                                    tipele.textContent = getPublicRes(182);
+                                                                    objele.appendChild(tipele);
+                                                                    objele.style.maxWidth = "100%";
+                                                                    objele.style.textAlign = "center";
+                                                                    var title = Bridge.String.format(getPublicRes(183), self.textContent);
+                                                                    var contentele = document.createElement("div");
+                                                                    var filenameele = document.createElement("p");
+                                                                    filenameele.textContent = self.textContent;
+                                                                    contentele.appendChild(filenameele);
+                                                                    contentele.style.width = "100%";
+                                                                    contentele.appendChild(objele);
+                                                                    messageBoxAsync(contentele, title).then(function() {
+                                                                        if (typeof objele.remove === "function") {
+                                                                            objele.remove();
+                                                                        } else if (typeof objele.removeNode === "function") {
+                                                                            objele.removeNode(true);
+                                                                        } else if (typeof objele.parentNode.removeChild === "function") {
+                                                                            objele.parentNode.removeChild(objele);
+                                                                        }
+                                                                    });
+                                                                }
+                                                                clickCount = 0;
+                                                                clearTimeout(clickTimer);
+                                                                clickTimer = null;
+                                                            }, CLICK_DELAY);
+                                                        } else if (clickCount === 2) return;
+                                                    });
+                                                })();
                                             }
                                         }
                                         OnLoad.add(function() {
                                             setTimeout(refreshFileList, 100);
+                                            setInterval(refreshFileList, 2000);
                                         });
                                         window.refreshFileList = refreshFileList;
                                     })();
@@ -382,12 +408,42 @@
                         </div>
                     </div>
                     <br>
-                    <h3>向自定义样式中添加自定义文件</h3>
-                    <p>在自定义样式文件目录中，可以添加图片、音效等文件，这些文件将会用于自定义样式中。</p>
-                    <p>添加的文件将在文件列表中显示。双击目录会跳转到该目录，双击文件会将文件名插入到编辑器中。</p>
-                    <p>如果想要删除文件，请在资源管理器中直接删除。</p>
-                    <p>不建议用过大分辨率的图片，因为可能会导致页面加载变慢，而且也用不到。也不要用太大的视频和音频。这些资源都会影响加载速度和内存占用。</p>
-                    <button id="custom-addfile">添加</button>
+                    <h3 data-res-fromfile="publicRes (184)"></h3>
+                    <p data-res-fromfile="publicRes (185)"></p>
+                    <p data-res-fromfile="publicRes (186)"></p>
+                    <button id="custom-preview-install" data-res-fromfile="publicRes (187)"></button>
+                    <button id="custom-preview-applist" data-res-fromfile="publicRes (188)"></button>
+                    <script>
+                        var customPreviewBtn = document.getElementById("custom-preview-install");
+                        var customPreviewApplistBtn = document.getElementById("custom-preview-applist");
+                        Windows.UI.Event.Util.addEvent(customPreviewBtn, "click", function() {
+                            var storage = Bridge.External.Storage;
+                            var path = storage.path;
+                            var currentColor = Theme.customColor;
+                            var colorStr = currentColor === Theme.ColorType.dark ? "dark" : "light";
+                            var installPage = path.combine(path.root, "html\\install.html");
+                            var installPageUrl = storage.getFile(installPage).uri;
+                            var uriAndParam = installPageUrl + "?mode=preview&id=custom&color=" + currentColor;
+                            open(uriAndParam, "_blank");
+                        });
+                        Windows.UI.Event.Util.addEvent(customPreviewApplistBtn, "click", function() {
+                            var storage = Bridge.External.Storage;
+                            var path = storage.path;
+                            var currentColor = Theme.customColor;
+                            var colorStr = currentColor === Theme.ColorType.dark ? "dark" : "light";
+                            var installPage = path.combine(path.root, "html\\applist.html");
+                            var installPageUrl = storage.getFile(installPage).uri;
+                            var uriAndParam = installPageUrl + "?mode=preview&id=custom&color=" + currentColor;
+                            open(uriAndParam, "_blank");
+                        });
+                    </script>
+                    <br><br>
+                    <h3 data-res-fromfile="publicRes (189)"></h3>
+                    <p data-res-fromfile="publicRes (190)"></p>
+                    <p data-res-fromfile="publicRes (191)"></p>
+                    <p data-res-fromfile="publicRes (192)"></p>
+                    <p data-res-fromfile="publicRes (193)"></p>
+                    <button id="custom-addfile" data-res-fromfile="publicRes (194)"></button>
                     <script>
                         var customAddFileBtn = document.getElementById("custom-addfile");
                         customAddFileBtn.addEventListener("click", function() {
@@ -397,21 +453,31 @@
                             var currentColor = Theme.customColor;
                             var colorStr = currentColor === Theme.ColorType.dark ? "dark" : "light";
                             var customPath = path.combine(path.root, "html\\theme\\{colortype}\\custom").replace("{colortype}", colorStr);
-                            var supportFilterFormat = "{0}|" +
-                                "*.jpg;*.png;*.jpeg;*.bmp;*.gif;*.ico;*.tiff;*.svg|" +
-                                "{1}|" +
-                                "*.mp3;*.wav;*.wma;*.aac;*.m4a|" +
-                                "{2}|" +
-                                "*.mp4;*.avi;*.wmv|" +
-                                "{3}|" +
-                                "*.*";
-                            var getfile = JSON.parse(Bridge.External.SelectFilesToJSON(supportFilterFormat, 0x00080000 | 0x00000800, "请选择文件", null));
+                            var supportFilterFormat = "{4}|" +
+                                "*.jpg;*.png;*.jpeg;*.bmp;*.gif;*.ico;*.tiff;*.svg;*.mp3;*.wav;*.wma;*.aac;*.m4a*.mp4;*.avi;*.wmv|"
+                            "{0}|" +
+                            "*.jpg;*.png;*.jpeg;*.bmp;*.gif;*.ico;*.tiff;*.svg|" +
+                            "{1}|" +
+                            "*.mp3;*.wav;*.wma;*.aac;*.m4a|" +
+                            "{2}|" +
+                            "*.mp4;*.avi;*.wmv|" +
+                            "{3}|" +
+                            "*.*";
+                            supportFilterFormat = Bridge.String.format(
+                                supportFilterFormat,
+                                getPublicRes(195),
+                                getPublicRes(196),
+                                getPublicRes(197),
+                                getPublicRes(163),
+                                getPublicRes(198)
+                            )
+                            var getfile = JSON.parse(Bridge.External.SelectFilesToJSON(supportFilterFormat, 0x00080000 | 0x00000800, getPublicRes(199), null));
                             for (var i = 0; i < getfile.length; i++) {
                                 var srcfilepath = getfile[i];
                                 var filename = path.getName(srcfilepath);
                                 var fsize = Bridge.External.GetFileSize(srcfilepath);
                                 if (fsize < 0 || fsize > 104857600) { // 100MB 限制
-                                    messageBoxAsync("文件大小不符合要求，请选择尺寸较小的文件（不超过100MB）。", "文件无法复制");
+                                    messageBoxAsync(getPublicRes(201), getPublicRes(200));
                                 } else {
                                     var destfilepath = path.combine(customPath, filename);
                                     Bridge.External.ShellCopyFile(srcfilepath, destfilepath);
@@ -422,9 +488,130 @@
                         });
                     </script>
                     <br><br>
-                    <h3>导出</h3>
-                    <p>在这里，您可以导出自己的自定义样式，以便分享给其他人。</p>
-                    <button id="custom-export">导出</button>
+                    <h3 data-res-fromfile="publicRes (202)"></h3>
+                    <p data-res-fromfile="publicRes (203)"></p>
+                    <button id="custom-export" data-res-fromfile="publicRes (202)"></button>
+                    <script>
+                        var customExportBtn = document.getElementById("custom-export");
+                        Windows.UI.Event.Util.addEvent(customExportBtn, "click", function() {
+                            var infoinputblock = document.createElement("p");
+                            var style = document.createElement("style");
+                            style.type = "text/css";
+                            style.innerHTML = "" +
+                                ".info-row { margin-bottom:5px; zoom:1; clear:both; }" +
+                                ".info-row label { display:inline-block; width:120px; min-width: 0; vertical-align:middle; }" +
+                                ".info-row input, .info-row textarea, .info-row select { display:inline-block; vertical-align:middle; }" +
+                                "";
+                            infoinputblock.appendChild(style);
+                            var infos = {
+                                Id: "string",
+                                DisplayName: "string",
+                                Author: "string",
+                                Version: "version",
+                                Description: "multiline_string",
+                                Homepage: "uri",
+                                /* Color: "enum(dark,light)", */
+                            };
+                            var infoDisplayName = {
+                                Id: getPublicRes(204),
+                                DisplayName: getPublicRes(205),
+                                Author: getPublicRes(206),
+                                Version: getPublicRes(207),
+                                Description: getPublicRes(208),
+                                Homepage: getPublicRes(209),
+                                Color: getPublicRes(210),
+                            };
+                            var infokeys = Object.keys(infos);
+                            var infokeys = [];
+                            var infodata = {
+                                Color: Theme.customColor === Theme.ColorType.dark ? "dark" : "light",
+                            };
+                            for (var k in infos) {
+                                if (infos.hasOwnProperty(k)) {
+                                    infokeys.push(k);
+                                }
+                            }
+                            for (var i = 0; i < infokeys.length; i++) {
+                                var key = infokeys[i];
+                                var value = infos[key];
+                                var labelText = infoDisplayName[key] || key;
+                                var row = document.createElement("div");
+                                row.className = "info-row";
+                                var label = document.createElement("label");
+                                label.innerText = labelText + "  ";
+                                label.htmlFor = "info_" + key;
+                                var input;
+                                if (value === "multiline_string") {
+                                    input = document.createElement("textarea");
+                                } else if (value.indexOf("enum(") === 0) { // ES5 兼容
+                                    input = document.createElement("select");
+                                    var enumStr = value.substring(5, value.length - 1); // 去掉 enum(...)
+                                    var options = enumStr.split(",");
+                                    for (var j = 0; j < options.length; j++) {
+                                        var opt = document.createElement("option");
+                                        opt.value = options[j];
+                                        opt.innerText = options[j];
+                                        input.appendChild(opt);
+                                    }
+                                } else {
+                                    input = document.createElement("input");
+                                    input.type = "text";
+                                }
+                                input.id = "info_" + key;
+                                input.name = key;
+                                row.appendChild(label);
+                                row.appendChild(input);
+                                Windows.UI.Event.Util.addEvent(input, "change", function() {
+                                    var self = this;
+                                    infodata[self.name] = self.value;
+                                });
+                                infoinputblock.appendChild(row);
+                            }
+                            var showMsgDialog = function() {
+                                messageBoxAsync(infoinputblock, getPublicRes(211), MBFLAGS.MB_OKCANCEL).then(function(pressid) {
+                                    if (pressid === MBRET.IDOK) {
+                                        if (Bridge.NString.empty(infodata.Id) || Bridge.NString.empty(infodata.DisplayName) || Bridge.NString.empty(infodata.Author) || Bridge.NString.empty(infodata.Color)) {
+                                            messageBoxAsync(getPublicRes(213), getPublicRes(212)).then(function() {
+                                                showMsgDialog();
+                                            });
+                                            return;
+                                        }
+                                        var jsonstr = JSON.stringify(infodata);
+                                        var showFileSaveDialog = function() {
+                                            var storage = Bridge.External.Storage;
+                                            var path = storage.path;
+                                            var currentColor = Theme.customColor;
+                                            var colorStr = currentColor === Theme.ColorType.dark ? "dark" : "light";
+                                            var customPath = path.combine(path.root, "html\\theme\\{colortype}\\custom").replace("{colortype}", colorStr);
+                                            var supportFilterFormat = "{0}|*.zip";
+                                            supportFilterFormat = Bridge.String.format(supportFilterFormat, getPublicRes(162))
+                                            var getfile = Bridge.External.GetSavePath(supportFilterFormat, "zip", 2054, getPublicRes(214), null);
+                                            if (Bridge.NString.empty(getfile)) {
+                                                messageBoxAsync(getPublicRes(215), getPublicRes(212)).then(function() {
+                                                    showMsgDialog();
+                                                });
+                                                return;
+                                            } else {
+                                                Bridge.External.CompressTheme(customPath, getfile, jsonstr, infodata.Id);
+                                                var displayMsg = "";
+                                                if (path.fileExist(getfile)) displayMsg = Bridge.String.format(getPublicRes(216), getfile);
+                                                else displayMsg = getPublicRes(217);
+                                                messageBoxAsync(displayMsg, getPublicRes(218), MBFLAGS.MB_OKCANCEL).done(function(pressid) {
+                                                    if (pressid === MBRET.IDOK) {
+                                                        if (!path.fileExist(getfile)) {
+                                                            showMsgDialog();
+                                                        }
+                                                    }
+                                                });
+                                            }
+                                        };
+                                        showFileSaveDialog();
+                                    }
+                                });
+                            };
+                            showMsgDialog();
+                        });
+                    </script>
                     <div class="bottom-compensate"></div>
                 </div>
             </main>

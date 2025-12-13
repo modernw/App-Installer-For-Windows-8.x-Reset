@@ -18,6 +18,25 @@
         light: 0xFFFFFF,
         dark: 0x000000,
     };
+    var strutil = Bridge.External.String;
+    var nstrutil = Bridge.NString;
+    var boolTrue = ["true", "1", "yes", "on", "y", "t", "zhen", "真"];
+    var boolFalse = ["false", "0", "no", "off", "n", "f", "jia", "假"];
+
+    function parseBool(str) {
+        str = "" + str;
+        for (var i = 0; i < boolTrue.length; i++) {
+            if (nstrutil.equals(str, boolTrue[i])) {
+                return true;
+            }
+        }
+        for (var i = 0; i < boolFalse.length; i++) {
+            if (nstrutil.equals(str, boolFalse[i])) {
+                return false;
+            }
+        }
+        return null;
+    };
 
     function getThemeSwitchType() {
         var themeType = themeSection.getKey("AppInstaller:ThemeMode").value;
@@ -250,6 +269,47 @@
         }
         customColor.value = value;
     }
+
+    function getUseCustomBackgroundImage() {
+        var useCustomBackground = themeSection.getKey("AppInstaller:UseBackgroundImage");
+        return parseBool(useCustomBackground.value);
+    }
+
+    function setUseCustomBackgroundImage(use) {
+        var useCustomBackground = themeSection.getKey("AppInstaller:UseBackgroundImage");
+        useCustomBackground.value = use ? "true" : "false";
+    }
+
+    function getCustomBackgroundImageLight() {
+        var customBackgroundImageLight = themeSection.getKey("AppInstaller:BackgroundImageLight");
+        return customBackgroundImageLight.value;
+    }
+
+    function setCustomBackgroundImageLight(url) {
+        var customBackgroundImageLight = themeSection.getKey("AppInstaller:BackgroundImageLight");
+        customBackgroundImageLight.value = url;
+    }
+
+    function getCustomBackgroundImageDark() {
+        var customBackgroundImageDark = themeSection.getKey("AppInstaller:BackgroundImageDark");
+        return customBackgroundImageDark.value;
+    }
+
+    function setCustomBackgroundImageDark(url) {
+        var customBackgroundImageDark = themeSection.getKey("AppInstaller:BackgroundImageDark");
+        customBackgroundImageDark.value = url;
+    }
+
+    function getSuitableBackgroundImage() {
+        var useCustomBackground = getUseCustomBackgroundImage();
+        if (useCustomBackground) {
+            var color = getCurrentThemeColor();
+            if (color === ColorType.light) return getCustomBackgroundImageLight();
+            else return getCustomBackgroundImageDark();
+        } else {
+            return "";
+        }
+    }
     module.exports = {
         Theme: {
             ThemeType: ThemeType,
@@ -264,7 +324,14 @@
             setNightTime: setTimeModeNightTime,
             setLightTheme: setLightTheme,
             setDarkTheme: setDarkTheme,
-            setCustomColor: setCustomColor
+            setCustomColor: setCustomColor,
+            getUseCustomBackgroundImage: getUseCustomBackgroundImage,
+            setUseCustomBackgroundImage: setUseCustomBackgroundImage,
+            getCustomBackgroundImageLight: getCustomBackgroundImageLight,
+            setCustomBackgroundImageLight: setCustomBackgroundImageLight,
+            getCustomBackgroundImageDark: getCustomBackgroundImageDark,
+            setCustomBackgroundImageDark: setCustomBackgroundImageDark,
+            getSuitableBackgroundImage: getSuitableBackgroundImage
         }
     };
     var themeNS = Theme;
@@ -362,5 +429,34 @@
                 try { Windows.UI.DPI.mode = 1; } catch (e) {}
             }, 0);
         }
+    });
+    Object.defineProperty(themeNS, "useCustomBackgroundImage", {
+        get: function() {
+            return themeNS.getUseCustomBackgroundImage();
+        },
+        set: function(value) {
+            return themeNS.setUseCustomBackgroundImage(value);
+        }
+    });
+    Object.defineProperty(themeNS, "customBackgroundImageLight", {
+        get: function() {
+            return themeNS.getCustomBackgroundImageLight();
+        },
+        set: function(value) {
+            return themeNS.setCustomBackgroundImageLight(value);
+        }
+    });
+    Object.defineProperty(themeNS, "customBackgroundImageDark", {
+        get: function() {
+            return themeNS.getCustomBackgroundImageDark();
+        },
+        set: function(value) {
+            return themeNS.setCustomBackgroundImageDark(value);
+        }
+    });
+    Object.defineProperty(themeNS, "suitableBackgroundImage", {
+        get: function() {
+            return themeNS.getSuitableBackgroundImage();
+        },
     });
 })(this);

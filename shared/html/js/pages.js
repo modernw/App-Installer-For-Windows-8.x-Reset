@@ -1,7 +1,7 @@
 (function(global) {
     "use strict";
     Object.defineProperty(global, "pagecontainer", {
-        get: function() { return document.querySelector(".pagecontainer"); }
+        get: function() { return document.querySelector(".pagecontainer.main"); }
     });
 
     function getPage() {

@@ -19,6 +19,8 @@
 #include <rapidjson\stringbuffer.h>
 #include <tlhelp32.h>
 #include <Psapi.h>
+#include <cliext/vector>
+#include <cliext/utility>
 #include "module.h"
 #include "themeinfo.h"
 #include "mpstr.h"
@@ -36,6 +38,8 @@
 
 using namespace System;
 using namespace System::Runtime::InteropServices;
+using namespace System::IO::Compression;
+using namespace System::Text;
 
 #ifdef _DEBUG
 #define DEBUGMODE true
@@ -665,6 +669,38 @@ rapidjson::Document GetFileVersionAsJson (const std::wstring &filePath)
 	}
 	return doc;
 }
+size_t ExploreSaveFile (
+	HWND hParent,
+	std::vector<std::wstring> &results,
+	LPWSTR lpFilter = L"Windows Store App Package (*.appx; *.appxbundle)\0*.appx;*.appxbundle",
+	const std::wstring &lpDefExt = L"appx",
+	DWORD dwFlags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY,
+	const std::wstring &swWndTitle = std::wstring (L"Please select the file to save: "),
+	const std::wstring &swInitDir = GetFileDirectoryW (g_lastfile))
+{
+	results.clear ();
+	const DWORD BUFFER_SIZE = 65536; // 64KB
+	std::vector <WCHAR> buffer (BUFFER_SIZE, 0);
+	OPENFILENAME ofn;
+	ZeroMemory (&ofn, sizeof (ofn));
+	ofn.hwndOwner = hParent;
+	ofn.lpstrFile = buffer.data ();
+	ofn.nMaxFile = BUFFER_SIZE;
+	ofn.lpstrFilter = lpFilter;
+	ofn.nFilterIndex = 1;
+	ofn.lpstrTitle = swWndTitle.c_str ();
+	ofn.lpstrDefExt = lpDefExt.c_str ();
+	ofn.Flags = dwFlags;
+	ofn.lpstrInitialDir = swInitDir.c_str ();
+	ofn.lStructSize = sizeof (ofn);
+	if (GetSaveFileNameW (&ofn))
+	{
+		std::wstring filePath = buffer.data ();
+		results.push_back (filePath);
+		g_lastfile = filePath;
+	}
+	return results.size ();
+}
 
 [ComVisible (true)]
 public ref class SplashForm: public System::Windows::Forms::Form
@@ -888,6 +924,141 @@ bool CopyFileWithDialog (const std::wstring &src, const std::wstring &dst)
 	bool ok = SUCCEEDED (hr);
 	return ok;
 }
+// pkginfo 中的内容以 UTF8 保存为 themeinfo.json 文件，并位于压缩包根目录。
+// 该文件仅在压缩包中存在，是为了方便读取主题文件信息的文件。当压缩或解压完毕后该文件会在磁盘中删除。
+void CompressToThemePackage (String ^srcfolder, String ^destfile, String ^pkginfo, String ^id)
+{
+	if (!Directory::Exists (srcfolder))
+		throw gcnew DirectoryNotFoundException (srcfolder);
+
+	if (File::Exists (destfile))
+		File::Delete (destfile);
+
+	FileStream^ fs = gcnew FileStream (destfile, FileMode::CreateNew);
+	ZipArchive^ zip = gcnew ZipArchive (fs, ZipArchiveMode::Create);
+
+	try
+	{
+		array<String^>^ files = Directory::GetFiles (srcfolder, "*", SearchOption::AllDirectories);
+		for each (String^ file in files)
+		{
+			String^ relativePath = file->Substring (srcfolder->Length);
+
+			// 去掉开头的分隔符
+			if (relativePath->StartsWith (Path::DirectorySeparatorChar.ToString ()) ||
+				relativePath->StartsWith (Path::AltDirectorySeparatorChar.ToString ()))
+			{
+				relativePath = relativePath->Substring (1);
+			}
+
+			// 如果是 custom.css 就改名为 {id}.css
+			if (relativePath->Equals ("custom.css", StringComparison::OrdinalIgnoreCase))
+			{
+				relativePath = id->Trim () + ".css";
+			}
+
+			ZipArchiveEntry^ entry = zip->CreateEntry (relativePath, CompressionLevel::Optimal);
+			Stream^ entryStream = entry->Open ();
+			FileStream^ fileStream = gcnew FileStream (file, FileMode::Open, FileAccess::Read);
+
+			array<Byte>^ buffer = gcnew array<Byte> (4096);
+			int bytesRead;
+			while ((bytesRead = fileStream->Read (buffer, 0, buffer->Length)) > 0)
+			{
+				entryStream->Write (buffer, 0, bytesRead);
+			}
+
+			fileStream->Close ();
+			entryStream->Close ();
+		}
+
+		// 添加 themeinfo.json
+		ZipArchiveEntry^ infoEntry = zip->CreateEntry ("themeinfo.json", CompressionLevel::Optimal);
+		Stream^ infoStream = infoEntry->Open ();
+		array<Byte>^ infoBytes = Encoding::UTF8->GetBytes (pkginfo);
+		infoStream->Write (infoBytes, 0, infoBytes->Length);
+		infoStream->Close ();
+	}
+	finally
+	{
+		delete zip;
+		delete fs;
+	}
+}
+String ^GetThemePackageInfo (String ^pkgfile)
+{
+	if (!File::Exists (pkgfile)) throw gcnew FileNotFoundException ("Theme package not found.", pkgfile);
+	FileStream^ fs = gcnew FileStream (pkgfile, FileMode::Open, FileAccess::Read);
+	ZipArchive^ zip = gcnew ZipArchive (fs, ZipArchiveMode::Read);
+	try
+	{
+		ZipArchiveEntry^ infoEntry = zip->GetEntry ("themeinfo.json");
+		if (infoEntry == nullptr)
+			throw gcnew InvalidDataException ("themeinfo.json not found in theme package.");
+		Stream^ stream = infoEntry->Open ();
+		StreamReader^ reader = gcnew StreamReader (stream, Encoding::UTF8);
+		String^ json = reader->ReadToEnd ();
+		reader->Close ();
+		stream->Close ();
+		return json;
+	}
+	finally
+	{
+		delete zip;
+		delete fs;
+	}
+}
+void ExtractThemePackage (String ^pkgfile, String ^destfolder)
+{
+	if (!File::Exists (pkgfile)) throw gcnew FileNotFoundException ("Theme package not found.", pkgfile);
+	if (Directory::Exists (destfolder)) Directory::Delete (destfolder);
+	if (!Directory::Exists (destfolder)) Directory::CreateDirectory (destfolder);
+	FileStream^ fs = gcnew FileStream (pkgfile, FileMode::Open, FileAccess::Read);
+	ZipArchive^ zip = gcnew ZipArchive (fs, ZipArchiveMode::Read);
+	try
+	{
+		for each (ZipArchiveEntry^ entry in zip->Entries)
+		{
+			String^ outPath = Path::Combine (destfolder, entry->FullName);
+
+			// 目录项
+			if (String::IsNullOrEmpty (entry->Name))
+			{
+				if (!Directory::Exists (outPath))
+					Directory::CreateDirectory (outPath);
+				continue;
+			}
+
+			// 确保目录存在
+			String^ dir = Path::GetDirectoryName (outPath);
+			if (!String::IsNullOrEmpty (dir) && !Directory::Exists (dir))
+				Directory::CreateDirectory (dir);
+
+			// 写文件
+			Stream^ inStream = entry->Open ();
+			FileStream^ outStream = gcnew FileStream (
+				outPath,
+				FileMode::Create,
+				FileAccess::Write
+			);
+
+			array<Byte>^ buffer = gcnew array<Byte> (4096);
+			int bytesRead;
+			while ((bytesRead = inStream->Read (buffer, 0, buffer->Length)) > 0)
+			{
+				outStream->Write (buffer, 0, bytesRead);
+			}
+
+			outStream->Close ();
+			inStream->Close ();
+		}
+	}
+	finally
+	{
+		delete zip;
+		delete fs;
+	}
+}
 [ComVisible (true)]
 public ref class MainHtmlWnd: public System::Windows::Forms::Form, public IScriptBridge
 {
@@ -1100,6 +1271,44 @@ public ref class MainHtmlWnd: public System::Windows::Forms::Form, public IScrip
 		}
 		uint64_t GetFileSize (String ^filepath) { return ::GetFileSize (filepath); }
 		bool ShellCopyFile (String ^src, String ^desc) { return CopyFileWithDialog (MPStringToStdW (src), MPStringToStdW (desc)); }
+		String ^GetSavePath (String ^filter, String ^defext, DWORD flags, String ^wndtitle, String ^initdir)
+		{
+			std::vector <std::wstring> ret;
+			std::wstring filterbuf = MPStringToStdW (filter) + L'|||';
+			for (auto &it : filterbuf) if (it == L'|') it = L'\0';
+			ExploreSaveFile (wndinst->InvokeGetHWND (), ret, (LPWSTR)filterbuf.data (), MPStringToStdW (defext), flags, MPStringToStdW (wndtitle), MPStringToStdW (initdir));
+			for (auto &it : ret) if (!IsNormalizeStringEmpty (it)) return CStringToMPString (it);
+			return "";
+		}
+		void CompressTheme (String ^srcfolder, String ^destfile, String ^pkginfo, String ^id) { CompressToThemePackage (srcfolder, destfile, pkginfo, id); }
+		String ^GetThemePkgInfo (String ^themepkg) { return GetThemePackageInfo (themepkg); }
+		void ExtraceThemePkg (String ^src, String ^desc) { ExtractThemePackage (src, desc); }
+		bool CopyFile (String^ srcFile, String^ destFile, bool cover)
+		{
+			try
+			{
+				if (String::IsNullOrEmpty (srcFile) || String::IsNullOrEmpty (destFile))
+					return false;
+
+				if (!File::Exists (srcFile))
+					throw gcnew FileNotFoundException ("Source file not found.", srcFile);
+
+				// 确保目标目录存在
+				String^ destDir = Path::GetDirectoryName (destFile);
+				if (!String::IsNullOrEmpty (destDir) && !Directory::Exists (destDir))
+				{
+					Directory::CreateDirectory (destDir);
+				}
+
+				// overwrite = true
+				File::Copy (srcFile, destFile, cover);
+				return true;
+			}
+			catch (Exception^)
+			{
+				return false;
+			}
+		}
 		void CloseWindow ()
 		{
 			if (wndinst && wndinst->IsHandleCreated) wndinst->Close ();

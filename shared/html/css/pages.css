@@ -65,7 +65,7 @@ body * {
     margin: 0px;
     padding: 0px;
     border: 0px;
-    background-color: #f3f3f3;
+    /* background-color: #f3f3f3; */
 }
 
 .pagecontainer.full {
@@ -76,6 +76,13 @@ body * {
     height: 100%;
     max-width: 100%;
     max-height: 100%;
+}
+
+.pagecontainer.background {
+    background-size: cover;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    background-position: center center;
 }
 
 .pagecontainer>.page {
