@@ -12,6 +12,13 @@
     flex-wrap: nowrap;
     align-content: center;
     justify-content: center;
+    display: -ms-flexbox;
+    -ms-flex-direction: column;
+    -ms-flex-wrap: nowrap;
+    -ms-flex-line-pack: center;
+    /* align-content: center */
+    -ms-flex-pack: center;
+    /* justify-content: center */
     transition: all 0.15s linear;
     opacity: 0;
     z-index: 100;
@@ -29,6 +36,9 @@
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
+    display: -ms-flexbox;
+    -ms-flex-direction: column;
+    -ms-flex-wrap: nowrap;
     min-height: 0 !important;
     box-sizing: border-box;
 }
@@ -67,6 +77,15 @@
     align-content: center;
     justify-content: flex-end;
     align-items: center;
+    display: -ms-flexbox;
+    -ms-flex-direction: row;
+    -ms-flex-wrap: nowrap;
+    -ms-flex-line-pack: center;
+    /* align-content: center（几乎无效，保留即可） */
+    -ms-flex-pack: end;
+    /* justify-content: flex-end */
+    -ms-flex-align: center;
+    /* align-items: center */
     margin-top: 10px;
     /*gap: 20px;*/
 }

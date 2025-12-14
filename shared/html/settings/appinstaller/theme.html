@@ -281,22 +281,22 @@
                 </div>
                 <div class="win-settings-section" id="item-custom-theme">
                     <br>
-                    <label data-res-fromfile="publicRes (154)"></label><br>
+                    <label data-res-fromfile="publicRes (154)"></label><span>: </span><span id="custom-color-mode-display"></span><br>
                     <script>
                         (function() {
                             var sect = document.getElementById("item-custom-theme");
-                            var toggle = new Toggle();
-                            toggle.create();
-                            toggle.parent = sect;
-                            toggle.setColor("#202020");
-                            toggle.showlabel = true;
-                            toggle.setStatusText(getPublicRes(155), getPublicRes(156));
-                            toggle.addEventListener("change", function() {
-                                Theme.setCustomColor(toggle.checked ? Theme.ColorType.dark : Theme.ColorType.light);
+                            var toggleForColorMode = new Toggle();
+                            toggleForColorMode.create();
+                            toggleForColorMode.parent = sect;
+                            toggleForColorMode.setColor("#202020");
+                            toggleForColorMode.showlabel = true;
+                            toggleForColorMode.setStatusText(getPublicRes(155), getPublicRes(156));
+                            toggleForColorMode.addEventListener("change", function() {
+                                Theme.setCustomColor(toggleForColorMode.checked ? Theme.ColorType.dark : Theme.ColorType.light);
                                 refreshCustomPreview();
                             });
                             OnLoad.add(function() {
-                                toggle.checked = Theme.customColor === Theme.ColorType.dark;
+                                toggleForColorMode.checked = Theme.customColor === Theme.ColorType.dark;
                             });
                         })();
                     </script>
@@ -481,6 +481,17 @@
                             var customThemePath = path.combine(path.root, "html\\theme\\{colormode}\\custom\\custom.css").replace("{colormode}", customcolorstr);
                             var iframe = document.getElementById("theme-custom-preview");
                             iframe.setAttribute("src", "../../preview.html?id=custom&color=" + customcolor);
+                            var customColorModeDisplay = document.getElementById("custom-color-mode-display");
+                            if (customColorModeDisplay) {
+                                switch (customcolor) {
+                                    case Theme.ColorType.dark:
+                                        customColorModeDisplay.textContent = getPublicRes(155);
+                                        break;
+                                    case Theme.ColorType.light:
+                                        customColorModeDisplay.textContent = getPublicRes(156);
+                                        break;
+                                }
+                            }
                         }
                         OnLoad.add(function() {
                             setTimeout(refreshCustomPreview, 100);
