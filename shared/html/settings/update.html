@@ -480,15 +480,39 @@
                         var tempfile = path.combine(tempdir, "InstallerSetup.exe");
                         tbputil.tbProgress = 0;
                         tbputil.tbState = tbpFlags.normal;
+                        var proxyDownloadUrl = "https://githubproxy.cc/" + downloadUrl;
                         downloadFile(downloadUrl, tempfile).done(
                             function(complete) {
                                 anime.loading(checkUpdateLoading, false);
                                 if (complete.status == "ok") setComplete(complete);
-                                else setError(complete);
+                                else {
+                                    anime.loading(checkUpdateLoading, true);
+                                    downloadFile(proxyDownloadUrl, tempfile).done(
+                                        function(comp) {
+                                            anime.loading(checkUpdateLoading, false);
+                                            if (complete.status == "ok") setComplete(comp);
+                                            else setError(comp);
+                                        },
+                                        function(error) {
+                                            setError(error);
+                                        }
+                                    );
+                                }
                             },
                             function(error) {
                                 anime.loading(checkUpdateLoading, false);
-                                setError(error);
+                                anime.loading(checkUpdateLoading, true);
+                                downloadFile(proxyDownloadUrl, tempfile).done(
+                                    function(comp) {
+                                        anime.loading(checkUpdateLoading, false);
+                                        if (complete.status == "ok") setComplete(comp);
+                                        else setError(comp);
+                                    },
+                                    function(err) {
+                                        anime.loading(checkUpdateLoading, false);
+                                        setError(err);
+                                    }
+                                );
                             },
                             function(prog) {
                                 //console.log("download progress", prog);
