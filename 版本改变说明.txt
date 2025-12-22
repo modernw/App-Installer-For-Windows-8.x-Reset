@@ -1,0 +1,5 @@
+此文本仅是提醒我。
+版本改变说明：
+更改 shared\version 中的版本
+更改 others\buildsetup.suf 中的版本
+提交发行时新的版本。
