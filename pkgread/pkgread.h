@@ -368,7 +368,14 @@ class package_reader
 	{
 	#ifdef _PRI_READER_CLI_HEADER_
 		pribundlereader.destroy ();
-		for (auto &it : prifilestreams) if (it != nullptr) DestroyAppxFileStream (it);
+		for (auto &it : prifilestreams)
+		{
+			if (it != nullptr)
+			{
+				DestroyAppxFileStream (it);
+				it = nullptr;
+			}
+		}
 		prifilestreams.clear ();
 		switch (this->package_type ())
 		{
@@ -383,6 +390,7 @@ class package_reader
 			case PKGTYPE_BUNDLE: {
 				HANDLE hls = nullptr, hss = nullptr;
 				destruct rel1 ([&hls, &hss] () {
+					if (hls == hss) hss = nullptr;
 					if (hls) DestroyAppxFileStream (hls);
 					if (hss) DestroyAppxFileStream (hss);
 				});
@@ -423,6 +431,9 @@ class package_reader
 				}
 			} break;
 		}
+		std::sort (prifilestreams.begin (), prifilestreams.end ());
+		auto last = std::unique (prifilestreams.begin (), prifilestreams.end ());
+		prifilestreams.erase (last, prifilestreams.end ());
 		try
 		{
 			std::vector <std::wstring> resnames;
@@ -598,6 +609,7 @@ class package_reader
 				case PKGTYPE_BUNDLE: {
 					HANDLE pkg = nullptr, pic = nullptr;
 					destruct relp ([&pic, &pkg] () {
+						if (pic == pkg) pkg = nullptr; // 虽然来说这个代码永远无法达到，但是保险起见
 						if (pic) DestroyAppxFileStream (pic);
 						if (pkg) DestroyAppxFileStream (pkg);
 						pkg = nullptr;
@@ -616,12 +628,14 @@ class package_reader
 						if (lpstr) free (lpstr);
 						HANDLE pkg1 = nullptr, pic1 = nullptr;
 						destruct relp1 ([&pic1, &pkg1] () {
+							if (pic1 == pkg1) pkg1 = nullptr; // 虽然来说这个代码永远无法达到，但是保险起见
 							if (pic1) DestroyAppxFileStream (pic1);
 							if (pkg1) DestroyAppxFileStream (pkg1);
 							pkg1 = nullptr;
 							pic1 = nullptr;
 						});
 						pkg1 = GetAppxBundleApplicationPackageFile (hReader);
+						if (pkg1 == pkg) pkg = nullptr;
 						if (pkg1)
 						{
 							pic1 = GetFileFromPayloadPackage (pkg1, logo ().c_str ());
@@ -782,6 +796,7 @@ class package_reader
 					case PKGTYPE_BUNDLE: {
 						HANDLE pkg = nullptr, pic = nullptr;
 						destruct relp ([&pic, &pkg] () {
+							if (pic == pkg) pkg = nullptr; // 虽然来说这个代码永远无法达到，但是保险起见
 							if (pic) DestroyAppxFileStream (pic);
 							if (pkg) DestroyAppxFileStream (pkg);
 							pkg = nullptr;

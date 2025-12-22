@@ -329,7 +329,15 @@
                                 iframe.contentWindow.Theme.currentColor = color;
                                 iframe.contentWindow.Theme.currentTheme = id;
                             };*/
-                            iframe.src = previewHtml + "?color=" + color + "&id=" + id;
+                            setTimeout(function(iframenode, iframesrc) {
+                                iframenode.src = iframesrc;
+                            }, 0, iframe, previewHtml + "?color=" + color + "&id=" + id);
+                            // iframe.src = previewHtml + "?color=" + color + "&id=" + id;
+                            try {
+                                iframe.defer = true;
+                                iframe.loading = "lazy";
+                                iframe.async = true;
+                            } catch (e) {}
                             item.appendChild(iframe);
                             var colorstr = "light";
                             if (color === Theme.ColorType.dark) colorstr = "dark";
@@ -467,7 +475,7 @@
                     <br>
                     <h3 data-res-fromfile="publicRes (174)"></h3>
                     <label data-res-fromfile="publicRes (175)"></label><br>
-                    <iframe src="../../preview.html" id="theme-custom-preview"></iframe>
+                    <iframe src="../../preview.html" id="theme-custom-preview" defer loading="lazy" async></iframe>
                     <br><br>
                     <button id="jump-editpage" data-res-fromfile="publicRes (176)"></button>
                     <script>

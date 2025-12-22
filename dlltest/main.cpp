@@ -191,12 +191,13 @@ int main (int argc, char *argv [])
 {
 	setlocale (LC_ALL, "");
 	std::wcout.imbue (std::locale ("", LC_CTYPE));
+	CoInitializeEx (nullptr, COINIT_MULTITHREADED);
 	std::wcout << L"Please enter the file path: " << std::endl;
 	std::wcout << L"\\> ";
 	std::wstring pkgPathStr = L"E:\\Profiles\\Bruce\\Desktop\\Discourse.appx";
-	pkgPathStr = L"F:\\BaiduNetdiskDownload\\Collection4\\Microsoft.BingFinance_2015.709.2014.2069_neutral_~_8wekyb3d8bbwe\\FinanceApp_3.0.4.336_x86.appx";
+	//pkgPathStr = L"F:\\BaiduNetdiskDownload\\Collection4\\Microsoft.BingFinance_2015.709.2014.2069_neutral_~_8wekyb3d8bbwe\\FinanceApp_3.0.4.336_x86.appx";
 	//pkgPathStr = L"F:\\BaiduNetdiskDownload\\Collection4\\Microsoft.BingFinance_2015.709.2014.2069_neutral_~_8wekyb3d8bbwe.appxbundle";
-	//pkgPathStr = L"";
+	pkgPathStr = L"E:\\Profiles\\Bruce\\Desktop\\新建文件夹\\Microsoft.MSIXPackagingTool_2023.1212.538.0_neutral_~_8wekyb3d8bbwe.Msixbundle";
 	if (pkgPathStr.empty ()) std::getline (std::wcin, pkgPathStr);
 	pkgPathStr.erase (
 		std::remove (pkgPathStr.begin (), pkgPathStr.end (), L'\"'),
